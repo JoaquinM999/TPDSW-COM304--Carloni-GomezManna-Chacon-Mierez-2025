@@ -1,12 +1,13 @@
 // src/routes/seguimiento.routes.ts
 import { Router } from 'express';
-import { getSeguidores, getSeguidos, followUser, unfollowUser } from '../controllers/seguimiento.controller';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { followUser, unfollowUser, getSeguidores, getSeguidos } from '../controllers/seguimiento.controller';
 
 const router = Router();
 
+router.post('/follow', authenticateJWT, followUser);
+router.delete('/unfollow/:seguidoId', authenticateJWT, unfollowUser);
 router.get('/seguidores/:usuarioId', getSeguidores);
-router.get('/seguidos/:usuarioId', getSeguidos);
-router.post('/follow', followUser);
-router.post('/unfollow', unfollowUser);
+router.get('/seguidos', authenticateJWT, getSeguidos);
 
 export { router as seguimientoRoutes };

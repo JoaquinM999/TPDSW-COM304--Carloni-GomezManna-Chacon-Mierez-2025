@@ -1,69 +1,86 @@
+// src/controllers/seguimiento.controller.ts
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Seguimiento } from '../entities/seguimiento.entity';
+import { Usuario } from '../entities/usuario.entity';
 
-export const seguirUsuario = async (req: Request, res: Response) => {
+export const followUser = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const { seguidorId, seguidoId } = req.body;
+  const seguidorPayload = (req as any).user;
+  const { seguidoId } = req.body;
 
-  if (!seguidorId || !seguidoId) {
-    return res.status(400).json({ error: 'Faltan IDs de usuarios' });
+  if (!seguidorPayload || !seguidorPayload.id) {
+    return res.status(401).json({ error: 'Usuario no autenticado' });
+  }
+  if (!seguidoId) {
+    return res.status(400).json({ error: 'Falta el ID del usuario a seguir' });
+  }
+  if (seguidorPayload.id === seguidoId) {
+    return res.status(400).json({ error: 'No puedes seguirte a ti mismo' });
   }
 
-  const seguimientoExistente = await orm.em.findOne(Seguimiento, {
-    seguidor: seguidorId,
-    seguido: seguidoId,
-  });
-
-  if (seguimientoExistente) {
-    return res.status(400).json({ error: 'Ya estás siguiendo a este usuario' });
+  const seguidor = await orm.em.findOne(Usuario, { id: seguidorPayload.id });
+  const seguido = await orm.em.findOne(Usuario, { id: seguidoId });
+  if (!seguidor || !seguido) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
   }
 
-  const seguimiento = orm.em.create(Seguimiento, {
-    seguidor: seguidorId,
-    seguido: seguidoId,
-    fecha: new Date(),
-  });
+  const existente = await orm.em.findOne(Seguimiento, { seguidor: seguidor.id, seguido: seguido.id });
+  if (existente) {
+    return res.status(400).json({ error: 'Ya sigues a este usuario' });
+  }
 
-  await orm.em.persistAndFlush(seguimiento);
-  res.status(201).json(seguimiento);
+  const nuevoSeguimiento = orm.em.create(Seguimiento, {
+    seguidor,
+    seguido,
+    fechaSeguido: new Date(),
+  });
+  await orm.em.persistAndFlush(nuevoSeguimiento);
+  res.status(201).json({ message: `Ahora sigues a ${seguido.username}` });
 };
 
-export const dejarDeSeguirUsuario = async (req: Request, res: Response) => {
+export const unfollowUser = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const { seguidorId, seguidoId } = req.params;
+  const seguidorPayload = (req as any).user;
+  const seguidoId = Number(req.params.seguidoId);
+
+  if (!seguidorPayload || !seguidorPayload.id) {
+    return res.status(401).json({ error: 'Usuario no autenticado' });
+  }
 
   const seguimiento = await orm.em.findOne(Seguimiento, {
-    seguidor: +seguidorId,
-    seguido: +seguidoId,
+    seguidor: seguidorPayload.id,
+    seguido: seguidoId,
   });
 
   if (!seguimiento) {
-    return res.status(404).json({ error: 'Seguimiento no encontrado' });
+    return res.status(404).json({ error: 'No estás siguiendo a este usuario' });
   }
 
   await orm.em.removeAndFlush(seguimiento);
-  res.json({ mensaje: 'Dejaste de seguir al usuario' });
+  res.json({ message: 'Dejaste de seguir al usuario' });
 };
 
 export const getSeguidores = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const seguidoId = +req.params.usuarioId;
+  const seguidoId = Number(req.params.usuarioId);
 
-  const seguidores = await orm.em.find(Seguimiento, {
-    seguido: seguidoId,
-  }, { populate: ['seguidor'] });
+  const seguidores = await orm.em.find(Seguimiento, { seguido: seguidoId }, { populate: ['seguidor'] });
+  const usuariosSeguidores = seguidores.map(s => s.seguidor);
 
-  res.json(seguidores);
+  res.json(usuariosSeguidores);
 };
 
 export const getSeguidos = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const seguidorId = +req.params.usuarioId;
+  const seguidorPayload = (req as any).user;
 
-  const seguidos = await orm.em.find(Seguimiento, {
-    seguidor: seguidorId,
-  }, { populate: ['seguido'] });
+  if (!seguidorPayload || !seguidorPayload.id) {
+    return res.status(401).json({ error: 'Usuario no autenticado' });
+  }
 
-  res.json(seguidos);
+  const seguidos = await orm.em.find(Seguimiento, { seguidor: seguidorPayload.id }, { populate: ['seguido'] });
+  const usuariosSeguidos = seguidos.map(s => s.seguido);
+
+  res.json(usuariosSeguidos);
 };

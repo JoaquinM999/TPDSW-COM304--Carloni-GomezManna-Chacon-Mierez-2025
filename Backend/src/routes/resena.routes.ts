@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { resenaController } from '../controllers/resena.controller';
+import * as resenaController from '../controllers/resena.controller';
 
 const router = Router();
 

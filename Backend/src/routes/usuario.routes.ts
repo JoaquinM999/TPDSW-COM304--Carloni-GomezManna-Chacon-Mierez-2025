@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { getUsuarios, getUsuarioById, updateUsuario, deleteUsuario, createUsuario } from '../controllers/usuario.controller';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { getUsers, getUserById, updateUser, deleteUser } from '../controllers/usuario.controller';
 
 const router = Router();
 
-router.get('/', getUsuarios);
-router.get('/:id', getUsuarioById);
-router.put('/:id', updateUsuario);
-router.delete('/:id', deleteUsuario);
-router.post('/', createUsuario);
+router.get('/', authenticateJWT, getUsers);
+router.get('/:id', authenticateJWT, getUserById);
+router.put('/:id', authenticateJWT, updateUser);
+router.delete('/:id', authenticateJWT, deleteUser);
 
 export { router as usuarioRoutes };
-

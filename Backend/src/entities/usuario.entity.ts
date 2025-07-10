@@ -1,4 +1,5 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, BeforeCreate, BeforeUpdate } from '@mikro-orm/core';
+import bcrypt from 'bcrypt';
 
 export enum RolUsuario {
   USUARIO = 'usuario',
@@ -27,10 +28,16 @@ export class Usuario {
   refreshToken?: string;
 
   async validatePassword(password: string): Promise<boolean> {
-    return this.password === password;
+    return bcrypt.compare(password, this.password);
   }
 
-  async hashPassword() {
-    // Aquí deberías usar bcrypt.hash
+  @BeforeCreate()
+  @BeforeUpdate()
+  async hashPasswordHook(): Promise<void> {
+    // Solo hashea si la password cambió y no está ya hasheada
+    if (this.password && !this.password.startsWith('$2b$')) {
+      const saltRounds = 10;
+      this.password = await bcrypt.hash(this.password, saltRounds);
+    }
   }
 }

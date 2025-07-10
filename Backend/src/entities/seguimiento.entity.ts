@@ -1,5 +1,5 @@
 // src/entities/seguimiento.entity.ts
-import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
+import { Entity, PrimaryKey, ManyToOne, Property } from '@mikro-orm/core';
 import { Usuario } from './usuario.entity';
 
 @Entity()
@@ -7,12 +7,12 @@ export class Seguimiento {
   @PrimaryKey()
   id!: number;
 
-  @ManyToOne()
+  @ManyToOne(() => Usuario)
   seguidor!: Usuario;
 
-  @ManyToOne()
+  @ManyToOne(() => Usuario)
   seguido!: Usuario;
 
   @Property()
-  fecha: Date = new Date();
+  fechaSeguido: Date = new Date();
 }

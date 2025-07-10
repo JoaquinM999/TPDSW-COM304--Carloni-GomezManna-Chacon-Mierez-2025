@@ -1,66 +1,97 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import { MikroORM } from '@mikro-orm/mysql';
+import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
+import { promisify } from 'util';
 import { Usuario } from '../entities/usuario.entity';
-import { MikroORM } from '@mikro-orm/core';
+import jwtConfig from '../shared/jwt.config';
+import { StringValue } from 'ms';
 
-export const login = async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
-  try {
-    const orm = req.app.get('orm') as MikroORM;
-    const usuario = await orm.em.findOne(Usuario, { email });
-
-    if (!usuario) {
-      res.status(400).json({ error: 'Credenciales incorrectas' });
-      return;
-    }
-
-    const isValidPassword = await usuario.validatePassword(password);
-    if (!isValidPassword) {
-      res.status(400).json({ error: 'Credenciales incorrectas' });
-      return;
-    }
-
-    const token = generateToken(usuario);
-    res.json({ message: 'Inicio de sesión exitoso', token });
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Error desconocido' });
+// Función auxiliar para generar un token de acceso
+const generateToken = (user: Usuario): string => {
+  if (!jwtConfig.secret) {
+    throw new Error('JWT secret not configured');
   }
+
+  const signOptions: SignOptions = {
+    expiresIn: jwtConfig.expiresIn as StringValue,
+  };
+
+  return jwt.sign(
+    { id: user.id, email: user.email, username: user.username, rol: user.rol },
+    jwtConfig.secret,
+    signOptions
+  );
 };
 
-export const refreshToken = async (req: Request, res: Response): Promise<void> => {
-  const { refreshToken } = req.body;
+// Función auxiliar para verificar el refresh token como Promise
+const verifyToken = (token: string, secret: string): Promise<JwtPayload> =>
+  new Promise((resolve, reject) => {
+    jwt.verify(token, secret, (err, decoded) => {
+      if (err || typeof decoded !== 'object' || !decoded) {
+        return reject(err);
+      }
+      resolve(decoded as JwtPayload);
+    });
+  });
 
-  if (!refreshToken) {
-    res.status(400).json({ error: 'Refresh token es necesario' });
-    return;
-  }
-
+// Login de usuario
+export const loginUser = async (req: Request, res: Response) => {
   try {
-    const decoded: any = jwt.verify(refreshToken, process.env.JWT_SECRET as string);
     const orm = req.app.get('orm') as MikroORM;
-    const usuario = await orm.em.findOne(Usuario, { id: decoded.userId });
+    const { email, password } = req.body;
 
-    if (!usuario) {
-      res.status(401).json({ error: 'Usuario no encontrado' });
-      return;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const newAccessToken = jwt.sign(
-      { userId: usuario.id, email: usuario.email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+    const user = await orm.em.findOne(Usuario, { email });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const validPassword = await user.validatePassword(password);
+    if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = generateToken(user);
+
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      jwtConfig.secret!,
+      { expiresIn: '7d' }
     );
 
-    res.json({ accessToken: newAccessToken });
+    user.refreshToken = refreshToken;
+    await orm.em.persistAndFlush(user);
+
+    res.json({ token, refreshToken, message: 'Login successful' });
   } catch (error) {
-    res.status(403).json({ error: 'Refresh token inválido o expirado' });
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
-const generateToken = (usuario: Usuario) => {
-  const payload = {
-    id: usuario.id,
-    email: usuario.email,
-  };
-  return jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+// Renovar token con refresh token
+export const refreshTokenUser = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token missing' });
+    }
+
+    let decoded: JwtPayload;
+    try {
+      decoded = await verifyToken(refreshToken, jwtConfig.secret!);
+    } catch {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    const user = await orm.em.findOne(Usuario, { id: decoded.id });
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    const newAccessToken = generateToken(user);
+    res.json({ token: newAccessToken });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
 };

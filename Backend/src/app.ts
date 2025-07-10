@@ -11,6 +11,7 @@ import { resenaRoutes } from './routes/resena.routes';
 import { contenidoListaRoutes } from './routes/contenidoLista.routes';
 import { reaccionRoutes } from './routes/reaccion.routes';
 import { seguimientoRoutes } from './routes/seguimiento.routes';
+import { recomendacionRoutes } from './routes/recomendacion.routes';
 
 const app = express(); 
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use('/api/resena', resenaRoutes);
 app.use('/api/contenido-lista', contenidoListaRoutes);
 app.use('/api/reacciones', reaccionRoutes);
 app.use('/api/seguimientos', seguimientoRoutes);
+app.use('/api/recomendaciones', recomendacionRoutes);
 
 
 export default app;

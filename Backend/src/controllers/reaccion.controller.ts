@@ -32,7 +32,8 @@ export const addOrUpdateReaccion = async (req: Request, res: Response) => {
   res.status(201).json(reaccion);
 };
 
-export const getReaccionesPorResena = async (req: Request, res: Response) => {
+// 🔁 Renombrada para que coincida con el import
+export const getReaccionesByResena = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const resenaId = +req.params.resenaId;
 

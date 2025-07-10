@@ -1,26 +1,36 @@
+// src/middleware/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import jwtConfig from '../config/jwt.config';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-interface CustomRequest extends Request {
-  user?: any;
+export interface AuthRequest extends Request {
+  user?: JwtPayload & { id?: number }; // indica que puede tener un id numérico
 }
 
-const verifyToken = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    return res.status(403).json({ message: 'Token no proporcionado' });
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Authorization header missing' });
   }
 
-  jwt.verify(token, jwtConfig.secret, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: 'Token inválido' });
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Token missing' });
+  }
+
+  try {
+    const secret = process.env.JWT_SECRET || 'defaultsecret';
+    const decoded = jwt.verify(token, secret);
+
+    if (typeof decoded !== 'object' || decoded === null) {
+      return res.status(401).json({ error: 'Invalid token payload' });
     }
 
-    req.user = decoded;  // Guardamos el usuario decodificado en la solicitud
-    next();
-  });
-};
+    // Si en tu payload JWT el usuario tiene un campo id numérico, acá lo aseguramos
+    req.user = decoded as JwtPayload & { id?: number };
 
-export default verifyToken;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};

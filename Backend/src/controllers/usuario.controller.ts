@@ -1,97 +1,127 @@
-import { Request, Response } from 'express';
+// src/controllers/usuario.controller.ts
+import { Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Usuario, RolUsuario } from '../entities/usuario.entity';
+import { AuthRequest } from '../middleware/auth.middleware';
 
-export const getUsuarios = async (req: Request, res: Response) => {
-  try {
-    const orm = req.app.get('orm') as MikroORM;
-    const usuarios = await orm.em.find(Usuario, {});
-    res.json(usuarios);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener usuarios' });
-  }
-};
-
-export const getUsuarioById = async (req: Request, res: Response) => {
-  try {
-    const orm = req.app.get('orm') as MikroORM;
-    const usuario = await orm.em.findOne(Usuario, { id: +req.params.id });
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    res.json(usuario);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al buscar usuario' });
-  }
-};
-
-export const createUsuario = async (req: Request, res: Response) => {
+// Create user
+export const createUser = async (req: AuthRequest, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const { email, username, password, rol } = req.body;
 
-    const usuarioExistente = await orm.em.findOne(Usuario, { email });
-    if (usuarioExistente) {
-      return res.status(400).json({ error: 'El email ya está registrado' });
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const rolUsuario: RolUsuario = rol ?? RolUsuario.USUARIO;
+    const existingUser = await orm.em.findOne(Usuario, { email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email is already registered' });
+    }
 
-    const nuevoUsuario = orm.em.create(Usuario, {
+    const userRole: RolUsuario = rol ?? RolUsuario.USUARIO;
+
+    const newUser = orm.em.create(Usuario, {
       email,
       username,
       password,
-      rol: rolUsuario,
+      rol: userRole,
     });
 
-    if (nuevoUsuario.hashPassword) {
-      await nuevoUsuario.hashPassword();
-    }
+    await orm.em.persistAndFlush(newUser);
 
-    await orm.em.persistAndFlush(nuevoUsuario);
+    const { password: _, refreshToken, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'Usuario creado correctamente',
-      usuario: nuevoUsuario,
+      message: 'User created successfully',
+      user: userWithoutPassword,
     });
   } catch (error) {
     res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error desconocido',
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 };
 
-export const updateUsuario = async (req: Request, res: Response) => {
+// Get all users
+export const getUsers = async (req: AuthRequest, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const usuario = await orm.em.findOne(Usuario, { id: +req.params.id });
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+
+    const users = await orm.em.find(Usuario, {});
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving users' });
+  }
+};
+
+// Get user by ID
+export const getUserById = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = +req.params.id;
+
+    if (!req.user || (typeof req.user === 'object' && req.user.id !== userId)) {
+      return res.status(403).json({ error: 'Not authorized to view this user' });
     }
 
-    orm.em.assign(usuario, req.body);
-    await orm.em.persistAndFlush(usuario);
+    const user = await orm.em.findOne(Usuario, { id: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving user' });
+  }
+};
+
+// Update user
+export const updateUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = +req.params.id;
+
+    if (!req.user || (typeof req.user === 'object' && req.user.id !== userId)) {
+      return res.status(403).json({ error: 'Not authorized to update this user' });
+    }
+
+    const user = await orm.em.findOne(Usuario, { id: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    orm.em.assign(user, req.body);
+    await orm.em.persistAndFlush(user);
 
     res.json({
-      message: 'Usuario actualizado correctamente',
-      usuario,
+      message: 'User updated successfully',
+      user,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar usuario' });
+    res.status(500).json({ error: 'Error updating user' });
   }
 };
 
-export const deleteUsuario = async (req: Request, res: Response) => {
+// Delete user
+export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const usuario = await orm.em.findOne(Usuario, { id: +req.params.id });
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+    const userId = +req.params.id;
+
+    if (!req.user || (typeof req.user === 'object' && req.user.id !== userId)) {
+      return res.status(403).json({ error: 'Not authorized to delete this user' });
     }
 
-    await orm.em.removeAndFlush(usuario);
-    res.json({ message: 'Usuario eliminado correctamente' });
+    const user = await orm.em.findOne(Usuario, { id: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await orm.em.removeAndFlush(user);
+    res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar usuario' });
+    res.status(500).json({ error: 'Error deleting user' });
   }
 };

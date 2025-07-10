@@ -32,7 +32,7 @@ export const getResenaById = async (req: Request, res: Response) => {
   }
 };
 
-export const createResena = async (req: AuthRequest, res: Response) => {
+export const createResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const { comentario, estrellas, libroId } = req.body;
@@ -46,7 +46,7 @@ export const createResena = async (req: AuthRequest, res: Response) => {
     }
     if (!libroId) return res.status(400).json({ error: 'Falta libroId' });
 
-    const usuarioPayload = req.user;
+    const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
 
     const usuario = await orm.em.findOne(Usuario, { id: usuarioPayload.id });
@@ -55,7 +55,6 @@ export const createResena = async (req: AuthRequest, res: Response) => {
     const libro = await orm.em.findOne(Libro, { id: libroId });
     if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-    // Validar malas palabras
     const esOfensivo = await contieneMalasPalabras(comentario);
     if (esOfensivo) {
       return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
@@ -78,13 +77,13 @@ export const createResena = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateResena = async (req: AuthRequest, res: Response) => {
+export const updateResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const resena = await orm.em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario'] });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
-    const usuarioPayload = req.user;
+    const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
 
     if (resena.usuario.id !== usuarioPayload.id) {
@@ -118,13 +117,13 @@ export const updateResena = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteResena = async (req: AuthRequest, res: Response) => {
+export const deleteResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const resena = await orm.em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario'] });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
-    const usuarioPayload = req.user;
+    const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
 
     if (resena.usuario.id !== usuarioPayload.id) {

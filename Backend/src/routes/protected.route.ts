@@ -1,9 +1,10 @@
-// src/routes/protected.route.ts
-import { Request, Response } from 'express';
+import { Router } from 'express';
+import { authenticateJWT } from '../middleware/auth.middleware';
 
-export const protectedRoute = (req: Request, res: Response) => {
-  if (req.user) {
-    return res.json({ message: `Hello ${req.user.email}` });
-  }
-  res.status(401).json({ error: 'No user found' });
-};
+const router = Router();
+
+router.get('/', authenticateJWT, (req, res) => {
+  res.json({ message: 'Hola usuario autenticado' });
+});
+
+export { router as protectedRoutes };

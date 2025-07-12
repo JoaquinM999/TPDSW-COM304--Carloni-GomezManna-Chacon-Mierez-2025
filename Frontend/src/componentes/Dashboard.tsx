@@ -1,29 +1,43 @@
+// src/componentes/DashboardPage.tsx
+import React, { useEffect, useState } from 'react';
+import { getAccessToken, getNewAccessToken } from '../services/authService';
+import { useNavigate } from 'react-router-dom';
 
-//import React, { useEffect, useState } from 'react';
-//import { getNewAccessToken } from '../Servicios/authService';// Servicio para obtener el nuevo token
+const DashboardPage = () => {
+  const [mensaje, setMensaje] = useState('');
+  const navigate = useNavigate();
 
-//const Dashboard = () => {
-  //const [accessToken, setAccessToken] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchProtected = async () => {
+      let token = getAccessToken();
+      if (!token) {
+        token = await getNewAccessToken();
+      }
 
-  //useEffect(() => {
-    //const fetchAccessToken = async () => {
-      //try {
-        //const token = await getNewAccessToken();
-        //setAccessToken(token);
-      //} catch (error) {
-        //console.error('Error al obtener un nuevo token:', error);
-      //}
-    //};
+      const response = await fetch('http://localhost:3000/api/protected', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    //fetchAccessToken();
-  //}, []);
+      const data = await response.json();
+      if (response.ok) {
+        setMensaje(data.message);
+      } else {
+        setMensaje('Acceso no autorizado');
+      }
+    };
 
-  //return (
-    //<div>
-      //<h1>Dashboard</h1>
-      //<p>Access Token: {accessToken}</p>
-    //</div>
-  //);
-//};
+    fetchProtected();
+  }, []);
 
-//export default Dashboard;
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <button onClick={() => navigate('/favoritos')}>Mis Favoritos</button>
+      <p>{mensaje}</p>
+    </div>
+  );
+};
+
+export default DashboardPage;

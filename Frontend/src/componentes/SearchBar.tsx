@@ -96,6 +96,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     if (onSearch) {
       onSearch(item.title);
     }
+    
+    // Navigate to book detail if it's a book
+    if (item.type === 'book') {
+      window.location.href = `/libro/${item.id}`;
+    }
   };
 
   const handleSearch = () => {

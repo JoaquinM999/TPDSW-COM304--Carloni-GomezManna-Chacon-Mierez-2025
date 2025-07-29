@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
@@ -8,8 +8,15 @@ import { Footer } from './componentes/Footer';
 // Importar tu página de login
 import LoginPage from './paginas/LoginPage';
 
-function App() {
-  // Example of customization options
+// Importar las nuevas páginas
+import { CategoriasPage } from './paginas/CategoriasPage';
+import { DetalleLibro } from './paginas/DetalleLibro';
+import { FavoritosPage } from './paginas/FavoritosPage';
+import { LibrosPage } from './paginas/LibrosPage';
+
+function Layout() {
+  const location = useLocation();
+
   const customFooterLinks = [
     {
       title: 'Contenido',
@@ -44,40 +51,54 @@ function App() {
     }
   ];
 
-  const handleSearch = (query: string) => {
-    console.log('Searching for:', query);
-    // Aquí puedes implementar la lógica de búsqueda
-    // Por ejemplo, redirigir a una página de resultados o filtrar contenido
-  };
+  // Ocultar layout en la página de login
+  const hideLayout = location.pathname === './paginas/LoginPage';
 
   return (
-    <Router>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
+      {!hideLayout && (
+        <Header
+          siteName="BookCode"
+          showNotifications={true}
+          userAuthenticated={false}
+        />
+      )}
+
+      <main>
         <Routes>
-          <Route path="/" element={
-            <>
-              <Header 
-                siteName="BookCode"
-                showNotifications={true}
-                userAuthenticated={false}
-              />
-              
-              <main>
+          <Route
+            path="/"
+            element={
+              <>
                 <HeroSection />
                 <FeaturedContent />
-              </main>
-              
-              <Footer 
-                siteName="BookCode"
-                showSocialMedia={true}
-                showNewsletter={true}
-                customLinks={customFooterLinks}
-              />
-            </>
-          } />
-          <Route path="/paginas/LoginPage" element={<LoginPage />} />
+              </>
+            }
+          />
+          <Route path="/LoginPage" element={<LoginPage />} />
+          <Route path="/categorias" element={<CategoriasPage />} />
+          <Route path="/libro/:id" element={<DetalleLibro />} />
+          <Route path="/favoritos" element={<FavoritosPage />} />
+          <Route path="/libros" element={<LibrosPage />} />
         </Routes>
-      </div>
+      </main>
+
+      {!hideLayout && (
+        <Footer
+          siteName="BookCode"
+          showSocialMedia={true}
+          showNewsletter={true}
+          customLinks={customFooterLinks}
+        />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Layout />
     </Router>
   );
 }

@@ -19,10 +19,9 @@ export const Header: React.FC<HeaderProps> = ({
   const navigationItems = [
     { name: 'Libros', href: '#', icon: Book },
     { name: 'Autores', href: '#', icon: User },
-    { name: 'Reseñas', href: '#', icon: Star },
+    { name: 'Categorías', href: '/categorias', icon: Star },
     { name: 'Sagas', href: '#' },
     { name: 'Mis Listas', href: '#' },
-    { name: 'Comunidad', href: '#' },
   ];
 
   return (
@@ -32,23 +31,25 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {siteName}
-              </h1>
+              <Link to="/">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+                  {siteName}
+                </h1>
+              </Link>
             </div>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navigationItems.map((item) => (
-              <a
+              <Link
                 key={item.name}
-                href={item.href}
+                to={item.href}
                 className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 {item.icon && <item.icon className="w-4 h-4" />}
                 <span>{item.name}</span>
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -73,8 +74,11 @@ export const Header: React.FC<HeaderProps> = ({
 
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <Link to="../paginas/LoginPage.tsx" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link to="loginPage" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     {userAuthenticated ? 'Mi Perfil' : 'Iniciar Sesión'}
+                  </Link>
+                  <Link to="/favoritos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    {userAuthenticated ? 'Mis Favoritos' : 'Registrarse'}
                   </Link>
                   <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     {userAuthenticated ? 'Mis Reseñas' : 'Registrarse'}
@@ -108,14 +112,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50 rounded-lg mt-2">
               {navigationItems.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href}
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
                   <span>{item.name}</span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>

@@ -1,8 +1,10 @@
-import React from 'react';
+/* import React from 'react'; */
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
+import './index.css';
+
 
 function App() {
   // Example of customization options

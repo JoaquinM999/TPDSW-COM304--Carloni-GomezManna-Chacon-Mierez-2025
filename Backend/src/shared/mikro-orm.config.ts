@@ -14,8 +14,8 @@ dotenv.config();
 const config: Options<MySqlDriver> = {
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'joaquina',
-  password: process.env.DB_PASSWORD || 'Utenianos2025',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '1768',
   dbName: process.env.DB_NAME || 'agencia_personal',
   entities: [Usuario, Autor, Categoria, Editorial, Libro, Resena],
   forceEntityConstructor: true,

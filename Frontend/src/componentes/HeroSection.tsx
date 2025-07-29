@@ -1,6 +1,6 @@
 import React from 'react';
 import { SearchBar } from './SearchBar';
-import { Star, TrendingUp, Users, BookOpen, Heart, User } from 'lucide-react';
+import { Star, /* TrendingUp, */ Users, BookOpen, Heart/* , User */ } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   const stats = [

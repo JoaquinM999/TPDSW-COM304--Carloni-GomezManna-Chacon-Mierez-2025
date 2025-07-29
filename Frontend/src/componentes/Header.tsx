@@ -17,11 +17,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navigationItems = [
-    { name: 'Libros', href: '#', icon: Book },
+    { name: 'Libros', href: '/libros', icon: Book },
     { name: 'Autores', href: '#', icon: User },
     { name: 'Categorías', href: '/categorias', icon: Star },
     { name: 'Sagas', href: '#' },
-    { name: 'Mis Listas', href: '#' },
+    { name: 'Mis Favorito (futura Lista)', href: '/favoritos' },
   ];
 
   return (

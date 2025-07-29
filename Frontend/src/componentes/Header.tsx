@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, User, Menu, X, Star, Book, Film, Bell } from 'lucide-react';
 
 interface HeaderProps {
@@ -72,20 +73,20 @@ export const Header: React.FC<HeaderProps> = ({
 
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link to="../paginas/LoginPage.tsx" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     {userAuthenticated ? 'Mi Perfil' : 'Iniciar Sesión'}
-                  </a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  </Link>
+                  <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     {userAuthenticated ? 'Mis Reseñas' : 'Registrarse'}
-                  </a>
+                  </Link>
                   {userAuthenticated && (
                     <>
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         Configuración
-                      </a>
-                      <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      </Link>
+                      <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         Cerrar Sesión
-                      </a>
+                      </Link>
                     </>
                   )}
                 </div>

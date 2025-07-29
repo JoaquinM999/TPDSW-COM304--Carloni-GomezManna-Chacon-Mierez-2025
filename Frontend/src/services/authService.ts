@@ -44,3 +44,20 @@ export const login = async (email: string, password: string): Promise<void> => {
     throw new Error(data.error || 'Error al iniciar sesión');
   }
 };
+
+export const getToken = (): string | null => {
+  return localStorage.getItem('authToken');
+};
+
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken');
+};
+
+export const removeTokens = (): void => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('refreshToken');
+};
+
+export const isAuthenticated = (): boolean => {
+  return !!getToken();
+};

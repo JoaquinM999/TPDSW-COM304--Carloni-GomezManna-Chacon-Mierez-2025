@@ -1,10 +1,12 @@
-/* import React from 'react'; */
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
-import './index.css';
 
+// Importar tu página de login
+import LoginPage from './paginas/LoginPage';
 
 function App() {
   // Example of customization options
@@ -49,25 +51,34 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header 
-        siteName="BookCode"
-        showNotifications={true}
-        userAuthenticated={false}
-      />
-      
-      <main>
-        <HeroSection />
-        <FeaturedContent />
-      </main>
-      
-      <Footer 
-        siteName="BookCode"
-        showSocialMedia={true}
-        showNewsletter={true}
-        customLinks={customFooterLinks}
-      />
-    </div>
+    <Router>
+      <div className="min-h-screen bg-white">
+        <Routes>
+          <Route path="/" element={
+            <>
+              <Header 
+                siteName="BookCode"
+                showNotifications={true}
+                userAuthenticated={false}
+              />
+              
+              <main>
+                <HeroSection />
+                <FeaturedContent />
+              </main>
+              
+              <Footer 
+                siteName="BookCode"
+                showSocialMedia={true}
+                showNewsletter={true}
+                customLinks={customFooterLinks}
+              />
+            </>
+          } />
+          <Route path="/paginas/LoginPage" element={<LoginPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

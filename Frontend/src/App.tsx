@@ -13,6 +13,7 @@ import { CategoriasPage } from './paginas/CategoriasPage';
 import { DetalleLibro } from './paginas/DetalleLibro';
 import { FavoritosPage } from './paginas/FavoritosPage';
 import { LibrosPage } from './paginas/LibrosPage';
+import { PerfilUsuario } from './paginas/PerfilUsuario';
 
 function Layout() {
   const location = useLocation();
@@ -80,6 +81,7 @@ function Layout() {
           <Route path="/libro/:id" element={<DetalleLibro />} />
           <Route path="/favoritos" element={<FavoritosPage />} />
           <Route path="/libros" element={<LibrosPage />} />
+          <Route path="/usuario/:id" element={<PerfilUsuario />} />
         </Routes>
       </main>
 

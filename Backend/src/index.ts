@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/mysql';
-import config from './shared/mikro-orm.config';
+import config from './mikro-orm.config';
 import app from './app';
 import dotenv from 'dotenv';
 

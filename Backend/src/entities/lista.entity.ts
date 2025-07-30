@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection } from '@mikro-orm/core';
 import { Usuario } from './usuario.entity';
 import { ContenidoLista } from './contenidoLista.entity';
+import { Libro } from './libro.entity';
 
 @Entity()
 export class Lista {
@@ -16,6 +17,6 @@ export class Lista {
   @ManyToOne()
   usuario!: Usuario;
 
-  @OneToMany(() => ContenidoLista, contenido => contenido.lista)
-  contenidos = new Collection<ContenidoLista>(this);
+  @OneToMany(() => Libro, libro => libro)
+  contenidos = new Collection<Libro>(this);
 }

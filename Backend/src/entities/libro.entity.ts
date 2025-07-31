@@ -4,6 +4,7 @@ import { Categoria } from './categoria.entity';
 import { Editorial } from './editorial.entity';
 import { Autor } from './autor.entity';
 import { Saga } from './saga.entity'; 
+import { Lista } from './lista.entity';
 
 @Entity()
 export class Libro {
@@ -27,4 +28,7 @@ export class Libro {
 
   @ManyToOne(() => Saga, { nullable: true })  
   saga?: Saga;
+
+  @ManyToOne(() => Lista, { nullable: true })
+  lista!: Lista;
 }

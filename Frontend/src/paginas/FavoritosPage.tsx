@@ -337,7 +337,12 @@ export const FavoritosPage: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-2">{autor.nombre}</h3>
+                      <Link 
+                        to={`/usuario/${autor.id}`}
+                        className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors duration-200 block"
+                      >
+                        {autor.nombre}
+                      </Link>
                       <p className="text-gray-600 text-sm">{autor.libros} libros</p>
                     </div>
                     <Heart className="w-6 h-6 text-red-500 fill-current" />
@@ -393,54 +398,3 @@ export const FavoritosPage: React.FC = () => {
     </div>
   );
 };
-
-
-/* // src/paginas/FavoritosPage.tsx
-import React, { useEffect, useState } from 'react';
-import { obtenerFavoritos } from '../services/favoritosService';
-import { getLibrosPorIds } from '../services/libroService';
-import LibroCard from '../componentes/LibroCard';
-
-interface Libro {
-  id: number;
-  nombre: string;
-  sinopsis: string;
-}
-
-const FavoritosPage = () => {
-  const [librosFavoritos, setLibrosFavoritos] = useState<Libro[]>([]); // 👈 fijate acá
-
-  useEffect(() => {
-    const cargarFavoritos = async () => {
-      try {
-        const favoritosIds = await obtenerFavoritos();
-        if (favoritosIds.length === 0) {
-          setLibrosFavoritos([]);
-          return;
-        }
-        const libros = await getLibrosPorIds(favoritosIds);
-        setLibrosFavoritos(libros);
-      } catch (error) {
-        console.error('Error cargando favoritos', error);
-      }
-    };
-
-    cargarFavoritos();
-  }, []);
-
-  if (librosFavoritos.length === 0) {
-    return <p>No tenés libros favoritos aún.</p>;
-  }
-
-  return (
-    <div>
-      <h2>Mis Libros Favoritos</h2>
-      {librosFavoritos.map((libro) => (
-        <LibroCard key={libro.id} nombre={libro.nombre} sinopsis={libro.sinopsis} />
-      ))}
-    </div>
-  );
-};
-
-export default FavoritosPage;
- */

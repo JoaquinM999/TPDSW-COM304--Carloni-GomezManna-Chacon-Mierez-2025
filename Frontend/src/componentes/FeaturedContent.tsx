@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Star, TrendingUp, Clock, Users, ChevronRight, Heart, User, BookOpen } from 'lucide-react';
 
 interface ContentItem {
@@ -214,7 +215,12 @@ export const FeaturedContent: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <h4 className="font-medium text-gray-900">{review.user}</h4>
+                          <Link 
+                            to={`/usuario/1`} 
+                            className="font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200"
+                          >
+                            {review.user}
+                          </Link>
                           <p className="text-sm text-gray-600">reseñó <span className="font-medium">{review.book}</span></p>
                         </div>
                         <div className="flex items-center space-x-1">

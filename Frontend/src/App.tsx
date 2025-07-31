@@ -1,19 +1,20 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route ,useLocation} from 'react-router-dom';
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
 
-// Importar tu página de login
 import LoginPage from './paginas/LoginPage';
-
-// Importar las nuevas páginas
 import { CategoriasPage } from './paginas/CategoriasPage';
 import { DetalleLibro } from './paginas/DetalleLibro';
 import { FavoritosPage } from './paginas/FavoritosPage';
 import { LibrosPage } from './paginas/LibrosPage';
 import { PerfilUsuario } from './paginas/PerfilUsuario';
+import { CrearLibro } from './paginas/CrearLibro';
+import { CrearCategoria } from './paginas/CrearCategoria';
+import { CrearEditorial } from './paginas/CrearEditorial';
+import { CrearSaga } from './paginas/CrearSaga';
 
 function Layout() {
   const location = useLocation();
@@ -51,7 +52,12 @@ function Layout() {
       ]
     }
   ];
-
+  const handleSearch = (query: string) => {
+    console.log('Searching for:', query);
+    // Aquí puedes implementar la lógica de búsqueda
+    // Por ejemplo, redirigir a una página de resultados o filtrar contenido
+  };
+  
   // Ocultar layout en la página de login
   const hideLayout = location.pathname === './paginas/LoginPage';
 
@@ -82,6 +88,10 @@ function Layout() {
           <Route path="/favoritos" element={<FavoritosPage />} />
           <Route path="/libros" element={<LibrosPage />} />
           <Route path="/usuario/:id" element={<PerfilUsuario />} />
+          <Route path="/crear-libro" element={<CrearLibro />} />
+          <Route path="/crear-categoria" element={<CrearCategoria />} />
+          <Route path="/crear-editorial" element={<CrearEditorial />} />
+          <Route path="/crear-saga" element={<CrearSaga />} />
         </Routes>
       </main>
 

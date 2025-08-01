@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Book, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { saveTokens } from '../services/authService';
+import axios from 'axios';
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,24 +30,27 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
+    const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(loginData),
-      // });
+      const response = await axios.post('http://localhost:3000/login', {
+        email,
+        password,
+      });
 
-      // const data = await response.json();
+      const { token, refreshToken, message } = response.data;
 
-      // if (response.ok) {
-      //   saveTokens(data.token, data.refreshToken);
-      //   navigate('/');
-      // } else {
-      //   alert(data.message || 'Credenciales incorrectas');
-      // }
+      // Guardar los tokens en localStorage (o secure cookie)
+      localStorage.setItem('accessToken', token);
+      localStorage.setItem('refreshToken', refreshToken);
 
-      // Simulate API call
+      setSuccess(message);
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Login failed');
+      setSuccess('');
+    }
+  };
       setTimeout(() => {
         if (loginData.email && loginData.password) {
           saveTokens('mock-token', 'mock-refresh-token');

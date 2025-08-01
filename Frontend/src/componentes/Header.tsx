@@ -78,10 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {userAuthenticated ? 'Mi Perfil' : 'Iniciar Sesión'}
                   </Link>
                   <Link to="/favoritos" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    {userAuthenticated ? 'Mis Favoritos' : 'Registrarse'}
-                  </Link>
-                  <Link to="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    {userAuthenticated ? 'Mis Reseñas' : 'Registrarse'}
+                    {userAuthenticated ? 'Mis Favoritos' : 'Favoritos'}
                   </Link>
                   {userAuthenticated && (
                     <>

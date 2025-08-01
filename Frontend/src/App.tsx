@@ -15,6 +15,7 @@ import { CrearLibro } from './paginas/CrearLibro';
 import { CrearCategoria } from './paginas/CrearCategoria';
 import { CrearEditorial } from './paginas/CrearEditorial';
 import { CrearSaga } from './paginas/CrearSaga';
+import PerfilPage from './paginas/PerfilPage';
 
 function Layout() {
   const location = useLocation();
@@ -83,6 +84,7 @@ function Layout() {
             }
           />
           <Route path="/LoginPage" element={<LoginPage />} />
+          <Route path="/perfil" element={<PerfilPage />} />
           <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/libro/:id" element={<DetalleLibro />} />
           <Route path="/favoritos" element={<FavoritosPage />} />

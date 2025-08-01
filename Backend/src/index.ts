@@ -3,6 +3,7 @@ import { MikroORM } from '@mikro-orm/mysql';
 import config from './mikro-orm.config';
 import app from './app';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 async function main() {
@@ -15,11 +16,17 @@ async function main() {
   // Guardar ORM en app para acceder desde req.app.get('orm')
   app.set('orm', orm);
 
+  app.use(cors({
+  origin: 'http://localhost:5173', // o la URL donde corre tu frontend
+  credentials: true,
+  }));
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Servidor en puerto ${PORT}`);
   });
 }
+
+
 
 main().catch(console.error);
 

@@ -78,15 +78,15 @@ export const CrearSaga: React.FC = () => {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      const formData = new FormData();
-      Object.entries(sagaData).forEach(([key, value]) => {
-        if (key === 'imagen' && value) {
-          formData.append(key, value);
-        } else if (value !== null) {
-          formData.append(key, value.toString());
-        }
-      });
+    // TODO: Replace with actual API call
+    const formData = new FormData();
+    Object.entries(sagaData).forEach(([key, value]) => {
+      if (key === 'imagen' && value instanceof File) {
+        formData.append(key, value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value.toString());
+      }
+    });
 
       // const response = await fetch('/api/sagas', {
       //   method: 'POST',

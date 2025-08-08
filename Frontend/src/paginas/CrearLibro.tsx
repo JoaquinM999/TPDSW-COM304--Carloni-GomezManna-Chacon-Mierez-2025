@@ -142,17 +142,17 @@ export const CrearLibro: React.FC = () => {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      const formData = new FormData();
-      Object.entries(libroData).forEach(([key, value]) => {
-        if (key === 'idiomas') {
-          formData.append(key, JSON.stringify(value));
-        } else if (key === 'portada' && value) {
-          formData.append(key, value);
-        } else if (value !== null) {
-          formData.append(key, value.toString());
-        }
-      });
+  // TODO: Replace with actual API call
+  const formData = new FormData();
+  Object.entries(libroData).forEach(([key, value]) => {
+    if (key === 'idiomas') {
+      formData.append(key, JSON.stringify(value));
+    } else if (key === 'portada' && value instanceof File) {
+      formData.append(key, value);
+    } else if (value !== null && value !== undefined) {
+      formData.append(key, value.toString());
+    }
+  });
 
       // const response = await fetch('/api/libros', {
       //   method: 'POST',

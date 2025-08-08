@@ -46,7 +46,7 @@ export const login = async (email: string, password: string): Promise<void> => {
 };
 
 export const getToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('accessToken');
 };
 
 export const getRefreshToken = (): string | null => {
@@ -54,8 +54,13 @@ export const getRefreshToken = (): string | null => {
 };
 
 export const removeTokens = (): void => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+};
+
+export const logoutUser = (): void => {
+  removeTokens();
+  // acá podrías agregar redirección u otras limpiezas si querés
 };
 
 export const isAuthenticated = (): boolean => {

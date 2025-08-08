@@ -44,3 +44,25 @@ export const login = async (email: string, password: string): Promise<void> => {
     throw new Error(data.error || 'Error al iniciar sesión');
   }
 };
+
+export const getToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken');
+};
+
+export const removeTokens = (): void => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+};
+
+export const logoutUser = (): void => {
+  removeTokens();
+  // acá podrías agregar redirección u otras limpiezas si querés
+};
+
+export const isAuthenticated = (): boolean => {
+  return !!getToken();
+};

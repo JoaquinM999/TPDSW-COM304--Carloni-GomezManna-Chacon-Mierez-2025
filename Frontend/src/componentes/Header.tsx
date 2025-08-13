@@ -1,7 +1,7 @@
 // src/componentes/Header.tsx
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Menu, X, Star, Book, Bell, Search, Users } from 'lucide-react';
+import { User, Menu, X, Star, Book, Bell, Search, Users, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
@@ -28,7 +28,17 @@ const StackedBooksIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 // Categorías
-const categorias = ["Todas","Ficción","No Ficción","Ciencia","Historia","Biografía","Tecnología","Fantasía","Desarrollo Personal"];
+const categorias = [
+  "Todas",
+  "Ficción",
+  "No Ficción",
+  "Ciencia",
+  "Historia",
+  "Biografía",
+  "Tecnología",
+  "Fantasía",
+  "Desarrollo Personal"
+];
 
 // Dropdown items
 const dropdownItems = {
@@ -46,6 +56,16 @@ const dropdownItems = {
     name: cat,
     href: `/categorias/${cat.toLowerCase().replace(/\s+/g, "-")}`,
   })),
+  Sagas: [
+    { name: "Todas las sagas", href: "/sagas" },
+    { name: "Sagas populares", href: "/sagas/populares" },
+    { name: "Nuevas sagas", href: "/sagas/nuevas" },
+  ],
+  Configuración: [
+    { name: "Preferencias", href: "/configuracion/preferencias" },
+    { name: "Cuenta", href: "/configuracion/cuenta" },
+    { name: "Privacidad", href: "/configuracion/privacidad" },
+  ]
 };
 
 const dropdownItemVariants = {
@@ -74,6 +94,9 @@ export const Header: React.FC<HeaderProps> = ({
     { name: "Autores", href: "/autores", icon: Users },
     { name: "Categorías", href: "/categorias", icon: Star },
     { name: "Sagas", href: "/sagas", icon: StackedBooksIcon },
+    ...(userAuthenticated
+      ? [{ name: "Configuración", href: "/configuracion", icon: Settings }]
+      : [])
   ];
 
   const handleMouseEnterSearch = () => {
@@ -111,7 +134,18 @@ export const Header: React.FC<HeaderProps> = ({
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <Link to={item.href} className="flex items-center space-x-1">
-                  {item.icon && <item.icon className="w-4 h-4" />}
+                  {item.name === "Libros" ? (
+                    <motion.div
+                      initial={{ rotateY: 0 }}
+                      animate={{ rotateY: activeDropdown === "Libros" ? 75 : 0 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                      style={{ display: "inline-block" }}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4" />}
+                    </motion.div>
+                  ) : (
+                    item.icon && <item.icon className="w-4 h-4 transition-transform duration-200 group-hover:scale-125" />
+                  )}
                   <span>{item.name}</span>
                 </Link>
 
@@ -145,7 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
               onMouseLeave={handleMouseLeaveSearch}
               className="relative cursor-pointer"
             >
-              <Search className="w-5 h-5 text-gray-600 hover:text-green-600" />
+              <Search className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
               <AnimatePresence>
                 {showSearch && (
                   <motion.input
@@ -163,10 +197,16 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Notification Bell */}
             {showNotifications && (
-              <div className="relative cursor-pointer">
-                <Bell className="w-5 h-5 text-gray-600 hover:text-green-600" />
+              <motion.div
+                className="relative cursor-pointer"
+                whileHover={{
+                  rotate: [0, -15, 15, -10, 10, -5, 5, 0],
+                }}
+                transition={{ duration: 0.6 }}
+              >
+                <Bell className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200" />
                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-              </div>
+              </motion.div>
             )}
 
             {/* User Menu */}
@@ -175,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="focus:outline-none"
               >
-                <User className="w-6 h-6 text-gray-600 hover:text-green-600" />
+                <User className="w-6 h-6 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
               </button>
 
               <AnimatePresence>

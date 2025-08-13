@@ -1,0 +1,157 @@
+PRIMARY-- 1. AUTOR
+INSERT INTO autor (id, nombre, apellido) VALUES
+(1, 'Gabriel', 'García Márquez'),
+(2, 'Jane', 'Austen'),
+(3, 'George', 'Orwell'),
+(4, 'Haruki', 'Murakami'),
+(5, 'J.K.', 'Rowling'),
+(6, 'Ernest', 'Hemingway'),
+(7, 'Isabel', 'Allende'),
+(8, 'Leo', 'Tolstoy'),
+(9, 'Mark', 'Twain'),
+(10, 'Franz', 'Kafka');
+
+-- 2. EDITORIAL
+INSERT INTO editorial (id, nombre) VALUES
+(1, 'Planeta'),
+(2, 'Penguin'),
+(3, 'Alfaguara'),
+(4, 'Anagrama'),
+(5, 'Sudamericana'),
+(6, 'Random House'),
+(7, 'Seix Barral'),
+(8, 'Siglo XXI'),
+(9, 'Debolsillo'),
+(10, 'Minotauro');
+
+-- 3. CATEGORIA
+INSERT INTO categoria (id, nombre) VALUES
+(1, 'Novela'),
+(2, 'Ciencia Ficción'),
+(3, 'Fantasía'),
+(4, 'Misterio'),
+(5, 'Romance'),
+(6, 'Biografía'),
+(7, 'Ensayo'),
+(8, 'Drama'),
+(9, 'Poesía'),
+(10, 'Histórica');
+
+-- 4. SAGA
+INSERT INTO saga (id, nombre) VALUES
+(1, 'Harry Potter'),
+(2, 'El señor de los anillos'),
+(3, 'Divergente'),
+(4, 'Cazadores de sombras'),
+(5, 'Millennium'),
+(6, 'Crónicas de Narnia'),
+(7, 'Juego de Tronos'),
+(8, 'Los Juegos del Hambre'),
+(9, 'Fundación'),
+(10, 'Maze Runner');
+
+-- 5. USUARIO
+INSERT INTO usuario (id, email, password, username, rol, refresh_token) VALUES
+(1, 'usuario1@mail.com', 'pass1', 'user1', 'admin', NULL),
+(2, 'usuario2@mail.com', 'pass2', 'user2', 'lector', NULL),
+(3, 'usuario3@mail.com', 'pass3', 'user3', 'lector', NULL),
+(4, 'usuario4@mail.com', 'pass4', 'user4', 'lector', NULL),
+(5, 'usuario5@mail.com', 'pass5', 'user5', 'lector', NULL),
+(6, 'usuario6@mail.com', 'pass6', 'user6', 'lector', NULL),
+(7, 'usuario7@mail.com', 'pass7', 'user7', 'lector', NULL),
+(8, 'usuario8@mail.com', 'pass8', 'user8', 'lector', NULL),
+(9, 'usuario9@mail.com', 'pass9', 'user9', 'lector', NULL),
+(10, 'usuario10@mail.com', 'pass10', 'user10', 'lector', NULL);
+
+-- 6. LIBRO
+INSERT INTO libro (id, nombre, sinopsis, autor_id, categoria_id, editorial_id, saga_id, lista_id) VALUES
+(1, 'Cien años de soledad', 'Saga familiar en Macondo.', 1, 1, 1, NULL, NULL),
+(2, 'Orgullo y prejuicio', 'Historia de amor y prejuicio social.', 2, 5, 2, NULL, NULL),
+(3, '1984', 'Distopía sobre control totalitario.', 3, 2, 3, 9, NULL),
+(4, 'Kafka en la orilla', 'Realismo mágico japonés.', 4, 8, 4, NULL, NULL),
+(5, 'Harry Potter y la piedra filosofal', 'Un niño descubre que es mago.', 5, 3, 5, 1, NULL),
+(6, 'El viejo y el mar', 'Lucha entre hombre y naturaleza.', 6, 1, 6, NULL, NULL),
+(7, 'La casa de los espíritus', 'Saga familiar con elementos sobrenaturales.', 7, 1, 7, NULL, NULL),
+(8, 'Ana Karenina', 'Historia de pasión y tragedia.', 8, 8, 8, NULL, NULL),
+(9, 'Las aventuras de Tom Sawyer', 'Niñez en el Mississippi.', 9, 1, 9, NULL, NULL),
+(10, 'La metamorfosis', 'Un hombre se transforma en insecto.', 10, 2, 10, NULL, NULL);
+
+-- 7. LISTA
+INSERT INTO lista (id, nombre, ultima_modificacion, usuario_id) VALUES
+(1, 'Favoritos de Gabriel', NOW(), 1),
+(2, 'Libros que quiero leer', NOW(), 2),
+(3, 'Top 10 clásicos', NOW(), 3),
+(4, 'Recomendados por amigos', NOW(), 4),
+(5, 'Fantasía épica', NOW(), 5),
+(6, 'Para leer en verano', NOW(), 6),
+(7, 'Mi biblioteca digital', NOW(), 7),
+(8, 'Lecturas obligatorias', NOW(), 8),
+(9, 'Mis sagas favoritas', NOW(), 9),
+(10, 'Reseñados este año', NOW(), 10);
+
+-- 8. RESENA
+INSERT INTO resena (id, comentario, estrellas, fecha_resena, usuario_id, libro_id) VALUES
+(1, 'Impresionante narrativa.', 5, NOW(), 1, 1),
+(2, 'Muy bueno pero denso.', 4, NOW(), 2, 2),
+(3, 'Me perturbó bastante.', 5, NOW(), 3, 3),
+(4, 'Extraño y profundo.', 4, NOW(), 4, 4),
+(5, 'Mágico y atrapante.', 5, NOW(), 5, 5),
+(6, 'Conmovedor y simbólico.', 5, NOW(), 6, 6),
+(7, 'Maravilloso.', 5, NOW(), 7, 7),
+(8, 'Clásico obligatorio.', 4, NOW(), 8, 8),
+(9, 'Divertido y ágil.', 4, NOW(), 9, 9),
+(10, 'Perturbador y reflexivo.', 5, NOW(), 10, 10);
+
+-- 9. REACCION
+INSERT INTO reaccion (id, tipo, usuario_id, resena_id, fecha) VALUES
+(1, 'like', 2, 1, NOW()),
+(2, 'dislike', 3, 2, NOW()),
+(3, 'like', 4, 3, NOW()),
+(4, 'like', 5, 4, NOW()),
+(5, 'like', 6, 5, NOW()),
+(6, 'dislike', 7, 6, NOW()),
+(7, 'like', 8, 7, NOW()),
+(8, 'like', 9, 8, NOW()),
+(9, 'dislike', 10, 9, NOW()),
+(10, 'like', 1, 10, NOW());
+
+-- 10.SEGUIMIENTO
+INSERT INTO seguimiento (id, seguidor_id, seguido_id, fecha_seguido) VALUES
+(1, 1, 2, NOW()),
+(2, 2, 3, NOW()),
+(3, 3, 4, NOW()),
+(4, 4, 5, NOW()),
+(5, 5, 6, NOW()),
+(6, 6, 7, NOW()),
+(7, 7, 8, NOW()),
+(8, 8, 9, NOW()),
+(9, 9, 10, NOW()),
+(10, 10, 1, NOW());
+
+-- 11.CONTENIDO_LISTA
+INSERT INTO contenido_lista (id, lista_id, libro_id) VALUES
+(1, 1, 1),
+(2, 1, 3),
+(3, 2, 2),
+(4, 2, 5),
+(5, 3, 4),
+(6, 4, 6),
+(7, 5, 7),
+(8, 6, 8),
+(9, 7, 9),
+(10, 8, 10);
+
+-- 12.FAVORITO
+INSERT INTO favorito (id, usuario_id, libro_id, fecha_agregado) VALUES
+(1, 1, 1, NOW()),
+(2, 2, 2, NOW()),
+(3, 3, 3, NOW()),
+(4, 4, 4, NOW()),
+(5, 5, 5, NOW()),
+(6, 6, 6, NOW()),
+(7, 7, 7, NOW()),
+(8, 8, 8, NOW()),
+(9, 9, 9, NOW()),
+(10, 10, 10, NOW());
+
+

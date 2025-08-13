@@ -1,0 +1,149 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Header } from './componentes/Header';
+import { HeroSection } from './componentes/HeroSection';
+import { FeaturedContent } from './componentes/FeaturedContent';
+import { Footer } from './componentes/Footer';
+
+import LoginPage from './paginas/LoginPage';
+import { CategoriasPage } from './paginas/CategoriasPage';
+import { DetalleLibro } from './paginas/DetalleLibro';
+import { FavoritosPage } from './paginas/FavoritosPage';
+import LibrosPage from './paginas/LibrosPage';
+import { PerfilUsuario } from './paginas/PerfilUsuario';
+import { CrearLibro } from './paginas/CrearLibro';
+import { CrearCategoria } from './paginas/CrearCategoria';
+import { CrearEditorial } from './paginas/CrearEditorial';
+import { CrearSaga } from './paginas/CrearSaga';
+import PerfilPage from './paginas/PerfilPage';
+import { motion } from 'framer-motion';
+import AutoresPage from './paginas/AutoresPage';
+import AutorDetallePage from './paginas/AutorDetallePage';
+import SagasPage from './paginas/SagasPage';
+import SagaDetallePage from './paginas/SagaDetallePage';
+
+// 📌 Nuevas páginas
+import NuevosLanzamientos from './paginas/NuevosLanzamientos';
+import LibrosRecomendados from './paginas/LibrosRecomendados';
+import LibrosPopulares from './paginas/LibrosPopulares';
+
+interface FooterLink {
+  name: string;
+  href: string;
+}
+
+interface FooterCategory {
+  title: string;
+  links: FooterLink[];
+}
+
+function Layout() {
+  const location = useLocation();
+
+  const customFooterLinks: FooterCategory[] = [
+    {
+      title: 'Contenido',
+      links: [
+        { name: 'Libros Bestsellers', href: '#' },
+        { name: 'Sagas Populares', href: '#' },
+        { name: 'Autores Destacados', href: '#' },
+        { name: 'Críticas Profesionales', href: '#' },
+        { name: 'Próximos Lanzamientos', href: '#' },
+      ],
+    },
+    {
+      title: 'Herramientas',
+      links: [
+        { name: 'Crear Lista', href: '#' },
+        { name: 'Comparar Libros', href: '#' },
+        { name: 'Calculadora de Lectura', href: '#' },
+        { name: 'Recomendador IA', href: '#' },
+        { name: 'Mis Favoritos', href: '#' },
+        { name: 'Estadísticas', href: '#' },
+      ],
+    },
+    {
+      title: 'Soporte',
+      links: [
+        { name: 'Guía de Usuario', href: '#' },
+        { name: 'API Developers', href: '#' },
+        { name: 'Status del Sistema', href: '#' },
+        { name: 'Reportar Bug', href: '#' },
+        { name: 'Solicitar Función', href: '#' },
+      ],
+    },
+  ];
+
+  const hideLayout = location.pathname === '/LoginPage';
+
+  return (
+    <div className="min-h-screen bg-white">
+      {!hideLayout && (
+        <Header siteName="BookCode" showNotifications={true} userAuthenticated={false} />
+      )}
+
+      <main>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <HeroSection />
+                <FeaturedContent />
+              </motion.div>
+            }
+          />
+
+          {/* Autores */}
+          <Route path="/autores" element={<AutoresPage />} />
+          <Route path="/autores/:id" element={<AutorDetallePage />} />
+
+          {/* Sagas */}
+          <Route path="/sagas" element={<SagasPage />} />
+          <Route path="/sagas/:id" element={<SagaDetallePage />} />
+
+          {/* Nuevas rutas */}
+          <Route path="/libros/nuevos" element={<NuevosLanzamientos />} />
+          <Route path="/libros/recomendados" element={<LibrosRecomendados />} />
+          <Route path="/libros/populares" element={<LibrosPopulares />} />
+
+          {/* Rutas originales */}
+          <Route path="/LoginPage" element={<LoginPage />} />
+          <Route path="/perfil" element={<PerfilPage />} />
+          <Route path="/categorias" element={<CategoriasPage />} />
+          <Route path="/libro/:id" element={<DetalleLibro />} />
+          <Route path="/favoritos" element={<FavoritosPage />} />
+          <Route path="/libros" element={<LibrosPage />} />
+          <Route path="/usuario/:id" element={<PerfilUsuario />} />
+          <Route path="/crear-libro" element={<CrearLibro />} />
+          <Route path="/crear-categoria" element={<CrearCategoria />} />
+          <Route path="/crear-editorial" element={<CrearEditorial />} />
+          <Route path="/crear-saga" element={<CrearSaga />} />
+        </Routes>
+      </main>
+
+      {!hideLayout && (
+        <Footer
+          siteName="BookCode"
+          showSocialMedia={true}
+          showNewsletter={true}
+          customLinks={customFooterLinks}
+        />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Layout />
+    </Router>
+  );
+}
+
+export default App;

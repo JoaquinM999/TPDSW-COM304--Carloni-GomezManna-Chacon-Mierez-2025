@@ -1,7 +1,7 @@
 // src/componentes/Header.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Menu, X, Star, Book, Bell, Search, Users, Settings } from 'lucide-react';
+import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
@@ -27,20 +27,11 @@ const StackedBooksIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-// Categorías
 const categorias = [
-  "Todas",
-  "Ficción",
-  "No Ficción",
-  "Ciencia",
-  "Historia",
-  "Biografía",
-  "Tecnología",
-  "Fantasía",
-  "Desarrollo Personal"
+  "Todas", "Ficción", "No Ficción", "Ciencia", "Historia",
+  "Biografía", "Tecnología", "Fantasía", "Desarrollo Personal"
 ];
 
-// Dropdown items
 const dropdownItems = {
   Libros: [
     { name: "Nuevos lanzamientos", href: "/libros/nuevos" },
@@ -68,15 +59,6 @@ const dropdownItems = {
   ]
 };
 
-const dropdownItemVariants = {
-  hover: {
-    scale: 1.05,
-    backgroundColor: "#d1fae5",
-    color: "#065f46",
-    transition: { type: "spring", stiffness: 300, damping: 20 },
-  },
-};
-
 export const Header: React.FC<HeaderProps> = ({
   siteName = "BookCode",
   showNotifications = true,
@@ -84,10 +66,26 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
   const searchTimeoutRef = useRef<number | null>(null);
+
+  const headerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+        setIsUserMenuOpen(false);
+        setIsNotificationsOpen(false);
+        setShowSearch(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const navigationItems = [
     { name: "Libros", href: "/libros", icon: Book },
@@ -96,128 +94,160 @@ export const Header: React.FC<HeaderProps> = ({
     { name: "Sagas", href: "/sagas", icon: StackedBooksIcon },
     ...(userAuthenticated
       ? [{ name: "Configuración", href: "/configuracion", icon: Settings }]
-      : [])
+      : []),
   ];
 
   const handleMouseEnterSearch = () => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-      searchTimeoutRef.current = null;
-    }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     setShowSearch(true);
   };
 
   const handleMouseLeaveSearch = () => {
-    searchTimeoutRef.current = window.setTimeout(() => {
-      setShowSearch(false);
-    }, 300);
+    if (!isSearchFocused) {
+      searchTimeoutRef.current = window.setTimeout(() => setShowSearch(false), 300);
+    }
   };
 
   return (
-    <header className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
+    <header ref={headerRef} className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        {/* Layout de tres áreas */}
+        <div className="flex justify-between items-center h-16 relative">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center z-10">
             <Link to="/">
               <h1 className="text-4xl font-bold text-green-600">{siteName}</h1>
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 relative">
-            {navigationItems.map((item) => (
-              <div
-                key={item.name}
-                className="relative flex items-center space-x-1 px-3 py-2 cursor-pointer text-gray-700 hover:text-green-600"
-                onMouseEnter={() => setActiveDropdown(item.name)}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <Link to={item.href} className="flex items-center space-x-1">
-                  {item.name === "Libros" ? (
-                    <motion.div
-                      initial={{ rotateY: 0 }}
-                      animate={{ rotateY: activeDropdown === "Libros" ? 75 : 0 }}
-                      transition={{ duration: 0.5, ease: "easeInOut" }}
-                      style={{ display: "inline-block" }}
-                    >
-                      {item.icon && <item.icon className="w-4 h-4" />}
-                    </motion.div>
-                  ) : (
-                    item.icon && <item.icon className="w-4 h-4 transition-transform duration-200 group-hover:scale-125" />
-                  )}
-                  <span>{item.name}</span>
-                </Link>
+          {/* Navegación centrada */}
+          <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 space-x-6">
+            {navigationItems
+              .filter(item => ["Libros", "Autores", "Categorías", "Sagas"].includes(item.name))
+              .map((item) => (
+                <div
+                  key={item.name}
+                  className="relative flex items-center px-2 py-2 cursor-pointer text-gray-700 hover:text-green-600"
+                  onMouseEnter={() => setActiveDropdown(item.name)}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <Link to={item.href} className="flex items-center space-x-1">
+                    {item.icon && <item.icon className="w-4 h-4" />}
+                    <span>{item.name}</span>
+                  </Link>
 
-                <AnimatePresence>
-                  {activeDropdown === item.name && dropdownItems[item.name as keyof typeof dropdownItems] && (
-                    <motion.div
-                      className="absolute top-full left-0 bg-white rounded shadow-md p-2 min-w-[180px] z-50"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      {dropdownItems[item.name as keyof typeof dropdownItems].map((subitem) => (
-                        <motion.div key={subitem.name} variants={dropdownItemVariants} whileHover="hover">
-                          <Link to={subitem.href} className="block px-3 py-2 text-gray-700 rounded hover:bg-green-100">
+                  {/* Dropdown */}
+                  <AnimatePresence>
+                    {activeDropdown === item.name && dropdownItems[item.name as keyof typeof dropdownItems] && (
+                      <motion.div
+                        className="absolute top-full left-0 bg-white rounded shadow-md p-2 min-w-[180px] z-50"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        {dropdownItems[item.name as keyof typeof dropdownItems].map((subitem) => (
+                          <Link
+                            key={subitem.name}
+                            to={subitem.href}
+                            className="block px-3 py-2 text-gray-700 rounded hover:bg-green-100 hover:text-green-700 transition-colors duration-200"
+                          >
                             {subitem.name}
                           </Link>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
           </nav>
 
-          {/* Right side icons */}
-          <div className="flex items-center space-x-4">
-            {/* Search Icon */}
+          {/* Iconos derecha */}
+          <div className="flex items-center space-x-4 z-10">
+            {/* Search */}
             <div
               onMouseEnter={handleMouseEnterSearch}
               onMouseLeave={handleMouseLeaveSearch}
-              className="relative cursor-pointer"
+              className="relative w-[180px] flex items-center justify-end"
             >
-              <Search className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
+              <AnimatePresence>
+                {!showSearch && (
+                  <motion.div
+                    key="icon"
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute right-0"
+                  >
+                    <Search className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <AnimatePresence>
                 {showSearch && (
                   <motion.input
+                    key="input"
                     initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 150, opacity: 1 }}
+                    animate={{ width: 180, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
                     type="text"
                     placeholder="Buscar libros..."
-                    className="absolute right-0 top-0 h-8 px-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-9 px-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 shadow-sm"
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => { setIsSearchFocused(false); setShowSearch(false); }}
                   />
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Notification Bell */}
+            {/* Notifications */}
             {showNotifications && (
-              <motion.div
-                className="relative cursor-pointer"
-                whileHover={{
-                  rotate: [0, -15, 15, -10, 10, -5, 5, 0],
-                }}
-                transition={{ duration: 0.6 }}
-              >
-                <Bell className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-              </motion.div>
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="relative p-1 rounded-full hover:bg-gray-100 focus:outline-none"
+                >
+                  <motion.div
+                    className="inline-block relative"
+                    whileHover={{ rotate: [0, -10, 10, -7, 7, -5, 5, 0] }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                  >
+                    <Bell className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200" />
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                  </motion.div>
+                </button>
+
+                <AnimatePresence>
+                  {isNotificationsOpen && (
+                    <motion.div
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                    >
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>No hay notificaciones recientes</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
 
             {/* User Menu */}
             <div className="relative">
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="focus:outline-none"
-              >
-                <User className="w-6 h-6 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
+              <button onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} className="focus:outline-none">
+                <motion.div
+                  className="inline-block"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <User className="w-6 h-6 text-gray-600 hover:text-green-600 transition-transform duration-200" />
+                </motion.div>
               </button>
-
               <AnimatePresence>
                 {isUserMenuOpen && (
                   <motion.div
@@ -234,11 +264,8 @@ export const Header: React.FC<HeaderProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden focus:outline-none"
-            >
+            {/* Mobile Menu */}
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden focus:outline-none">
               {isMobileMenuOpen ? <X className="w-6 h-6 text-gray-600" /> : <Menu className="w-6 h-6 text-gray-600" />}
             </button>
           </div>
@@ -268,7 +295,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </Link>
                 </li>
               ))}
-
               <li>
                 <Link
                   to="/login"

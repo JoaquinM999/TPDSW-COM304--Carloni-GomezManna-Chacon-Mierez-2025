@@ -1,4 +1,6 @@
 import express from 'express';
+import 'dotenv/config';
+import googleBooksRoutes from './routes/googleBooks.routes';
 import { authRoutes } from './routes/auth.routes';
 import { usuarioRoutes } from './routes/usuario.routes';
 import { favoritosRoutes } from './routes/favoritos.routes';
@@ -32,6 +34,7 @@ app.use('/api/reacciones', reaccionRoutes);
 app.use('/api/seguimientos', seguimientoRoutes);
 app.use('/api/recomendaciones', recomendacionRoutes);
 app.get('/api/protected', authenticateJWT, protectedRoutes);
+app.use('/api/google-books', googleBooksRoutes);
 
 
 export default app;

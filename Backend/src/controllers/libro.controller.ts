@@ -1,57 +1,63 @@
 // src/controllers/libro.controller.ts
 import { Request, Response } from 'express';
-import { EntityManager } from '@mikro-orm/core';
+import { MikroORM } from '@mikro-orm/core';
 import { Libro } from '../entities/libro.entity';
 import { Categoria } from '../entities/categoria.entity';
 
 export const getLibros = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as EntityManager;
-  const libros = await orm.find(Libro, {});
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  const libros = await em.find(Libro, {});
   res.json(libros);
 };
 
 export const getLibroById = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as EntityManager;
-  const libro = await orm.findOne(Libro, { id: +req.params.id });
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  const libro = await em.findOne(Libro, { id: +req.params.id });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
   res.json(libro);
 };
 
 export const createLibro = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as EntityManager;
-  const nuevoLibro = orm.create(Libro, req.body);
-  await orm.persistAndFlush(nuevoLibro);
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  const nuevoLibro = em.create(Libro, req.body);
+  await em.persistAndFlush(nuevoLibro);
   res.status(201).json(nuevoLibro);
 };
 
 export const updateLibro = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as EntityManager;
-  const libro = await orm.findOne(Libro, { id: +req.params.id });
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  const libro = await em.findOne(Libro, { id: +req.params.id });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-  orm.assign(libro, req.body);
-  await orm.flush();
+  em.assign(libro, req.body);
+  await em.flush();
   res.json(libro);
 };
 
 export const deleteLibro = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as EntityManager;
-  const libro = await orm.findOne(Libro, { id: +req.params.id });
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  const libro = await em.findOne(Libro, { id: +req.params.id });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-  await orm.removeAndFlush(libro);
+  await em.removeAndFlush(libro);
   res.json({ mensaje: 'Libro eliminado' });
 };
 
 export const getLibrosByCategoria = async (req: Request, res: Response) => {
   try {
-    const orm = req.app.get('orm') as EntityManager;
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
     const categoriaId = +req.params.categoriaId;
 
-    const categoria = await orm.findOne(Categoria, { id: categoriaId });
+    const categoria = await em.findOne(Categoria, { id: categoriaId });
     if (!categoria) return res.status(404).json({ error: 'Categoría no encontrada' });
 
-    const libros = await orm.find(Libro, { categoria: categoriaId });
+    const libros = await em.find(Libro, { categoria: categoriaId });
     res.json(libros);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener libros por categoría' });
@@ -60,15 +66,15 @@ export const getLibrosByCategoria = async (req: Request, res: Response) => {
 
 export const getLibrosByEstrellasMinimas = async (req: Request, res: Response) => {
   try {
-    const orm = req.app.get('orm') as EntityManager;
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
     const minEstrellas = Number(req.query.minEstrellas);
 
     if (isNaN(minEstrellas) || minEstrellas < 1 || minEstrellas > 5) {
       return res.status(400).json({ error: 'Parámetro minEstrellas inválido. Debe estar entre 1 y 5' });
     }
 
-    // Consulta SQL nativa para obtener libros con promedio de estrellas >= minEstrellas
-    const libros = await orm.getConnection().execute(`
+    const libros = await em.getConnection().execute(`
       SELECT l.*, AVG(r.estrellas) AS promedio_estrellas
       FROM libro l
       LEFT JOIN resena r ON r.libro_id = l.id

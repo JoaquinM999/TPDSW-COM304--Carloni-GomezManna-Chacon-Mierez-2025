@@ -1,5 +1,7 @@
 import express from 'express';
+import cors from 'cors';
 import 'dotenv/config';
+
 import googleBooksRoutes from './routes/googleBooks.routes';
 import { authRoutes } from './routes/auth.routes';
 import { usuarioRoutes } from './routes/usuario.routes';
@@ -20,6 +22,11 @@ import { authenticateJWT } from './middleware/auth.middleware';
 const app = express(); 
 app.use(express.json());
 
+// ✅ Habilitar CORS para React (localhost:5173)
+app.use(cors({
+  origin: "http://localhost:5173"
+}));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes); 
 app.use('/api/favoritos', favoritosRoutes);
@@ -35,6 +42,5 @@ app.use('/api/seguimientos', seguimientoRoutes);
 app.use('/api/recomendaciones', recomendacionRoutes);
 app.get('/api/protected', authenticateJWT, protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
-
 
 export default app;

@@ -7,11 +7,11 @@ import Spline from '@splinetool/react-spline';
 // Componente del pollito con animación al aparecer
 const PollitoSpline: React.FC = () => {
   const [showSpline, setShowSpline] = useState(
-    typeof window !== 'undefined' && window.innerWidth >= 768
+    typeof window !== 'undefined' && window.innerWidth >= 1024
   );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
 
     const handler = (e: MediaQueryListEvent) => {
       setShowSpline(e.matches);
@@ -66,10 +66,10 @@ export const HeroSection: React.FC = () => {
       />
 
       {/* Contenedor principal */}
-      <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 flex flex-col md:flex-row items-center md:items-center md:justify-center gap-12">
+      <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 flex flex-col lg:flex-row items-center lg:justify-center gap-12">
         
-        {/* Pollito - solo en desktop */}
-        <div className="hidden md:flex relative z-10 justify-center items-center h-full min-h-[300px]">
+        {/* Pollito - solo en desktop y iPad Pro */}
+        <div className="hidden lg:flex relative z-10 justify-center items-center h-full min-h-[300px]">
           <div className="w-full max-w-6xl h-[440px] sm:h-[500px] lg:h-[560px] overflow-hidden flex items-center justify-center">
             <div
               style={{
@@ -85,7 +85,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Títulos y barra de búsqueda */}
-        <div className="flex flex-col justify-center text-center md:text-left w-full md:w-2/3">
+        <div className="flex flex-col justify-center text-center lg:text-left w-full lg:w-2/3">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -107,7 +107,7 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="max-w-3xl mx-auto md:mx-0 text-lg sm:text-xl text-gray-700 mb-8 leading-relaxed"
+            className="max-w-3xl mx-auto lg:mx-0 text-lg sm:text-xl text-gray-700 mb-8 leading-relaxed"
           >
             Explora millones de reseñas, descubre nuevos autores y sagas, recibe recomendaciones personalizadas 
             y conecta con una comunidad lectora apasionada.
@@ -117,7 +117,7 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.9 }}
-            className="mb-16 max-w-xl mx-auto md:mx-0"
+            className="mb-16 max-w-xl mx-auto lg:mx-0"
           >
             <SearchBar
               placeholder="Buscar libros, autores, sagas..."

@@ -1,8 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SearchBar } from './SearchBar';
 import { Star, Users, BookOpen, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Spline from '@splinetool/react-spline';
+
+// Componente del pollito con animación al aparecer
+const PollitoSpline: React.FC = () => {
+  const [showSpline, setShowSpline] = useState(
+    typeof window !== 'undefined' && window.innerWidth >= 768
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+
+    const handler = (e: MediaQueryListEvent) => {
+      setShowSpline(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  if (!showSpline) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      style={{ width: '100%', height: '100%' }}
+    >
+      <Spline scene="https://prod.spline.design/mwDSVm4wBNVQVDdz/scene.splinecode" />
+    </motion.div>
+  );
+};
 
 export const HeroSection: React.FC = () => {
   const stats = [
@@ -23,7 +54,7 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       aria-label="Sección principal de bienvenida"
-      className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-24"
+      className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-10"
     >
       {/* Fondo animado */}
       <motion.div
@@ -48,7 +79,7 @@ export const HeroSection: React.FC = () => {
                 transform: 'translateY(80px)',
               }}
             >
-              <Spline scene="https://prod.spline.design/mwDSVm4wBNVQVDdz/scene.splinecode" />
+              <PollitoSpline />
             </div>
           </div>
         </div>
@@ -76,10 +107,10 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="max-w-3xl mx-auto md:mx-0 text-lg sm:text-xl text-gray-700 mb-14 leading-relaxed"
+            className="max-w-3xl mx-auto md:mx-0 text-lg sm:text-xl text-gray-700 mb-8 leading-relaxed"
           >
-            Explora millones de reseñas, descubre nuevos autores y sagas, encuentra
-            recomendaciones personalizadas y conecta con una comunidad apasionada por la lectura.
+            Explora millones de reseñas, descubre nuevos autores y sagas, recibe recomendaciones personalizadas 
+            y conecta con una comunidad lectora apasionada.
           </motion.p>
 
           <motion.div
@@ -97,7 +128,6 @@ export const HeroSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Estadísticas */}
       {/* Estadísticas */}
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {stats.map(({ icon: Icon, label, value, color }, idx) => (
@@ -140,7 +170,6 @@ export const HeroSection: React.FC = () => {
           </motion.div>
         ))}
       </div>
-
     </section>
   );
 };

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 
+import hardcoverRoutes from './routes/hardcover.routes';
 import googleBooksRoutes from './routes/googleBooks.routes';
 import { authRoutes } from './routes/auth.routes';
 import { usuarioRoutes } from './routes/usuario.routes';
@@ -42,5 +43,6 @@ app.use('/api/seguimientos', seguimientoRoutes);
 app.use('/api/recomendaciones', recomendacionRoutes);
 app.get('/api/protected', authenticateJWT, protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
+app.use('/api/hardcover', hardcoverRoutes);
 
 export default app;

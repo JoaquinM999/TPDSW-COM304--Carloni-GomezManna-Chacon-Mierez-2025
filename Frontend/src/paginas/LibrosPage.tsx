@@ -4,24 +4,36 @@ interface Libro {
   id: string;
   titulo: string;
   autores: string[];
-  descripcion: string;
+  descripcion?: string;
   imagen: string | null;
   enlace: string | null;
 }
 
+interface LibroTrending {
+  id: string;
+  title: string;
+  slug: string;
+  activities_count: number;
+  image: string | null;
+}
+
 export default function TodosLosLibros() {
   const [libros, setLibros] = useState<Libro[]>([]);
+  const [trending, setTrending] = useState<LibroTrending[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingTrending, setLoadingTrending] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorTrending, setErrorTrending] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
   const librosPorPagina = 8;
 
+  // Google Books
   useEffect(() => {
     const fetchLibros = async () => {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:3000/api/google-books/buscar?q=subject:horror&orderBy=relevance&maxResults=40&startIndex=${
+          `http://localhost:3000/api/google-books/buscar?q=subject:fantasy&orderBy=relevance&maxResults=40&startIndex=${
             (pagina - 1) * librosPorPagina
           }`
         );
@@ -39,6 +51,33 @@ export default function TodosLosLibros() {
     fetchLibros();
   }, [pagina]);
 
+  // Trending Hardcover
+  useEffect(() => {
+    const fetchTrending = async () => {
+      setLoadingTrending(true);
+      try {
+       const res = await fetch("http://localhost:3000/api/hardcover/trending"); 
+        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+        const data = await res.json();
+        const mapped = data.map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          slug: b.slug,
+          activities_count: b.activities_count,
+          image: b.editions?.[0]?.image?.url ?? null,
+        }));
+        setTrending(mapped);
+        setErrorTrending(null);
+      } catch (err: any) {
+        setErrorTrending(err.message);
+      } finally {
+        setLoadingTrending(false);
+      }
+    };
+
+    fetchTrending();
+  }, []);
+
   const totalPaginas = Math.ceil(libros.length / librosPorPagina);
   const inicio = (pagina - 1) * librosPorPagina;
   const librosMostrados = libros.slice(inicio, inicio + librosPorPagina);
@@ -46,11 +85,12 @@ export default function TodosLosLibros() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
 
+      {/* Google Books */}
       <h2 className="flex justify-center items-center gap-3 text-4xl font-bold text-cyan-800 mb-8">
-        Biblioteca de Libros
+        Biblioteca de Libros (Google)
       </h2>
 
-
+      {/* Loader Google */}
       {loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {Array.from({ length: librosPorPagina }).map((_, i) => (
@@ -66,9 +106,7 @@ export default function TodosLosLibros() {
         </div>
       )}
 
-      {error && (
-        <p className="text-red-500 text-center text-lg">Error: {error}</p>
-      )}
+      {error && <p className="text-red-500 text-center text-lg">Error: {error}</p>}
 
       {!loading && !error && (
         <>
@@ -102,9 +140,7 @@ export default function TodosLosLibros() {
                   </div>
 
                   <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="text-lg font-semibold mb-1">
-                      {libro.titulo}
-                    </h3>
+                    <h3 className="text-lg font-semibold mb-1">{libro.titulo}</h3>
                     <p className="text-sm text-gray-600 mb-3">
                       {libro.autores?.length
                         ? libro.autores.join(", ")
@@ -126,7 +162,7 @@ export default function TodosLosLibros() {
             })}
           </div>
 
-          {/* Paginación */}
+          {/* Paginación Google */}
           <div className="flex justify-center mt-8 gap-2">
             <button
               onClick={() => setPagina((p) => Math.max(1, p - 1))}
@@ -137,15 +173,7 @@ export default function TodosLosLibros() {
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              ←
             </button>
             {Array.from({ length: totalPaginas }, (_, i) => (
               <button
@@ -169,19 +197,61 @@ export default function TodosLosLibros() {
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              →
             </button>
           </div>
         </>
       )}
+
+      {/* Sección Trending Hardcover */}
+      <h2 className="flex justify-center items-center gap-3 text-4xl font-bold text-purple-800 mt-16 mb-8">
+        Libros más populares (Hardcover)
+      </h2>
+
+      {loadingTrending && <p className="text-center text-gray-600">Cargando...</p>}
+      {errorTrending && <p className="text-red-500 text-center text-lg">Error: {errorTrending}</p>}
+
+      {!loadingTrending && !errorTrending && (
+        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          {trending.map((libro) => (
+            <div
+              key={libro.id}
+              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
+            >
+              <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
+                {libro.image ? (
+                  <img
+                    src={libro.image}
+                    alt={libro.title}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src="/placeholder-cover.png"
+                    alt="Sin portada"
+                    className="max-h-full max-w-full object-contain opacity-60"
+                  />
+                )}
+              </div>
+              <div className="p-4 flex flex-col flex-grow">
+                <h3 className="text-lg font-semibold mb-1">{libro.title}</h3>
+                <p className="text-sm text-gray-500 mb-2">
+                  Actividad: {libro.activities_count}
+                </p>
+                <a
+                  href={`https://hardcover.app/books/${libro.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="self-start mt-auto px-3 py-1 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-800 transition"
+                >
+                  Ver en Hardcover
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }

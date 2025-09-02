@@ -14,7 +14,7 @@ interface LibroTrending {
   title: string;
   slug: string;
   activities_count: number;
-  image: string | null;
+  coverUrl: string | null; // cambiamos 'image' por 'coverUrl'
 }
 
 export default function TodosLosLibros() {
@@ -56,16 +56,19 @@ export default function TodosLosLibros() {
     const fetchTrending = async () => {
       setLoadingTrending(true);
       try {
-       const res = await fetch("http://localhost:3000/api/hardcover/trending"); 
+        const res = await fetch("http://localhost:3000/api/hardcover/trending");
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
         const data = await res.json();
+
+        // mapeamos usando coverUrl que devuelve el backend
         const mapped = data.map((b: any) => ({
           id: b.id,
           title: b.title,
           slug: b.slug,
           activities_count: b.activities_count,
-          image: b.editions?.[0]?.image?.url ?? null,
+          coverUrl: b.coverUrl ?? null, // <- cambio clave
         }));
+
         setTrending(mapped);
         setErrorTrending(null);
       } catch (err: any) {
@@ -90,14 +93,10 @@ export default function TodosLosLibros() {
         Biblioteca de Libros (Google)
       </h2>
 
-      {/* Loader Google */}
       {loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {Array.from({ length: librosPorPagina }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl shadow p-4 animate-pulse"
-            >
+            <div key={i} className="bg-white rounded-xl shadow p-4 animate-pulse">
               <div className="w-full h-64 bg-gray-200 rounded-md mb-3"></div>
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -142,9 +141,7 @@ export default function TodosLosLibros() {
                   <div className="p-4 flex flex-col flex-grow">
                     <h3 className="text-lg font-semibold mb-1">{libro.titulo}</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      {libro.autores?.length
-                        ? libro.autores.join(", ")
-                        : "Autor desconocido"}
+                      {libro.autores?.length ? libro.autores.join(", ") : "Autor desconocido"}
                     </p>
                     {libro.enlace && (
                       <a
@@ -180,9 +177,7 @@ export default function TodosLosLibros() {
                 key={i}
                 onClick={() => setPagina(i + 1)}
                 className={`px-3 py-1 rounded-md text-white ${
-                  pagina === i + 1
-                    ? "bg-green-800"
-                    : "bg-green-600 hover:bg-green-700"
+                  pagina === i + 1 ? "bg-green-800" : "bg-green-600 hover:bg-green-700"
                 }`}
               >
                 {i + 1}
@@ -219,9 +214,9 @@ export default function TodosLosLibros() {
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
             >
               <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
-                {libro.image ? (
+                {libro.coverUrl ? ( // usamos coverUrl
                   <img
-                    src={libro.image}
+                    src={libro.coverUrl}
                     alt={libro.title}
                     className="max-h-full max-w-full object-contain"
                   />
@@ -251,7 +246,6 @@ export default function TodosLosLibros() {
           ))}
         </div>
       )}
-
     </div>
   );
 }

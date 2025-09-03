@@ -1,24 +1,44 @@
-import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
+// src/entities/resena.entity.ts
+import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Enum } from '@mikro-orm/core';
 import { Usuario } from './usuario.entity';
 import { Libro } from './libro.entity';
+import { Reaccion } from './reaccion.entity';
+
+export enum EstadoResena {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  FLAGGED = 'flagged',
+}
 
 @Entity()
 export class Resena {
   @PrimaryKey()
   id!: number;
 
-  @Property()
+  @Property({ type: 'text' })
   comentario!: string;
 
   @Property()
-  estrellas!: number;
+  estrellas!: number; // validar rango 0-5 en servicio antes de persistir
 
-  @Property()
-  fechaResena!: Date;
+  @Enum(() => EstadoResena)
+  estado: EstadoResena = EstadoResena.PENDING;
 
-  @ManyToOne(() => Usuario)
+  @Property({ type: 'date', onCreate: () => new Date() })
+  fechaResena: Date = new Date();
+
+  @ManyToOne(() => Usuario, { nullable: false })
   usuario!: Usuario;
 
-  @ManyToOne(() => Libro)
+  @ManyToOne(() => Libro, { nullable: false })
   libro!: Libro;
+
+  @OneToMany(() => Reaccion, reaccion => reaccion.resena)
+  reacciones = new Collection<Reaccion>(this);
+
+  @Property({ type: 'date', onCreate: () => new Date() })
+  createdAt: Date = new Date();
+
+  @Property({ type: 'date', onUpdate: () => new Date(), nullable: true })
+  updatedAt?: Date;
 }

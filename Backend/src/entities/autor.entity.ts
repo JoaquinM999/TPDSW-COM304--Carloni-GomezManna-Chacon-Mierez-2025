@@ -1,5 +1,5 @@
 // src/entities/autor.entity.ts
-import { Entity, PrimaryKey, Property, OneToMany, Collection } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OneToMany, Collection, Index, Cascade } from '@mikro-orm/core';
 import { Libro } from './libro.entity';
 
 @Entity()
@@ -8,11 +8,19 @@ export class Autor {
   id!: number;
 
   @Property()
+  @Index() // índice para búsquedas rápidas por nombre
   nombre!: string;
 
   @Property()
+  @Index()
   apellido!: string;
 
-  @OneToMany(() => Libro, libro => libro.autor)
+  @OneToMany(() => Libro, libro => libro.autor, { cascade: [Cascade.PERSIST, Cascade.REMOVE] })
   libros = new Collection<Libro>(this);
+
+  @Property({ type: 'date', onCreate: () => new Date() })
+  createdAt: Date = new Date();
+
+  @Property({ type: 'date', onUpdate: () => new Date(), nullable: true })
+  updatedAt?: Date;
 }

@@ -41,7 +41,7 @@ app.use('/api/contenido-lista', contenidoListaRoutes);
 app.use('/api/reacciones', reaccionRoutes);
 app.use('/api/seguimientos', seguimientoRoutes);
 app.use('/api/recomendaciones', recomendacionRoutes);
-app.get('/api/protected', authenticateJWT, protectedRoutes);
+app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
 

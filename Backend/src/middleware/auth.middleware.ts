@@ -19,7 +19,7 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'defaultsecret';
+    const secret = process.env.JWT_SECRET || 'secretkey';
     const decoded = jwt.verify(token, secret);
 
     if (typeof decoded !== 'object' || decoded === null) {

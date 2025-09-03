@@ -1,18 +1,23 @@
-import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
+// src/entities/favorito.entity.ts
+import { Entity, PrimaryKey, ManyToOne, Property, Unique } from '@mikro-orm/core';
 import { Usuario } from './usuario.entity';
 import { Libro } from './libro.entity';
 
 @Entity()
+@Unique({ properties: ['usuario', 'libro'] }) // evita que un usuario agregue el mismo libro más de una vez
 export class Favorito {
   @PrimaryKey()
   id!: number;
 
-  @ManyToOne()
+  @ManyToOne(() => Usuario, { nullable: false })
   usuario!: Usuario;
 
-  @ManyToOne()
+  @ManyToOne(() => Libro, { nullable: false })
   libro!: Libro;
 
-  @Property()
+  @Property({ type: 'date', onCreate: () => new Date() })
   fechaAgregado: Date = new Date();
+
+  @Property({ type: 'date', onCreate: () => new Date(), onUpdate: () => new Date(), nullable: true })
+  updatedAt?: Date;
 }

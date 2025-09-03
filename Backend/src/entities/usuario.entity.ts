@@ -1,4 +1,5 @@
-import { Entity, PrimaryKey, Property, BeforeCreate, BeforeUpdate } from '@mikro-orm/core';
+// src/entities/usuario.entity.ts
+import { Entity, PrimaryKey, Property, BeforeCreate, BeforeUpdate, Unique, Index } from '@mikro-orm/core';
 import bcrypt from 'bcrypt';
 
 export enum RolUsuario {
@@ -7,18 +8,22 @@ export enum RolUsuario {
 }
 
 @Entity()
+@Unique({ properties: ['email'] }) // evita emails duplicados
+@Unique({ properties: ['username'] }) // evita usernames duplicados
 export class Usuario {
 
   @PrimaryKey()
   id!: number;
 
   @Property()
+  @Index() // para búsquedas rápidas por email
   email!: string;
 
   @Property()
   password!: string;
 
   @Property()
+  @Index()
   username!: string;
 
   @Property({ columnType: 'varchar(20)' })
@@ -26,6 +31,13 @@ export class Usuario {
 
   @Property({ nullable: true })
   refreshToken?: string;
+
+  // Auditoría
+  @Property({ type: 'date', onCreate: () => new Date() })
+  createdAt: Date = new Date();
+
+  @Property({ type: 'date', onUpdate: () => new Date(), nullable: true })
+  updatedAt?: Date;
 
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);

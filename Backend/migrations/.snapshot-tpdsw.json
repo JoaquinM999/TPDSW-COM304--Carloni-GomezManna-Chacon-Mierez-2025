@@ -32,11 +32,51 @@
           "nullable": false,
           "length": 255,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "autor",
       "indexes": [
         {
+          "columnNames": [
+            "nombre"
+          ],
+          "composite": false,
+          "keyName": "autor_nombre_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "apellido"
+          ],
+          "composite": false,
+          "keyName": "autor_apellido_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -72,11 +112,51 @@
           "nullable": false,
           "length": 255,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "categoria",
       "indexes": [
         {
+          "columnNames": [
+            "nombre"
+          ],
+          "composite": false,
+          "keyName": "categoria_nombre_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "nombre"
+          ],
+          "composite": false,
+          "keyName": "categoria_nombre_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -112,11 +192,95 @@
           "nullable": false,
           "length": 255,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "editorial",
       "indexes": [
         {
+          "keyName": "editorial_nombre_unique",
+          "columnNames": [
+            "nombre"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "enum('moderar_resena','eliminar_usuario','gestionar_libro')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "moderar_resena",
+            "eliminar_usuario",
+            "gestionar_libro"
+          ],
+          "mappedType": "enum"
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        }
+      },
+      "name": "permiso",
+      "indexes": [
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -152,91 +316,40 @@
           "nullable": false,
           "length": 255,
           "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "saga",
       "indexes": [
         {
-          "keyName": "PRIMARY",
+          "keyName": "saga_nombre_unique",
           "columnNames": [
-            "id"
+            "nombre"
           ],
           "composite": false,
           "constraint": true,
-          "primary": true,
+          "primary": false,
           "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "password": {
-          "name": "password",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "username": {
-          "name": "username",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "rol": {
-          "name": "rol",
-          "type": "varchar(20)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 20,
-          "default": "'usuario'",
-          "mappedType": "string"
-        },
-        "refresh_token": {
-          "name": "refresh_token",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        }
-      },
-      "name": "usuario",
-      "indexes": [
         {
           "keyName": "PRIMARY",
           "columnNames": [
@@ -250,194 +363,6 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
-        },
-        "seguidor_id": {
-          "name": "seguidor_id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
-        },
-        "seguido_id": {
-          "name": "seguido_id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
-        },
-        "fecha_seguido": {
-          "name": "fecha_seguido",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": null,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "seguimiento",
-      "indexes": [
-        {
-          "columnNames": [
-            "seguidor_id"
-          ],
-          "composite": false,
-          "keyName": "seguimiento_seguidor_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "seguido_id"
-          ],
-          "composite": false,
-          "keyName": "seguimiento_seguido_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "PRIMARY",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "seguimiento_seguidor_id_foreign": {
-          "constraintName": "seguimiento_seguidor_id_foreign",
-          "columnNames": [
-            "seguidor_id"
-          ],
-          "localTableName": "seguimiento",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "usuario",
-          "updateRule": "cascade"
-        },
-        "seguimiento_seguido_id_foreign": {
-          "constraintName": "seguimiento_seguido_id_foreign",
-          "columnNames": [
-            "seguido_id"
-          ],
-          "localTableName": "seguimiento",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "usuario",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
-        },
-        "nombre": {
-          "name": "nombre",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "ultima_modificacion": {
-          "name": "ultima_modificacion",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": null,
-          "mappedType": "datetime"
-        },
-        "usuario_id": {
-          "name": "usuario_id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": null,
-          "mappedType": "integer"
-        }
-      },
-      "name": "lista",
-      "indexes": [
-        {
-          "columnNames": [
-            "usuario_id"
-          ],
-          "composite": false,
-          "keyName": "lista_usuario_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "PRIMARY",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "lista_usuario_id_foreign": {
-          "constraintName": "lista_usuario_id_foreign",
-          "columnNames": [
-            "usuario_id"
-          ],
-          "localTableName": "lista",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "usuario",
-          "updateRule": "cascade"
-        }
-      },
       "nativeEnums": {}
     },
     {
@@ -464,13 +389,13 @@
         },
         "sinopsis": {
           "name": "sinopsis",
-          "type": "varchar(255)",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "length": null,
+          "mappedType": "text"
         },
         "autor_id": {
           "name": "autor_id",
@@ -512,19 +437,39 @@
           "length": null,
           "mappedType": "integer"
         },
-        "lista_id": {
-          "name": "lista_id",
-          "type": "int",
-          "unsigned": true,
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
           "length": null,
-          "mappedType": "integer"
+          "mappedType": "date"
         }
       },
       "name": "libro",
       "indexes": [
+        {
+          "columnNames": [
+            "nombre"
+          ],
+          "composite": false,
+          "keyName": "libro_nombre_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
         {
           "columnNames": [
             "autor_id"
@@ -561,16 +506,6 @@
           ],
           "composite": false,
           "keyName": "libro_saga_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "lista_id"
-          ],
-          "composite": false,
-          "keyName": "libro_lista_id_index",
           "constraint": false,
           "primary": false,
           "unique": false
@@ -636,18 +571,365 @@
           "referencedTableName": "saga",
           "deleteRule": "set null",
           "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
         },
-        "libro_lista_id_foreign": {
-          "constraintName": "libro_lista_id_foreign",
+        "libro_id": {
+          "name": "libro_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "avg_rating": {
+          "name": "avg_rating",
+          "type": "float",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "float"
+        },
+        "cantidad_resenas": {
+          "name": "cantidad_resenas",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "fecha_actualizacion": {
+          "name": "fecha_actualizacion",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        }
+      },
+      "name": "rating_libro",
+      "indexes": [
+        {
           "columnNames": [
-            "lista_id"
+            "libro_id"
           ],
-          "localTableName": "libro",
+          "composite": false,
+          "keyName": "rating_libro_libro_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "rating_libro_libro_id_foreign": {
+          "constraintName": "rating_libro_libro_id_foreign",
+          "columnNames": [
+            "libro_id"
+          ],
+          "localTableName": "rating_libro",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "lista",
-          "deleteRule": "set null",
+          "referencedTableName": "libro",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "rol": {
+          "name": "rol",
+          "type": "varchar(20)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 20,
+          "default": "'usuario'",
+          "mappedType": "string"
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
+        }
+      },
+      "name": "usuario",
+      "indexes": [
+        {
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
+          "keyName": "usuario_email_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "username"
+          ],
+          "composite": false,
+          "keyName": "usuario_username_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "usuario_username_unique",
+          "columnNames": [
+            "username"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "usuario_email_unique",
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "seguidor_id": {
+          "name": "seguidor_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "seguido_id": {
+          "name": "seguido_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "fecha_seguido": {
+          "name": "fecha_seguido",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
+        }
+      },
+      "name": "seguimiento",
+      "indexes": [
+        {
+          "columnNames": [
+            "seguidor_id"
+          ],
+          "composite": false,
+          "keyName": "seguimiento_seguidor_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "seguido_id"
+          ],
+          "composite": false,
+          "keyName": "seguimiento_seguido_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "seguimiento_seguidor_id_seguido_id_unique",
+          "columnNames": [
+            "seguidor_id",
+            "seguido_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "seguimiento_seguidor_id_foreign": {
+          "constraintName": "seguimiento_seguidor_id_foreign",
+          "columnNames": [
+            "seguidor_id"
+          ],
+          "localTableName": "seguimiento",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "usuario",
+          "updateRule": "cascade"
+        },
+        "seguimiento_seguido_id_foreign": {
+          "constraintName": "seguimiento_seguido_id_foreign",
+          "columnNames": [
+            "seguido_id"
+          ],
+          "localTableName": "seguimiento",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "usuario",
           "updateRule": "cascade"
         }
       },
@@ -667,13 +949,13 @@
         },
         "comentario": {
           "name": "comentario",
-          "type": "varchar(255)",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "length": null,
+          "mappedType": "text"
         },
         "estrellas": {
           "name": "estrellas",
@@ -685,15 +967,30 @@
           "length": null,
           "mappedType": "integer"
         },
+        "estado": {
+          "name": "estado",
+          "type": "enum('pending','approved','flagged')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'pending'",
+          "enumItems": [
+            "pending",
+            "approved",
+            "flagged"
+          ],
+          "mappedType": "enum"
+        },
         "fecha_resena": {
           "name": "fecha_resena",
-          "type": "datetime",
+          "type": "date",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "length": null,
-          "mappedType": "datetime"
+          "mappedType": "date"
         },
         "usuario_id": {
           "name": "usuario_id",
@@ -714,6 +1011,26 @@
           "nullable": false,
           "length": null,
           "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "resena",
@@ -792,13 +1109,17 @@
         },
         "tipo": {
           "name": "tipo",
-          "type": "varchar(255)",
+          "type": "enum('like','dislike','corazon')",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "enumItems": [
+            "like",
+            "dislike",
+            "corazon"
+          ],
+          "mappedType": "enum"
         },
         "usuario_id": {
           "name": "usuario_id",
@@ -822,13 +1143,23 @@
         },
         "fecha": {
           "name": "fecha",
-          "type": "datetime",
+          "type": "date",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "length": null,
-          "mappedType": "datetime"
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "reaccion",
@@ -852,6 +1183,17 @@
           "constraint": false,
           "primary": false,
           "unique": false
+        },
+        {
+          "keyName": "reaccion_usuario_id_resena_id_unique",
+          "columnNames": [
+            "usuario_id",
+            "resena_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
         },
         {
           "keyName": "PRIMARY",
@@ -905,6 +1247,115 @@
           "length": null,
           "mappedType": "integer"
         },
+        "nombre": {
+          "name": "nombre",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "enum('read','to_read','pending','custom')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'custom'",
+          "enumItems": [
+            "read",
+            "to_read",
+            "pending",
+            "custom"
+          ],
+          "mappedType": "enum"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "ultima_modificacion": {
+          "name": "ultima_modificacion",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        }
+      },
+      "name": "lista",
+      "indexes": [
+        {
+          "columnNames": [
+            "usuario_id"
+          ],
+          "composite": false,
+          "keyName": "lista_usuario_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "lista_usuario_id_foreign": {
+          "constraintName": "lista_usuario_id_foreign",
+          "columnNames": [
+            "usuario_id"
+          ],
+          "localTableName": "lista",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "usuario",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
         "lista_id": {
           "name": "lista_id",
           "type": "int",
@@ -924,6 +1375,26 @@
           "nullable": false,
           "length": null,
           "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "contenido_lista",
@@ -947,6 +1418,17 @@
           "constraint": false,
           "primary": false,
           "unique": false
+        },
+        {
+          "keyName": "contenido_lista_lista_id_libro_id_unique",
+          "columnNames": [
+            "lista_id",
+            "libro_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
         },
         {
           "keyName": "PRIMARY",
@@ -1022,13 +1504,23 @@
         },
         "fecha_agregado": {
           "name": "fecha_agregado",
-          "type": "datetime",
+          "type": "date",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "length": null,
-          "mappedType": "datetime"
+          "mappedType": "date"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "date"
         }
       },
       "name": "favorito",
@@ -1052,6 +1544,17 @@
           "constraint": false,
           "primary": false,
           "unique": false
+        },
+        {
+          "keyName": "favorito_usuario_id_libro_id_unique",
+          "columnNames": [
+            "usuario_id",
+            "libro_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
         },
         {
           "keyName": "PRIMARY",
@@ -1088,6 +1591,161 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "enum('resena','favorito','seguimiento','lista','reaccion')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "resena",
+            "favorito",
+            "seguimiento",
+            "lista",
+            "reaccion"
+          ],
+          "mappedType": "enum"
+        },
+        "libro_id": {
+          "name": "libro_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "resena_id": {
+          "name": "resena_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        }
+      },
+      "name": "actividad",
+      "indexes": [
+        {
+          "columnNames": [
+            "usuario_id"
+          ],
+          "composite": false,
+          "keyName": "actividad_usuario_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "libro_id"
+          ],
+          "composite": false,
+          "keyName": "actividad_libro_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "resena_id"
+          ],
+          "composite": false,
+          "keyName": "actividad_resena_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "actividad_usuario_id_foreign": {
+          "constraintName": "actividad_usuario_id_foreign",
+          "columnNames": [
+            "usuario_id"
+          ],
+          "localTableName": "actividad",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "usuario",
+          "updateRule": "cascade"
+        },
+        "actividad_libro_id_foreign": {
+          "constraintName": "actividad_libro_id_foreign",
+          "columnNames": [
+            "libro_id"
+          ],
+          "localTableName": "actividad",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "libro",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "actividad_resena_id_foreign": {
+          "constraintName": "actividad_resena_id_foreign",
+          "columnNames": [
+            "resena_id"
+          ],
+          "localTableName": "actividad",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "resena",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },

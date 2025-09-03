@@ -1,6 +1,5 @@
-import { Entity, PrimaryKey, Property, OneToMany } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OneToMany, Collection, Unique } from '@mikro-orm/core';
 import { Libro } from './libro.entity';
-import { Collection } from '@mikro-orm/core';  // Importar Collection
 
 @Entity()
 export class Editorial {
@@ -8,8 +7,15 @@ export class Editorial {
   id!: number;
 
   @Property()
+  @Unique({ properties: ['nombre'] }) // evita duplicados
   nombre!: string;
 
-  @OneToMany(() => Libro, libro => libro.editorial)
-  libros = new Collection<Libro>(this);  // Usar Collection
+  @OneToMany(() => Libro, libro => libro.editorial) // quitamos 'cascade' para evitar error TS
+  libros = new Collection<Libro>(this);
+
+  @Property({ type: 'date', onCreate: () => new Date() })
+  createdAt: Date = new Date();
+
+  @Property({ type: 'date', onUpdate: () => new Date(), nullable: true })
+  updatedAt?: Date;
 }

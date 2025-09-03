@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface Libro {
   id: string;
@@ -14,7 +15,7 @@ interface LibroTrending {
   title: string;
   slug: string;
   activities_count: number;
-  coverUrl: string | null; // cambiamos 'image' por 'coverUrl'
+  coverUrl: string | null;
 }
 
 export default function TodosLosLibros() {
@@ -60,13 +61,12 @@ export default function TodosLosLibros() {
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
         const data = await res.json();
 
-        // mapeamos usando coverUrl que devuelve el backend
         const mapped = data.map((b: any) => ({
           id: b.id,
           title: b.title,
           slug: b.slug,
           activities_count: b.activities_count,
-          coverUrl: b.coverUrl ?? null, // <- cambio clave
+          coverUrl: b.coverUrl ?? null,
         }));
 
         setTrending(mapped);
@@ -87,21 +87,19 @@ export default function TodosLosLibros() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-
       {/* Google Books */}
       <h2 className="flex justify-center items-center gap-3 text-4xl font-bold text-cyan-800 mb-8">
         Biblioteca de Libros (Google)
       </h2>
 
       {loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {Array.from({ length: librosPorPagina }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow p-4 animate-pulse">
-              <div className="w-full h-64 bg-gray-200 rounded-md mb-3"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          ))}
+        <div className="flex justify-center items-center">
+          <DotLottieReact
+            src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+            loop
+            autoplay
+            style={{ width: 200, height: 200 }}
+          />
         </div>
       )}
 
@@ -141,7 +139,9 @@ export default function TodosLosLibros() {
                   <div className="p-4 flex flex-col flex-grow">
                     <h3 className="text-lg font-semibold mb-1">{libro.titulo}</h3>
                     <p className="text-sm text-gray-600 mb-3">
-                      {libro.autores?.length ? libro.autores.join(", ") : "Autor desconocido"}
+                      {libro.autores?.length
+                        ? libro.autores.join(", ")
+                        : "Autor desconocido"}
                     </p>
                     {libro.enlace && (
                       <a
@@ -203,8 +203,20 @@ export default function TodosLosLibros() {
         Libros más populares (Hardcover)
       </h2>
 
-      {loadingTrending && <p className="text-center text-gray-600">Cargando...</p>}
-      {errorTrending && <p className="text-red-500 text-center text-lg">Error: {errorTrending}</p>}
+      {loadingTrending && (
+        <div className="flex justify-center items-center">
+          <DotLottieReact
+            src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+            loop
+            autoplay
+            style={{ width: 200, height: 200 }}
+          />
+        </div>
+      )}
+
+      {errorTrending && (
+        <p className="text-red-500 text-center text-lg">Error: {errorTrending}</p>
+      )}
 
       {!loadingTrending && !errorTrending && (
         <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -214,7 +226,7 @@ export default function TodosLosLibros() {
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
             >
               <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
-                {libro.coverUrl ? ( // usamos coverUrl
+                {libro.coverUrl ? (
                   <img
                     src={libro.coverUrl}
                     alt={libro.title}

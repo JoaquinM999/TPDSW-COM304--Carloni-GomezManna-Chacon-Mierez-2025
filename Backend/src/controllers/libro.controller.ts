@@ -3,12 +3,13 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/core';
 import { Libro } from '../entities/libro.entity';
 import { Categoria } from '../entities/categoria.entity';
+import { getReviewsByBookId } from '../services/reviewService';
 
 export const getLibros = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
   const libros = await em.find(Libro, {});
-  res.json(libros);
+  res.json(libros)
 };
 
 export const getLibroById = async (req: Request, res: Response) => {
@@ -74,8 +75,9 @@ export const getLibrosByEstrellasMinimas = async (req: Request, res: Response) =
       return res.status(400).json({ error: 'Parámetro minEstrellas inválido. Debe estar entre 1 y 5' });
     }
 
+    // Using COALESCE to treat books without reviews as 0 average
     const libros = await em.getConnection().execute(`
-      SELECT l.*, AVG(r.estrellas) AS promedio_estrellas
+      SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas
       FROM libro l
       LEFT JOIN resena r ON r.libro_id = l.id
       GROUP BY l.id
@@ -86,5 +88,50 @@ export const getLibrosByEstrellasMinimas = async (req: Request, res: Response) =
     res.json(libros);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener libros por estrellas' });
+  }
+};
+
+// Optional alternative using raw SQL query
+export const getLibrosByEstrellasMinimasQB = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const minEstrellas = Number(req.query.minEstrellas);
+
+    if (isNaN(minEstrellas) || minEstrellas < 1 || minEstrellas > 5) {
+      return res.status(400).json({ error: 'Parámetro minEstrellas inválido. Debe estar entre 1 y 5' });
+    }
+
+    const libros = await orm.em.getConnection().execute(`
+      SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas
+      FROM libro l
+      LEFT JOIN resena r ON r.libro_id = l.id
+      GROUP BY l.id
+      HAVING promedio_estrellas >= ?
+      ORDER BY promedio_estrellas DESC
+    `, [minEstrellas]);
+
+    res.json(libros);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener libros por estrellas (QueryBuilder)' });
+  }
+};
+
+export const getReviewsByBookIdController = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const bookId = +req.params.id;
+
+    if (isNaN(bookId)) {
+      return res.status(400).json({ error: 'ID de libro inválido' });
+    }
+
+    const reviews = await getReviewsByBookId(orm, bookId);
+    res.json(reviews);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Libro no encontrado') {
+      return res.status(404).json({ error: 'Libro no encontrado' });
+    }
+    res.status(500).json({ error: 'Error al obtener reseñas' });
   }
 };

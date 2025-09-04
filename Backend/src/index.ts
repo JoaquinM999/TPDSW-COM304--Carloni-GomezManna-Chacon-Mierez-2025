@@ -4,22 +4,27 @@ import config from './mikro-orm.config';
 import app from './app';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import redis from './redis';
 
 dotenv.config();
+
+// Apply CORS before initializing ORM and routes
+app.use(cors({
+  origin: 'http://localhost:5173', // o la URL donde corre tu frontend
+  credentials: true,
+}));
+
 async function main() {
   const orm = await MikroORM.init(config);
 
-  // Opcional: actualizar DB y schema
+  // Nota: ensureDatabase() y updateSchema() son solo para desarrollo.
+  // En producción, usa las migraciones de MikroORM para manejar cambios en la DB.
   await orm.getSchemaGenerator().ensureDatabase();
   await orm.getSchemaGenerator().updateSchema();
 
   // Guardar ORM en app para acceder desde req.app.get('orm')
   app.set('orm', orm);
 
-  app.use(cors({
-  origin: 'http://localhost:5173', // o la URL donde corre tu frontend
-  credentials: true,
-  }));
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Servidor en puerto ${PORT}`);

@@ -45,4 +45,12 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
 
+// Global error handler middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
+});
+
 export default app;

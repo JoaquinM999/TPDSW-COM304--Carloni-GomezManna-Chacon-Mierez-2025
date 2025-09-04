@@ -1,8 +1,8 @@
 // src/routes/libro.routes.ts
 import { Router } from 'express';
-import { 
+import {
   getLibros, getLibroById, createLibro, updateLibro, deleteLibro,
-  getLibrosByCategoria, getLibrosByEstrellasMinimas
+  getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController
 } from '../controllers/libro.controller';
 
 const router = Router();
@@ -15,5 +15,6 @@ router.delete('/:id', deleteLibro);
 
 router.get('/categoria/:categoriaId', getLibrosByCategoria);
 router.get('/estrellas', getLibrosByEstrellasMinimas);
+router.get('/:id/reviews', getReviewsByBookIdController);
 
 export { router as libroRoutes };

@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 
 interface RedisMock {
   get: (key: string) => Promise<string | null>;
-  set: (key: string, value: string) => Promise<string>;
+  set: (key: string, value: string, options?: { EX: number }) => Promise<string>;
   del: (key: string) => Promise<number>;
   ping: () => Promise<string>;
   quit: () => Promise<string>;
@@ -25,8 +25,8 @@ if (!redisUrl) {
       console.log(`Mock Redis GET called for key: ${key}`);
       return null;
     },
-    set: async (key: string, value: string) => {
-      console.log(`Mock Redis SET called for key: ${key} with value: ${value}`);
+    set: async (key: string, value: string, _options?: { EX: number }) => {
+      console.log(`Mock Redis SET called for key: ${key} (value length: ${value.length})`);
       return 'OK';
     },
     del: async (key: string) => {

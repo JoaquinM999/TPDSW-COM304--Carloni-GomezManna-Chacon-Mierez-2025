@@ -59,9 +59,18 @@ export default function TodosLosLibros() {
       try {
         const res = await fetch("http://localhost:3000/api/hardcover/trending");
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const data = await res.json();
+        const response = await res.json();
 
-        const mapped = data.map((b: any) => ({
+        // Handle loading state from backend
+        if (response.loading) {
+          // Keep loading state active and try again in 2 seconds
+          setTimeout(() => {
+            fetchTrending();
+          }, 2000);
+          return;
+        }
+
+        const mapped = (response.books ?? []).map((b: any) => ({
           id: b.id,
           title: b.title,
           slug: b.slug,
@@ -71,9 +80,9 @@ export default function TodosLosLibros() {
 
         setTrending(mapped);
         setErrorTrending(null);
+        setLoadingTrending(false);
       } catch (err: any) {
         setErrorTrending(err.message);
-      } finally {
         setLoadingTrending(false);
       }
     };

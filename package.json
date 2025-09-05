@@ -20,6 +20,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
+    "grep": "^0.1.0",
     "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",
     "mikro-orm": "^6.4.12",

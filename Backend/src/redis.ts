@@ -1,22 +1,61 @@
+
 import Redis from 'ioredis';
 
-// Usar URL de Redis remoto desde variable de entorno
-const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) {
-  console.warn('⚠️ REDIS_URL no definida, Redis no se conectará.');
+interface RedisMock {
+  get: (key: string) => Promise<string | null>;
+  set: (key: string, value: string) => Promise<string>;
+  del: (key: string) => Promise<number>;
+  ping: () => Promise<string>;
+  quit: () => Promise<string>;
+  disconnect: () => void;
+  on: (event: string, listener: (...args: any[]) => void) => void;
 }
 
-const redis = redisUrl
-  ? new Redis(redisUrl, {
-      // Opcional: reconexión automática
-      retryStrategy(times) {
-        console.log(`Redis reconnection attempt #${times}`);
-        return Math.min(times * 50, 2000); // tiempo entre reconexiones
-      },
-    })
-  : null;
+const redisUrl = process.env.REDIS_URL;
 
-if (redis) {
+let redis: Redis | RedisMock;
+
+if (!redisUrl) {
+  console.warn('⚠️ REDIS_URL no definida, Redis no se conectará. Usando modo mock.');
+  console.error('🚨 Running in Redis mock mode!');
+
+  // Mock con métodos básicos que no hacen nada
+  redis = {
+    get: async (key: string) => {
+      console.log(`Mock Redis GET called for key: ${key}`);
+      return null;
+    },
+    set: async (key: string, value: string) => {
+      console.log(`Mock Redis SET called for key: ${key} with value: ${value}`);
+      return 'OK';
+    },
+    del: async (key: string) => {
+      console.log(`Mock Redis DEL called for key: ${key}`);
+      return 0;
+    },
+    ping: async () => {
+      console.log('Mock Redis PING called');
+      return 'PONG';
+    },
+    quit: async () => {
+      console.log('Mock Redis QUIT called');
+      return 'OK';
+    },
+    disconnect: () => {
+      console.log('Mock Redis DISCONNECT called');
+    },
+    on: (_event: string, _listener: (...args: any[]) => void) => {
+      // No-op for mock
+    },
+  };
+} else {
+  redis = new Redis(redisUrl, {
+    retryStrategy(times) {
+      console.log(`Redis reconnection attempt #${times}`);
+      return Math.min(times * 50, 2000);
+    },
+  });
+
   redis.on('connect', () => {
     console.log('✅ Connected to Redis');
   });
@@ -25,7 +64,7 @@ if (redis) {
     console.log('🔔 Redis ready to use');
   });
 
-  redis.on('error', (err) => {
+  redis.on('error', (err: any) => {
     console.error('❌ Redis connection error:', err);
   });
 
@@ -37,7 +76,6 @@ if (redis) {
     console.log('🔁 Redis reconnecting...');
   });
 
-  // Ping opcional para verificar la conexión al arrancar
   redis
     .ping()
     .then(() => console.log('✅ Redis ping OK'))
@@ -45,10 +83,8 @@ if (redis) {
       /* noop */
     });
 
-  // Graceful shutdown: cuando el proceso reciba SIGINT/SIGTERM/SIGQUIT
   const shutdown = async (signal: string) => {
     console.log(`🛑 Received ${signal} — closing Redis connection...`);
-    // si quit tarda demasiado, forzamos salida
     const forceExitTimer = setTimeout(() => {
       console.warn('⏱ Redis quit timed out, forcing exit.');
       try {
@@ -64,7 +100,7 @@ if (redis) {
       clearTimeout(forceExitTimer);
       console.log('🛑 Redis connection closed gracefully.');
       process.exit(0);
-    } catch (err) {
+    } catch (err: any) {
       clearTimeout(forceExitTimer);
       console.error('Error during Redis shutdown:', err);
       try {
@@ -76,7 +112,6 @@ if (redis) {
     }
   };
 
-  // Usamos `once` para evitar ejecutar shutdown múltiples veces
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGQUIT', () => shutdown('SIGQUIT'));

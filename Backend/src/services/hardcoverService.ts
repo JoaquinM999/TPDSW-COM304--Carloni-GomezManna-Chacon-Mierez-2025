@@ -1,9 +1,10 @@
 import fetch, { RequestInit } from "node-fetch";
 import redis from "../redis";
+import LRU from "lru-cache";
 
 const HARDCOVER_API = "https://api.hardcover.app/v1/graphql";
 const TOKEN = process.env.HARDCOVER_TOKEN;
-if (!TOKEN) console.warn("HARDCOVER_TOKEN no definido. Algunas funciones fallarán.");
+if (!TOKEN) console.warn("⚠️ HARDCOVER_TOKEN no definido. Algunas funciones fallarán.");
 
 export interface HardcoverBook {
   id: number;
@@ -31,13 +32,12 @@ function getBestCover(editions: HardcoverEdition[]): string | null {
     const img = ed.image;
     if (!img?.url || isPlaceholderUrl(img.url)) continue;
 
-    const width = img.width ?? 0;
-    const height = img.height ?? 0;
+    const width = Math.max(0, img.width ?? 0);
+    const height = Math.max(0, img.height ?? 0);
     const size = width * height; // proxy de resolución
     const ratio = width > 0 ? height / width : 0;
     const portraitBonus = ratio >= 1.2 && ratio <= 2.5 ? 1.0 : 0; // favorece retrato
     const langBonus = ed.language?.id === 1 ? 1_000_000 : 0; // preferir idioma id=1 (ejemplo)
-    // score: combina tamaño + idioma + forma
     const score = Math.log1p(size) * (1 + portraitBonus) + langBonus;
 
     if (score > bestScore) {
@@ -48,14 +48,12 @@ function getBestCover(editions: HardcoverEdition[]): string | null {
 
   if (!bestUrl) return null;
 
-  // Intentar transformar tamaño de forma segura:
-  // reemplazar segmentos tipo "/wNNN" por "/w800" si aparecen como segmento
   try {
+    // normalizar a un width razonable; conservamos otros query params
     bestUrl = bestUrl.replace(/\/w\d+(?=\/|$)/i, "/w800");
-    // si tiene query like ?width=128 -> reemplazar con la misma clave + nuevo valor
     bestUrl = bestUrl.replace(/([?&]width=)\d+/i, (m, p1) => `${p1}800`);
   } catch {
-    // fallback: devolver la URL original si la manipulación falla
+    // fallback a la URL original
   }
 
   return bestUrl;
@@ -67,7 +65,7 @@ async function fetchWithRetry(
   {
     retries = 3,
     baseDelayMs = 500,
-    timeoutMs = 15_000, // aumentado por defecto a 15s
+    timeoutMs = 15_000, // 15s por defecto
   }: { retries?: number; baseDelayMs?: number; timeoutMs?: number } = {}
 ): Promise<any> {
   if (!TOKEN) throw new Error("HARDCOVER_TOKEN no definido en .env");
@@ -88,24 +86,19 @@ async function fetchWithRetry(
         },
         body: JSON.stringify({ query }),
         signal: controller.signal,
-        // node-fetch sigue redirecciones por defecto; si necesitás cambiarlo pon `redirect: 'follow'`
       } as RequestInit);
 
       clearTimeout(timer);
 
-      // lee el texto (por si viene HTML o JSON mal formado)
       const text = await res.text();
       const contentType = (res.headers && res.headers.get && res.headers.get("content-type")) || "";
 
-      // Si no es JSON, no intentar parsear: lanzamos error con contexto
       if (!/application\/json/i.test(contentType)) {
         const snippet = text ? text.slice(0, 1000) : "<empty body>";
         const msg = `Non-JSON response from Hardcover. status=${res.status} ${res.statusText} url=${(res as any).url || "unknown"} content-type=${contentType} body_snippet=${snippet}`;
-        // Si es HTML (probablemente una página de error/protección), no reintentamos múltiples veces:
         throw new Error(msg);
       }
 
-      // parse JSON
       let json;
       try {
         json = JSON.parse(text);
@@ -113,7 +106,6 @@ async function fetchWithRetry(
         throw new Error(`Respuesta JSON inválida (primeros 1000 chars): ${text.slice(0, 1000)}`);
       }
 
-      // GraphQL errors o HTTP not-ok
       if (!res.ok || json.errors) {
         const msg =
           (json?.errors && json.errors.map((e: any) => e.message).join(" | ")) ||
@@ -131,20 +123,17 @@ async function fetchWithRetry(
       const isAbort = err?.name === "AbortError" || /aborted|abort/i.test(errStr);
       const isNonJson = /Non-JSON response|Respuesta JSON inválida/i.test(errStr);
 
-      // Si es error cliente (401/403) no reintentar
       if (/401|403|client error/i.test(errStr)) {
         console.error("Hardcover client error (no reintentar):", errStr);
         throw err;
       }
 
-      // Si recibimos HTML u otra respuesta no-JSON, no reintentamos múltiples veces:
       if (isNonJson) {
         console.error("Non-JSON response detected, abortando reintentos:", errStr);
         throw err;
       }
 
       if (attempt < retries) {
-        // backoff exponencial + jitter
         const backoff = baseDelayMs * Math.pow(2, attempt);
         const jitter = Math.floor(Math.random() * baseDelayMs);
         const delay = backoff + jitter;
@@ -159,7 +148,6 @@ async function fetchWithRetry(
           );
         }
 
-        // esperar y aumentar ligeramente el timeout para el próximo intento (cap a 60s)
         await new Promise((r) => setTimeout(r, delay));
         currentTimeout = Math.min(Math.round(currentTimeout * 1.5), 60_000);
       } else {
@@ -173,44 +161,81 @@ async function fetchWithRetry(
   }
 }
 
-// --- Cache híbrido mejor: Map simple + in-flight dedupe ---
+// --- Cache híbrido: LRU en memoria + in-flight dedupe ---
 const CACHE_KEY = "hardcover:trending";
-const CACHE_TTL_SEC = 300;
+
+// memory vs redis TTLs
+const MEMORY_TTL_SEC = 3600; // 1 hora en memoria local
+const REDIS_TTL_SEC = 12 * 3600; // 12 horas en Upstash/Redis
 const MAX_MEM_ENTRIES = 200;
-const memoryCache = new Map<string, { data: HardcoverBook[]; expiresAt: number }>();
+
+// usamos lru-cache para TTL y LRU automático
+const memoryCache = new LRU<string, { data: HardcoverBook[]; expiresAt: number }>({
+  max: MAX_MEM_ENTRIES,
+  ttl: MEMORY_TTL_SEC * 1000,
+});
+
 const inFlight = new Map<string, Promise<HardcoverBook[]>>();
 
-export async function getTrendingBooks(): Promise<HardcoverBook[]> {
-  const now = Date.now();
+// Control simple para evitar refrescar en background demasiado seguido
+let lastBackgroundRefreshAt = 0;
+const BACKGROUND_MIN_INTERVAL_MS = 60 * 1000; // 1 minuto
+// Umbral: solo refrescar en background si queda poco tiempo de memoria (ej: 25% del TTL)
+const BACKGROUND_REFRESH_THRESHOLD_MS = Math.max(15 * 1000, Math.round(MEMORY_TTL_SEC * 1000 * 0.25));
+// jitter máximo antes de lanzar el refresh en background para evitar stampede
+const BACKGROUND_REFRESH_JITTER_MS = 5_000; // hasta 5s de jitter
 
-  // memoria
-  const mem = memoryCache.get(CACHE_KEY);
-  if (mem && mem.expiresAt > now) return mem.data;
-  if (mem && mem.expiresAt <= now) memoryCache.delete(CACHE_KEY);
+// cuánto esperar por la promesa inFlight antes de devolver "loading" (ms)
+const INFLIGHT_WAIT_MS = 2000; // 2s: ajustable según experiencia de UX
 
-  // dedupe peticiones concurrentes
+// métrica simple para fallos de redis (puedes exponer esto por logs/metrics)
+let redisFailureCount = 0;
+
+// Helper parse safe
+function safeParse<T>(s: string | null): T | null {
+  if (!s) return null;
+  try {
+    return JSON.parse(s) as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Helper: espera una promesa hasta timeout. 
+ *  Si resuelve antes del timeout devuelve { timedOut:false, result }, si no devuelve { timedOut:true }.
+ */
+async function waitForPromiseWithTimeout<T>(
+  p: Promise<T>,
+  ms: number
+): Promise<{ timedOut: false; result: T } | { timedOut: true }> {
+  let timeoutHandle: NodeJS.Timeout;
+  const timeoutPromise = new Promise<{ timedOut: true }>((res) => {
+    timeoutHandle = setTimeout(() => res({ timedOut: true }), ms);
+  });
+
+  try {
+    const res = await Promise.race([p.then((r) => ({ timedOut: false, result: r })), timeoutPromise]);
+    clearTimeout(timeoutHandle!);
+    return res as any;
+  } catch (err) {
+    clearTimeout(timeoutHandle!);
+    // If the promise rejects quickly, propagate that as a non-timeout failure
+    throw err;
+  }
+}
+
+/**
+ * refreshTrendingBooks:
+ * - fuerza llamada a la API (con dedup via inFlight)
+ * - actualiza memoria y Redis (con EX)
+ */
+export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
+  // si ya hay un refresh en vuelo, devolver esa promesa (dedupe)
   if (inFlight.has(CACHE_KEY)) return inFlight.get(CACHE_KEY)!;
 
   const p = (async (): Promise<HardcoverBook[]> => {
-    // primer intento: leer redis (fast path)
-    if (redis) {
-      try {
-        const cached = await redis.get(CACHE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached) as HardcoverBook[];
-          memoryCache.set(CACHE_KEY, { data: parsed, expiresAt: now + CACHE_TTL_SEC * 1000 });
-          if (memoryCache.size > MAX_MEM_ENTRIES) {
-            const oldest = memoryCache.keys().next().value;
-            if (typeof oldest === "string") memoryCache.delete(oldest);
-          }
-          return parsed;
-        }
-      } catch (err) {
-        console.error("Redis get error:", String(err));
-      }
-    }
+    const now = Date.now();
 
-    // fetch GraphQL
     const query = `
       query {
         books(order_by: {activities_count: desc}, limit: 20) {
@@ -226,38 +251,16 @@ export async function getTrendingBooks(): Promise<HardcoverBook[]> {
       }
     `;
 
-    // Intentamos obtener datos de la API; si falla con non-JSON, hacemos fallback a Redis (si está disponible)
     let data;
     try {
       data = await fetchWithRetry(query);
-    } catch (err: any) {
-      console.error("fetchWithRetry falló:", String(err));
-
-      // intentar fallback a Redis una vez más por si otro proceso actualizó la cache
-      if (redis) {
-        try {
-          const cached = await redis.get(CACHE_KEY);
-          if (cached) {
-            const parsed = JSON.parse(cached) as HardcoverBook[];
-            memoryCache.set(CACHE_KEY, { data: parsed, expiresAt: now + CACHE_TTL_SEC * 1000 });
-            if (memoryCache.size > MAX_MEM_ENTRIES) {
-              const oldest = memoryCache.keys().next().value;
-              if (typeof oldest === "string") memoryCache.delete(oldest);
-            }
-            console.warn("Usando fallback de Redis tras error en la API.");
-            return parsed;
-          }
-        } catch (rErr) {
-          console.error("Redis get fallback error:", String(rErr));
-        }
-      }
-
-      // si no hay fallback, propaga el error
+    } catch (err) {
+      console.error("refreshTrendingBooks: fetchWithRetry falló:", String(err));
       throw err;
     }
 
     if (!data || !Array.isArray(data.books)) {
-      // no cachee resultados vacíos completos; devolver [] y no cachear, o cachear por menos tiempo si preferís
+      console.warn("refreshTrendingBooks: respuesta inesperada de Hardcover, data.books no es array.");
       return [];
     }
 
@@ -269,21 +272,20 @@ export async function getTrendingBooks(): Promise<HardcoverBook[]> {
       coverUrl: getBestCover(b.editions || []),
     }));
 
-    // guardar en memoria
-    memoryCache.set(CACHE_KEY, { data: books, expiresAt: now + CACHE_TTL_SEC * 1000 });
-    if (memoryCache.size > MAX_MEM_ENTRIES) {
-      const oldest = memoryCache.keys().next().value;
-      if (typeof oldest === "string") {
-        memoryCache.delete(oldest);
-      }
+    // guardar en memoria (LRU cache maneja TTL internamente)
+    try {
+      memoryCache.set(CACHE_KEY, { data: books, expiresAt: now + MEMORY_TTL_SEC * 1000 });
+    } catch (err) {
+      console.error("Error guardando en memoryCache:", String(err));
     }
 
-    // guardar en redis con EX
+    // guardar en redis con EX (si disponible) usando REDIS_TTL_SEC
     if (redis) {
       try {
-        await redis.set(CACHE_KEY, JSON.stringify(books), "EX", CACHE_TTL_SEC);
+        await redis.set(CACHE_KEY, JSON.stringify(books), "EX", REDIS_TTL_SEC);
       } catch (err) {
-        console.error("Redis set error:", String(err));
+        redisFailureCount++;
+        console.error("Redis set error (refreshTrendingBooks):", String(err));
       }
     }
 
@@ -293,4 +295,130 @@ export async function getTrendingBooks(): Promise<HardcoverBook[]> {
   inFlight.set(CACHE_KEY, p);
   p.finally(() => inFlight.delete(CACHE_KEY));
   return p;
+}
+
+/**
+ * getTrendingBooks:
+ * - Now returns Promise<HardcoverBook[] | null>
+ * - If it returns `null` => frontend should show loading/pollito.
+ *
+ * Behavior:
+ * 1) If memory has valid data -> return it (and maybe refresh in background).
+ * 2) If memory has expired-but-present data -> return old data (and trigger background refresh).
+ * 3) If an inFlight fetch is running -> wait up to INFLIGHT_WAIT_MS for it; if it resolves quickly return data;
+ *    otherwise return null (so frontend keeps the loading indicator).
+ * 4) If Redis has data -> load to memory and return it.
+ * 5) If nothing -> trigger a refresh (which sets inFlight) and wait up to INFLIGHT_WAIT_MS; if resolves return data;
+ *    otherwise return null.
+ */
+export async function getTrendingBooks(): Promise<HardcoverBook[] | null> {
+  const now = Date.now();
+
+  // 1) memoryCache (super rápido)
+  const mem = memoryCache.get(CACHE_KEY);
+  if (mem && mem.expiresAt > now) {
+    console.debug("cache: memory hit");
+    // disparar refresh en background solo si la memoria está por expirar
+    maybeBackgroundRefresh(mem.expiresAt);
+    return mem.data;
+  }
+
+  // If memory exists but expired (LRU might keep it for short time), return it as stale fallback
+  if (mem) {
+    console.debug("cache: memory stale - returning stale data and triggering background refresh");
+    // remove so subsequent calls see it's stale; we still return stale data immediately
+    memoryCache.delete(CACHE_KEY);
+    // trigger background refresh
+    maybeBackgroundRefresh();
+    return mem.data;
+  }
+
+  // If a fetch is already in flight, wait a short time for it (so frontend keeps loading).
+  if (inFlight.has(CACHE_KEY)) {
+    console.debug(`inflight: fetch in progress - waiting up to ${INFLIGHT_WAIT_MS}ms`);
+    const p = inFlight.get(CACHE_KEY)!;
+    try {
+      const res = await waitForPromiseWithTimeout(p, INFLIGHT_WAIT_MS);
+      if (!res.timedOut) {
+        console.debug("inflight: completed within wait window, returning data");
+        return res.result;
+      }
+      console.debug("inflight: still running after wait window, returning null to indicate loading");
+      return null; // frontend shows loading (pollito)
+    } catch (err) {
+      console.error("inflight: promise rejected while waiting:", String(err));
+      // fallthrough to try redis or trigger new background refresh
+    }
+  }
+
+  // 2) intentar Redis (fast path server-wide)
+  if (redis) {
+    try {
+      const cached = await redis.get(CACHE_KEY);
+      const parsed = safeParse<HardcoverBook[]>(cached);
+      if (parsed && Array.isArray(parsed)) {
+        console.debug("cache: redis hit - populating memory and returning redis data");
+        const expiresAt = now + MEMORY_TTL_SEC * 1000;
+        memoryCache.set(CACHE_KEY, { data: parsed, expiresAt });
+        maybeBackgroundRefresh(expiresAt);
+        return parsed;
+      }
+      console.debug("cache: redis miss");
+    } catch (err) {
+      redisFailureCount++;
+      console.error("Redis get error (getTrendingBooks):", String(err));
+      // continue to triggering a refresh
+    }
+  }
+
+  // 3) No memory, no redis, no inflight -> trigger refresh and wait a short window
+  console.debug("cache: empty - triggering refresh and waiting briefly for data");
+  // This will set inFlight inside refreshTrendingBooks
+  try {
+    const inflightPromise = refreshTrendingBooks(); // will be stored into inFlight inside the function
+    // wait up to INFLIGHT_WAIT_MS for the initial fetch so frontend may get data without reload
+    try {
+      const res = await waitForPromiseWithTimeout(inflightPromise, INFLIGHT_WAIT_MS);
+      if (!res.timedOut) {
+        console.debug("initial refresh completed within wait window, returning data");
+        return res.result;
+      }
+      console.debug("initial refresh still running after wait window, returning null to indicate loading");
+      return null; // frontend: show pollito / loading
+    } catch (err) {
+      console.error("initial refresh promise rejected:", String(err));
+      return null;
+    }
+  } catch (err) {
+    console.error("getTrendingBooks: failed to start refreshTrendingBooks:", String(err));
+    return null;
+  }
+}
+
+/**
+ * maybeBackgroundRefresh:
+ * - Lanza un refresh en background si no hay uno en vuelo, pasó el intervalo mínimo
+ *   y (si se pasa expiresAt) la memoria está cerca de expirar.
+ * - Introduce un pequeño jitter antes de ejecutar para evitar stampede entre instancias.
+ */
+function maybeBackgroundRefresh(expiresAt?: number) {
+  const now = Date.now();
+  if (inFlight.has(CACHE_KEY)) return; // ya hay un refresh en vuelo
+  if (now - lastBackgroundRefreshAt < BACKGROUND_MIN_INTERVAL_MS) return; // demasiado reciente
+
+  // si tenemos un expiresAt y falta mucho tiempo, evitamos refrescar ahora
+  if (typeof expiresAt === "number" && expiresAt - now > BACKGROUND_REFRESH_THRESHOLD_MS) return;
+
+  lastBackgroundRefreshAt = now;
+
+  // jitter antes de disparar (evitar stampede si muchas instancias coinciden)
+  const jitter = Math.floor(Math.random() * BACKGROUND_REFRESH_JITTER_MS);
+  setTimeout(() => {
+    // disparar y loguear errores, pero no propagar
+    refreshTrendingBooks()
+      .then(() => console.debug("background refreshTrendingBooks: OK"))
+      .catch((err) => {
+        console.error("Background refreshTrendingBooks falló:", String(err));
+      });
+  }, jitter);
 }

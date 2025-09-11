@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { User, Mail, AtSign, MapPin, BookOpen, Settings, Save, ArrowLeft, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { User, Mail, AtSign, MapPin, BookOpen, Settings, Save, ArrowLeft, CheckCircle, XCircle, AlertCircle, HelpCircle } from 'lucide-react';
 
 interface ConfiguracionUsuarioProps {}
 
@@ -150,8 +150,8 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/10 border border-gray-100 overflow-hidden animate-in fade-in duration-500 hover:shadow-3xl hover:shadow-blue-500/20 transition-shadow duration-500">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 rounded-3xl shadow-2xl shadow-blue-500/10 border border-gray-100 overflow-hidden animate-in fade-in duration-500 hover:shadow-3xl hover:shadow-blue-500/20 transition-shadow duration-500">
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
 
@@ -186,9 +186,17 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="username">
-                    Nombre de Usuario *
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-semibold text-gray-800" htmlFor="username">
+                      Nombre de Usuario *
+                    </label>
+                    <div className="group relative">
+                      <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                      <div className="absolute right-0 top-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg">
+                        Tu nombre de usuario debe tener al menos 3 caracteres y puede contener letras, números y guiones bajos.
+                      </div>
+                    </div>
+                  </div>
                   <div className="relative">
                     <AtSign className="absolute left-4 top-4 w-5 h-5 text-gray-400 transition-colors" />
                     <input
@@ -211,9 +219,17 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="email">
-                    Correo Electrónico *
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-semibold text-gray-800" htmlFor="email">
+                      Correo Electrónico *
+                    </label>
+                    <div className="group relative">
+                      <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+                      <div className="absolute right-0 top-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg">
+                        Ingresa un correo electrónico válido. Este será usado para notificaciones y recuperación de contraseña.
+                      </div>
+                    </div>
+                  </div>
                   <div className="relative">
                     <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400 transition-colors" />
                     <input

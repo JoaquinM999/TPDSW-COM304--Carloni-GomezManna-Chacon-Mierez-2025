@@ -313,6 +313,9 @@ export const Header: React.FC<HeaderProps> = ({
                         <Link to="/perfil" className="block px-4 py-2 hover:bg-green-100">
                           Perfil
                         </Link>
+                        <Link to="/favoritos" className="block px-4 py-2 hover:bg-green-100">
+                          Mis Favoritos
+                        </Link>
                         <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100">
                           Configuración
                         </Link>
@@ -373,6 +376,30 @@ export const Header: React.FC<HeaderProps> = ({
                   </Link>
                 </li>
               ))}
+              {isAuth && (
+                <>
+                  <li>
+                    <Link
+                      to="/favoritos"
+                      className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Star className="w-5 h-5" />
+                      <span>Mis Favoritos</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/configuracion"
+                      className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Settings className="w-5 h-5" />
+                      <span>Configuración</span>
+                    </Link>
+                  </li>
+                </>
+              )}
               {!isAuth && (
                 <>
                   <li>

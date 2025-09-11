@@ -1,32 +1,15 @@
 // src/Servicios/authService.ts
 
-export const saveTokens = (token: string, refreshToken: string) => {
+export const saveTokens = (token: string) => {
   localStorage.setItem('accessToken', token);
-  localStorage.setItem('refreshToken', refreshToken);
 };
 
 export const getAccessToken = () => localStorage.getItem('accessToken');
 
 export const getNewAccessToken = async (): Promise<string> => {
-  const refreshToken = localStorage.getItem('refreshToken');
-
-  if (!refreshToken) {
-    throw new Error('No refresh token disponible');
-  }
-
-  const response = await fetch('http://localhost:3000/api/auth/refresh-token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  const data = await response.json();
-  if (response.ok) {
-    localStorage.setItem('accessToken', data.token); // 👈 el backend devuelve "token"
-    return data.token;
-  } else {
-    throw new Error('No se pudo refrescar el token');
-  }
+  // Since we no longer use refresh tokens, just call login again or handle accordingly
+  // For this example, we throw an error to force user to login again
+  throw new Error('El token ha expirado, por favor inicia sesión nuevamente');
 };
 
 export const login = async (email: string, password: string): Promise<void> => {
@@ -39,7 +22,7 @@ export const login = async (email: string, password: string): Promise<void> => {
   const data = await response.json();
 
   if (response.ok) {
-    saveTokens(data.token, data.refreshToken);
+    saveTokens(data.token);
   } else {
     throw new Error(data.error || 'Error al iniciar sesión');
   }

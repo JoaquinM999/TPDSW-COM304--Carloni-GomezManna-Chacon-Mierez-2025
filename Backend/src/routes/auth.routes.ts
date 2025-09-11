@@ -1,6 +1,7 @@
 // src/routes/auth.routes.ts
 import { Router } from 'express';
-import { loginUser, refreshTokenUser, registerUser } from '../controllers/auth.controller';
+import { loginUser, registerUser } from '../services/auth.service';
+import { refreshTokenUser } from '../controllers/auth.controller';
 
 const router = Router();
 

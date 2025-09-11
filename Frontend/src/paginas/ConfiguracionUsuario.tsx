@@ -287,7 +287,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
             </div>
 
             {/* Biography Section */}
-            <div className="border-t pt-8">
+            <div className="pt-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center group cursor-pointer">
                 <BookOpen className="w-6 h-6 mr-2 text-blue-600 group-hover:text-blue-700 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300" />
                 Acerca de Ti
@@ -333,7 +333,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="border-t pt-8 flex flex-col sm:flex-row gap-6 justify-end">
+            <div className="pt-8 flex flex-col sm:flex-row gap-6 justify-end">
               <Link
                 to="/perfil"
                 className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 hover:scale-105 transition-all duration-300 font-semibold shadow-sm hover:shadow-md"

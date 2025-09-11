@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye } from 'lucide-react';
 
 interface LibroFavorito {
@@ -101,6 +102,28 @@ export const FavoritosPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'libros' | 'autores' | 'categorias'>('libros');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
   const cambiarEstadoLibro = (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
     // Aquí implementarías la lógica para cambiar el estado en tu base de datos
     console.log(`Cambiar estado del libro ${libroId} a ${nuevoEstado}`);
@@ -148,179 +171,239 @@ export const FavoritosPage: React.FC = () => {
     : mockLibrosFavoritos.filter(libro => libro.estado === filtroEstado);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Mis Favoritos</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Gestiona tus libros, autores y categorías favoritas
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                Mis Favoritos
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                Gestiona tus libros, autores y categorías favoritas con estilo
+              </p>
+            </motion.div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-8 max-w-md mx-auto">
-          <button
+        <motion.div
+          className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-2xl mb-8 max-w-md mx-auto shadow-lg border border-white/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <motion.button
             onClick={() => setActiveTab('libros')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'libros'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
             }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <Book className="w-5 h-5" />
             <span>Libros</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => setActiveTab('autores')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'autores'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
             }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <User className="w-5 h-5" />
             <span>Autores</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => setActiveTab('categorias')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'categorias'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
             }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <Tag className="w-5 h-5" />
             <span>Categorías</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
         {/* Libros Tab */}
         {activeTab === 'libros' && (
           <div>
             {/* Filtros */}
-            <div className="flex flex-wrap gap-4 mb-8">
-              <button
+            <motion.div
+              className="flex flex-wrap gap-3 mb-8 justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <motion.button
                 onClick={() => setFiltroEstado('todos')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                className={`px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'todos'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-blue-500/25'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Todos ({mockLibrosFavoritos.length})
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setFiltroEstado('leido')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'leido'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-500/25'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <CheckCircle className="w-4 h-4" />
                 <span>Leídos ({mockLibrosFavoritos.filter(l => l.estado === 'leido').length})</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setFiltroEstado('ver-mas-tarde')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'ver-mas-tarde'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-blue-500/25'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <Eye className="w-4 h-4" />
                 <span>Ver más tarde ({mockLibrosFavoritos.filter(l => l.estado === 'ver-mas-tarde').length})</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setFiltroEstado('pendiente')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'pendiente'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-orange-500/25'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <Clock className="w-4 h-4" />
                 <span>Pendientes ({mockLibrosFavoritos.filter(l => l.estado === 'pendiente').length})</span>
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
 
             {/* Libros Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {librosFiltrados.map((libro) => (
-                <div key={libro.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                  <div className="relative">
+                <motion.div
+                  key={libro.id}
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                  variants={cardVariants}
+                  whileHover={{
+                    scale: 1.03,
+                    y: -8,
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="relative group">
                     <img
                       src={libro.imagen}
                       alt={libro.titulo}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    <div className="absolute top-3 right-3">
-                      <Heart className="w-6 h-6 text-red-500 fill-current" />
-                    </div>
-                    <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(libro.estado)}`}>
-                      <div className="flex items-center space-x-1">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <motion.div
+                      className="absolute top-4 right-4"
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Heart className="w-7 h-7 text-red-500 drop-shadow-lg" fill="currentColor" />
+                    </motion.div>
+                    <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/20 ${getEstadoColor(libro.estado)} shadow-lg`}>
+                      <div className="flex items-center space-x-1.5">
                         {getEstadoIcon(libro.estado)}
                         <span className="capitalize">{libro.estado.replace('-', ' ')}</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-6">
-                    <Link to={`/libro/${libro.id}`} className="block">
-                      <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors duration-200">
+                    <Link to={`/libro/${libro.id}`} className="block group">
+                      <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight">
                         {libro.titulo}
                       </h3>
                     </Link>
-                    <p className="text-gray-600 text-sm mb-3">por {libro.autor}</p>
-                    <div className="flex items-center justify-between mb-4">
+                    <p className="text-gray-600 text-sm mb-4 font-medium">por {libro.autor}</p>
+                    <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center space-x-1">
                         {renderStars(libro.rating)}
-                        <span className="text-sm text-gray-600 ml-1">{libro.rating}</span>
+                        <span className="text-sm font-semibold text-gray-700 ml-1">{libro.rating}</span>
                       </div>
-                      <span className="text-xs text-gray-500">{libro.categoria}</span>
+                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                        {libro.categoria}
+                      </span>
                     </div>
-                    
+
                     {/* Estado Buttons */}
                     <div className="flex space-x-2">
-                      <button
+                      <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'leido')}
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors duration-200 ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
                           libro.estado === 'leido'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600 hover:bg-green-50'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:shadow-md'
                         }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         Leído
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'ver-mas-tarde')}
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors duration-200 ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
                           libro.estado === 'ver-mas-tarde'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
+                            ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md'
                         }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         Ver después
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'pendiente')}
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors duration-200 ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
                           libro.estado === 'pendiente'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-gray-100 text-gray-600 hover:bg-orange-50'
+                            ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md'
                         }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
                         Pendiente
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         )}
 

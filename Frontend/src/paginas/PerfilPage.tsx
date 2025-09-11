@@ -182,7 +182,7 @@ const PerfilPage = () => {
 
                 {/* Biography Section */}
                 {perfil.biografia && (
-                  <div className="border-t pt-6">
+                  <div className="pt-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                       <BookOpen className="w-5 h-5 mr-2 text-blue-600" />
                       Acerca de mí

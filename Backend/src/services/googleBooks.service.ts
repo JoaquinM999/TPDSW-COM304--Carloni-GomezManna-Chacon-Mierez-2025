@@ -112,7 +112,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
         if (redis) {
           try {
             const ttl = ttlWithJitter(EMPTY_TTL_SEC, 10);
-            await (redis as any).set(cacheKey, JSON.stringify([]), { EX: ttl });
+            await redis.setex(cacheKey, ttl, JSON.stringify([]));
           } catch (err) {
             redisFailureCount++;
             console.error("Redis set error (on non-ok response):", err);
@@ -145,7 +145,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
         try {
           const baseTtl = results.length === 0 ? EMPTY_TTL_SEC : REDIS_TTL_SEC;
           const ttl = ttlWithJitter(baseTtl, 300);
-          await (redis as any).set(cacheKey, JSON.stringify(results), { EX: ttl });
+          await redis.setex(cacheKey, ttl, JSON.stringify(results));
         } catch (err) {
           redisFailureCount++;
           console.error("Redis set error:", err);
@@ -171,7 +171,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
       if (redis) {
         try {
           const ttl = ttlWithJitter(EMPTY_TTL_SEC, 10);
-          await (redis as any).set(cacheKey, JSON.stringify([]), { EX: ttl });
+          await redis.setex(cacheKey, ttl, JSON.stringify([]));
         } catch (e) {
           redisFailureCount++;
           console.error("Redis set error (on fetch failure):", e);

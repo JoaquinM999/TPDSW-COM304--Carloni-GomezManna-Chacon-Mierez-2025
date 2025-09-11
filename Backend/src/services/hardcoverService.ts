@@ -1,6 +1,6 @@
 import fetch, { RequestInit } from "node-fetch";
 import redis from "../redis";
-import LRU from "lru-cache";
+import { LRUCache } from "lru-cache";
 
 const HARDCOVER_API = "https://api.hardcover.app/v1/graphql";
 const TOKEN = process.env.HARDCOVER_TOKEN;
@@ -170,7 +170,7 @@ const REDIS_TTL_SEC = 12 * 3600; // 12 horas en Upstash/Redis
 const MAX_MEM_ENTRIES = 200;
 
 // usamos lru-cache para TTL y LRU automático
-const memoryCache = new LRU<string, { data: HardcoverBook[]; expiresAt: number }>({
+const memoryCache = new LRUCache<string, { data: HardcoverBook[]; expiresAt: number }>({
   max: MAX_MEM_ENTRIES,
   ttl: MEMORY_TTL_SEC * 1000,
 });
@@ -282,7 +282,7 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
     // guardar en redis con EX (si disponible) usando REDIS_TTL_SEC
     if (redis) {
       try {
-        await redis.set(CACHE_KEY, JSON.stringify(books), "EX", REDIS_TTL_SEC);
+        await redis.setex(CACHE_KEY, REDIS_TTL_SEC, JSON.stringify(books));
       } catch (err) {
         redisFailureCount++;
         console.error("Redis set error (refreshTrendingBooks):", String(err));

@@ -109,7 +109,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const response = await axios.post('http://localhost:3000/api/auth/register', {
-        nombre: registerData.nombre,
+        username: registerData.nombre,
         email: registerData.email,
         password: registerData.password,
       });

@@ -5,6 +5,7 @@ import { promisify } from 'util';
 import { Usuario } from '../entities/usuario.entity';
 import jwtConfig from '../shared/jwt.config';
 import { StringValue } from 'ms';
+import { registerUser } from '../services/auth.service';
 
 // Función auxiliar para generar un token de acceso
 const generateToken = (user: Usuario): string => {
@@ -95,3 +96,5 @@ export const refreshTokenUser = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+export { registerUser };

@@ -1,8 +1,9 @@
 // src/componentes/Header.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isAuthenticated, logoutUser } from "../services/authService";
 
 // Tipos
 interface HeaderProps {
@@ -125,6 +126,8 @@ export const Header: React.FC<HeaderProps> = ({
   const headerRef = useRef<HTMLDivElement | null>(null);
 
   const isMobileOrTablet = useIsMobileOrTablet();
+  const navigate = useNavigate();
+  const isAuth = isAuthenticated();
 
   const closeAllMenus = useCallback(() => {
     setMenuState({ user: false, notifications: false, dropdown: null });
@@ -305,15 +308,35 @@ export const Header: React.FC<HeaderProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                   >
-                    <Link to="/perfil" className="block px-4 py-2 hover:bg-green-100">
-                      Perfil
-                    </Link>
-                    <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100">
-                      Configuración
-                    </Link>
-                    <Link to="/logout" className="block px-4 py-2 hover:bg-green-100">
-                      Cerrar sesión
-                    </Link>
+                    {isAuth ? (
+                      <>
+                        <Link to="/perfil" className="block px-4 py-2 hover:bg-green-100">
+                          Perfil
+                        </Link>
+                        <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100">
+                          Configuración
+                        </Link>
+                        <button
+                          onClick={() => {
+                            logoutUser();
+                            navigate('/');
+                            setMenuState(prev => ({ ...prev, user: false }));
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-green-100"
+                        >
+                          Cerrar sesión
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100">
+                          Iniciar sesión
+                        </Link>
+                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100">
+                          Registrarse
+                        </Link>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -350,16 +373,27 @@ export const Header: React.FC<HeaderProps> = ({
                   </Link>
                 </li>
               ))}
-              {!userAuthenticated && (
-                <li>
-                  <Link
-                    to="/login"
-                    className="block px-3 py-2 rounded border border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Iniciar sesión
-                  </Link>
-                </li>
+              {!isAuth && (
+                <>
+                  <li>
+                    <Link
+                      to="/LoginPage"
+                      className="block px-3 py-2 rounded border border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Iniciar sesión
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/LoginPage"
+                      className="block px-3 py-2 rounded border border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Registrarse
+                    </Link>
+                  </li>
+                </>
               )}
             </ul>
           </motion.nav>

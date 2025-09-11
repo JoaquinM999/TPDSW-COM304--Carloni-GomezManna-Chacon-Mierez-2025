@@ -19,10 +19,16 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm');
     const usuario = orm.em.create(Usuario, { email, username, password });
-    await usuario.hashPassword();  // Encriptar la contraseña
+    // Removed manual password hashing call; handled by entity hook
     await orm.em.persistAndFlush(usuario);
 
-    res.status(201).json({ message: 'Usuario registrado exitosamente', usuario });
+    // Generate tokens
+    const token = generateToken(usuario);
+    const refreshToken = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+    usuario.refreshToken = refreshToken;
+    await orm.em.persistAndFlush(usuario);
+
+    res.status(201).json({ message: 'Usuario registrado exitosamente', token, refreshToken });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : 'Error desconocido' });
   }

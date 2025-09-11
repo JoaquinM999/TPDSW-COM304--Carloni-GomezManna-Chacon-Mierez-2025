@@ -24,10 +24,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:3000/api/usuarios/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get('http://localhost:3000/api/usuarios/me');
         const data = response.data;
         const profileData = {
           nombre: data.nombre || '',
@@ -40,8 +37,16 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
         setFormData(profileData);
         setOriginalData(profileData);
         setLoading(false);
-      } catch (err) {
-        setError('Error al cargar configuración de usuario');
+      } catch (err: any) {
+        console.error('Error fetching profile:', err);
+        if (err.response?.status === 401) {
+          setError('Sesión expirada. Redirigiendo al inicio de sesión...');
+          setTimeout(() => {
+            window.location.href = '/LoginPage';
+          }, 2000);
+        } else {
+          setError(err.response?.data?.error || 'Error al cargar configuración de usuario');
+        }
         setLoading(false);
       }
     };
@@ -93,12 +98,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.put(
-        `http://localhost:3000/api/usuarios/me`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`http://localhost:3000/api/usuarios/me`, formData);
       setOriginalData(formData);
       setMessage('Configuración actualizada correctamente');
       setTimeout(() => setMessage(''), 5000);
@@ -129,20 +129,20 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-2xl">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center space-x-4">
             <Link
               to="/perfil"
-              className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 border border-white/30"
+              className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-md rounded-lg hover:bg-white/30 hover:scale-105 transition-all duration-300 border border-white/40 shadow-lg hover:shadow-xl"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Volver al Perfil
             </Link>
           </div>
-          <div className="mt-6">
-            <h1 className="text-3xl font-bold">Configuración de Usuario</h1>
-            <p className="text-xl text-blue-100 mt-2">
+          <div className="mt-4">
+            <h1 className="text-2xl font-bold tracking-tight">Configuración de Usuario</h1>
+            <p className="text-base text-blue-100 mt-2 opacity-90">
               Personaliza tu perfil y preferencias
             </p>
           </div>
@@ -151,39 +151,20 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-
-          {/* Success/Error Messages */}
-          {message && (
-            <div className="bg-green-50 border-l-4 border-green-400 p-4 m-6 rounded-lg">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                <p className="text-green-700">{message}</p>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 m-6 rounded-lg">
-              <div className="flex items-center">
-                <XCircle className="w-5 h-5 text-red-400 mr-3" />
-                <p className="text-red-700">{error}</p>
-              </div>
-            </div>
-          )}
+        <div className="bg-white rounded-3xl shadow-2xl shadow-blue-500/10 border border-gray-100 overflow-hidden animate-in fade-in duration-500 hover:shadow-3xl hover:shadow-blue-500/20 transition-shadow duration-500">
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
 
             {/* Basic Information Section */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <User className="w-6 h-6 mr-2 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center group cursor-pointer">
+                <User className="w-6 h-6 mr-2 text-blue-600 group-hover:text-blue-700 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
                 Información Básica
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="nombre">
+                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="nombre">
                     Nombre Completo
                   </label>
                   <input
@@ -191,96 +172,96 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                     type="text"
                     value={formData.nombre}
                     onChange={(e) => handleInputChange('nombre', e.target.value)}
-                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.nombre ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full border-2 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${
+                      errors.nombre ? 'border-red-400 bg-red-50 focus:ring-red-500/20' : 'border-gray-200 focus:border-blue-500'
                     }`}
                     placeholder="Tu nombre completo"
                   />
                   {errors.nombre && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
+                    <p className="mt-2 text-sm text-red-600 flex items-center animate-in slide-in-from-left duration-200">
+                      <AlertCircle className="w-4 h-4 mr-2" />
                       {errors.nombre}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="username">
+                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="username">
                     Nombre de Usuario *
                   </label>
                   <div className="relative">
-                    <AtSign className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <AtSign className="absolute left-4 top-4 w-5 h-5 text-gray-400 transition-colors" />
                     <input
                       id="username"
                       type="text"
                       value={formData.username}
                       onChange={(e) => handleInputChange('username', e.target.value)}
-                      className={`w-full pl-10 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                        errors.username ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${
+                        errors.username ? 'border-red-400 bg-red-50 focus:ring-red-500/20' : 'border-gray-200 focus:border-blue-500'
                       }`}
                       placeholder="tu_usuario"
                     />
                   </div>
                   {errors.username && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
+                    <p className="mt-2 text-sm text-red-600 flex items-center animate-in slide-in-from-left duration-200">
+                      <AlertCircle className="w-4 h-4 mr-2" />
                       {errors.username}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="email">
                     Correo Electrónico *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400 transition-colors" />
                     <input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`w-full pl-10 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                        errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${
+                        errors.email ? 'border-red-400 bg-red-50 focus:ring-red-500/20' : 'border-gray-200 focus:border-blue-500'
                       }`}
                       placeholder="tu@email.com"
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
+                    <p className="mt-2 text-sm text-red-600 flex items-center animate-in slide-in-from-left duration-200">
+                      <AlertCircle className="w-4 h-4 mr-2" />
                       {errors.email}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="ubicacion">
+                  <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="ubicacion">
                     Ubicación
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400 transition-colors" />
                     <input
                       id="ubicacion"
                       type="text"
                       value={formData.ubicacion}
                       onChange={(e) => handleInputChange('ubicacion', e.target.value)}
-                      className="w-full pl-10 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="w-full pl-12 border-2 border-gray-200 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md"
                       placeholder="Ciudad, País"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="genero">
+              <div className="mt-8">
+                <label className="block text-sm font-semibold text-gray-800 mb-3" htmlFor="genero">
                   Género
                 </label>
                 <select
                   id="genero"
                   value={formData.genero}
                   onChange={(e) => handleInputChange('genero', e.target.value as 'masculino' | 'femenino' | 'otro')}
-                  className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full md:w-1/2 border-2 border-gray-200 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md bg-white"
                 >
                   <option value="masculino">Masculino</option>
                   <option value="femenino">Femenino</option>
@@ -291,8 +272,8 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
             {/* Biography Section */}
             <div className="border-t pt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <BookOpen className="w-6 h-6 mr-2 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center group cursor-pointer">
+                <BookOpen className="w-6 h-6 mr-2 text-blue-600 group-hover:text-blue-700 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300" />
                 Acerca de Ti
               </h2>
 
@@ -304,8 +285,8 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                   id="biografia"
                   value={formData.biografia}
                   onChange={(e) => handleInputChange('biografia', e.target.value)}
-                  className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    errors.biografia ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  className={`w-full border-2 rounded-xl px-4 py-4 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${
+                    errors.biografia ? 'border-red-400 bg-red-50 focus:ring-red-500/20' : 'border-gray-200 focus:border-blue-500'
                   }`}
                   rows={4}
                   placeholder="Cuéntanos un poco sobre ti..."
@@ -321,34 +302,45 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                     {formData.biografia.length}/500 caracteres
                   </p>
                 </div>
+
+                {/* Biography character count progress bar */}
+                <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden mt-1">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      formData.biografia.length > 450 ? 'bg-red-500' :
+                      formData.biografia.length > 400 ? 'bg-yellow-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${(formData.biografia.length / 500) * 100}%` }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="border-t pt-8 flex flex-col sm:flex-row gap-4 justify-end">
+            <div className="border-t pt-8 flex flex-col sm:flex-row gap-6 justify-end">
               <Link
                 to="/perfil"
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 hover:scale-105 transition-all duration-300 font-semibold shadow-sm hover:shadow-md"
               >
                 Cancelar
               </Link>
               <button
                 type="submit"
                 disabled={!hasChanges || saving}
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${
+                className={`px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl ${
                   hasChanges && !saving
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 text-white hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 hover:scale-105 focus:ring-4 focus:ring-blue-500/30'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 {saving ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                     Guardando...
                   </>
                 ) : (
                   <>
-                    <Save className="w-5 h-5 mr-2" />
+                    <Save className="w-5 h-5 mr-3" />
                     Guardar Cambios
                   </>
                 )}
@@ -356,6 +348,37 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
             </div>
           </form>
         </div>
+
+        {/* Success/Error Messages */}
+        {(message || error) && (
+          <div className="mt-8 animate-in slide-in-from-bottom duration-500">
+            {message && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-2xl shadow-lg border border-green-200">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <CheckCircle className="w-6 h-6 text-green-500 animate-in zoom-in duration-300" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-green-800 font-semibold text-lg">{message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 p-6 rounded-2xl shadow-lg border border-red-200">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <XCircle className="w-6 h-6 text-red-500 animate-in zoom-in duration-300" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-red-800 font-semibold text-lg">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

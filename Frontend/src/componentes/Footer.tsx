@@ -15,6 +15,7 @@ interface FooterProps {
   siteName?: string;
   showSocialMedia?: boolean;
   showNewsletter?: boolean;
+  showFeatures?: boolean;
   customLinks?: Array<{ title: string; links: Array<{ name: string; href: string }> }>;
 }
 
@@ -22,6 +23,7 @@ export const Footer: React.FC<FooterProps> = ({
   siteName = "TPDSW-Libros",
   showSocialMedia = true,
   showNewsletter = true,
+  showFeatures = true,
   customLinks = [],
 }) => {
   const defaultLinks = [
@@ -146,14 +148,16 @@ export const Footer: React.FC<FooterProps> = ({
           </motion.div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <FeaturesSection />
-        </motion.div>
+        {showFeatures && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <FeaturesSection />
+          </motion.div>
+        )}
 
         <div className="py-14 max-w-7xl mx-auto px-6 sm:px-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Branding */}

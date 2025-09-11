@@ -4,6 +4,8 @@ import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
+import axios from 'axios';
+import { setupAxiosInterceptors } from './services/authService';
 
 import LoginPage from './paginas/LoginPage';
 import { CategoriasPage } from './paginas/CategoriasPage';
@@ -78,6 +80,9 @@ function Layout() {
 
   const hideLayout = location.pathname === '/LoginPage';
 
+  // Hide newsletter and features section on /perfil and /configuracion
+  const hideNewsletterAndFeatures = location.pathname === '/perfil' || location.pathname === '/configuracion';
+
   return (
     <div className="min-h-screen bg-white">
       {!hideLayout && (
@@ -94,8 +99,12 @@ function Layout() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
               >
-                <HeroSection />
-                <FeaturedContent />
+                {!hideNewsletterAndFeatures && (
+                  <>
+                    <HeroSection />
+                    <FeaturedContent />
+                  </>
+                )}
               </motion.div>
             }
           />
@@ -133,7 +142,8 @@ function Layout() {
         <Footer
           siteName="BookCode"
           showSocialMedia={true}
-          showNewsletter={true}
+          showNewsletter={!hideNewsletterAndFeatures}
+          showFeatures={!hideNewsletterAndFeatures}
           customLinks={customFooterLinks}
         />
       )}
@@ -142,6 +152,11 @@ function Layout() {
 }
 
 function App() {
+  // Setup axios interceptors for automatic token refresh
+  React.useEffect(() => {
+    setupAxiosInterceptors(axios);
+  }, []);
+
   return (
     <Router>
       <Layout />

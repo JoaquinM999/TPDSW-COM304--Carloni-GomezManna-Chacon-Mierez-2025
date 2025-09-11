@@ -9,13 +9,7 @@ const PerfilPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-
-    axios.get('http://localhost:3000/api/usuarios/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    axios.get('http://localhost:3000/api/usuarios/me')
     .then((res) => {
       setPerfil(res.data);
       setLoading(false);

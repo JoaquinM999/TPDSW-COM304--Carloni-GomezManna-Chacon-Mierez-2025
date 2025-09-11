@@ -27,6 +27,8 @@ import NuevosLanzamientos from './paginas/NuevosLanzamientos';
 import LibrosRecomendados from './paginas/LibrosRecomendados';
 import LibrosPopulares from './paginas/LibrosPopulares';
 
+import ConfiguracionUsuario from './paginas/ConfiguracionUsuario';
+
 interface FooterLink {
   name: string;
   href: string;
@@ -114,6 +116,7 @@ function Layout() {
           {/* Rutas originales */}
           <Route path="/LoginPage" element={<LoginPage />} />
           <Route path="/perfil" element={<PerfilPage />} />
+          <Route path="/configuracion" element={<ConfiguracionUsuario />} />
           <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/libro/:id" element={<DetalleLibro />} />
           <Route path="/favoritos" element={<FavoritosPage />} />

@@ -533,6 +533,7 @@
             "id"
           ],
           "referencedTableName": "autor",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "libro_categoria_id_foreign": {
@@ -545,6 +546,7 @@
             "id"
           ],
           "referencedTableName": "categoria",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "libro_editorial_id_foreign": {
@@ -557,6 +559,7 @@
             "id"
           ],
           "referencedTableName": "editorial",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "libro_saga_id_foreign": {
@@ -569,6 +572,7 @@
             "id"
           ],
           "referencedTableName": "saga",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -663,6 +667,7 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -729,6 +734,46 @@
           "primary": false,
           "nullable": true,
           "length": 255,
+          "mappedType": "string"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "biografia": {
+          "name": "biografia",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "ubicacion": {
+          "name": "ubicacion",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "genero": {
+          "name": "genero",
+          "type": "varchar(20)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 20,
           "mappedType": "string"
         },
         "created_at": {
@@ -918,6 +963,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "seguimiento_seguido_id_foreign": {
@@ -930,6 +976,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1078,6 +1125,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "resena_libro_id_foreign": {
@@ -1090,6 +1138,7 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1218,6 +1267,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "reaccion_resena_id_foreign": {
@@ -1230,6 +1280,7 @@
             "id"
           ],
           "referencedTableName": "resena",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1339,6 +1390,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1453,6 +1505,7 @@
             "id"
           ],
           "referencedTableName": "lista",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "contenido_lista_libro_id_foreign": {
@@ -1465,6 +1518,7 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1579,6 +1633,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "favorito_libro_id_foreign": {
@@ -1591,6 +1646,7 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1720,6 +1776,7 @@
             "id"
           ],
           "referencedTableName": "usuario",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "actividad_libro_id_foreign": {
@@ -1732,6 +1789,7 @@
             "id"
           ],
           "referencedTableName": "libro",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1745,6 +1803,7 @@
             "id"
           ],
           "referencedTableName": "resena",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }

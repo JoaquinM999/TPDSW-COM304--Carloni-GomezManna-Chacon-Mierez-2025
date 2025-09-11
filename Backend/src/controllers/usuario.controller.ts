@@ -26,6 +26,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
       username,
       password,
       rol: userRole,
+      createdAt: new Date(),
     });
 
     await orm.em.persistAndFlush(newUser);
@@ -98,6 +99,64 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     res.json({
       message: 'User updated successfully',
       user,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating user' });
+  }
+};
+
+// Get current user profile
+export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+
+    if (!req.user || typeof req.user !== 'object') {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const user = await orm.em.findOne(Usuario, { id: req.user.id });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { password, refreshToken, ...userWithoutSensitiveData } = user;
+    res.json(userWithoutSensitiveData);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving user profile' });
+  }
+};
+
+// Update current user
+export const updateCurrentUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+
+    if (!req.user || typeof req.user !== 'object') {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const user = await orm.em.findOne(Usuario, { id: req.user.id });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Only allow updating profile fields, not sensitive data like password or role
+    const allowedFields = ['nombre', 'biografia', 'ubicacion', 'genero', 'email', 'username'];
+    const updates: any = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    orm.em.assign(user, updates);
+    await orm.em.persistAndFlush(user);
+
+    const { password, refreshToken, ...userWithoutSensitiveData } = user;
+    res.json({
+      message: 'User updated successfully',
+      user: userWithoutSensitiveData,
     });
   } catch (error) {
     res.status(500).json({ error: 'Error updating user' });

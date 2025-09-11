@@ -32,6 +32,19 @@ export class Usuario {
   @Property({ nullable: true })
   refreshToken?: string;
 
+  // Campos de perfil adicionales
+  @Property({ nullable: true })
+  nombre?: string;
+
+  @Property({ nullable: true })
+  biografia?: string;
+
+  @Property({ nullable: true })
+  ubicacion?: string;
+
+  @Property({ columnType: 'varchar(20)', nullable: true })
+  genero?: 'masculino' | 'femenino' | 'otro';
+
   // Auditoría
   @Property({ type: 'date', onCreate: () => new Date() })
   createdAt: Date = new Date();

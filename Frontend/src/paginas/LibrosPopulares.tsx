@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import LibroCard from "../componentes/LibroCard";
 
 interface LibroTrending {
   id: string;
@@ -8,21 +9,25 @@ interface LibroTrending {
   slug: string;
   activities_count: number;
   coverUrl: string | null;
+  authors: string[];
+  description: string | null;
 }
 
 export default function LibrosPopulares() {
+  const location = useLocation();
   const [trending, setTrending] = useState<LibroTrending[]>([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [errorTrending, setErrorTrending] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
 
-  const [userTrending, setUserTrending] = useState<LibroTrending[]>([]);
-  const [loadingUserTrending, setLoadingUserTrending] = useState(true);
-  const [errorUserTrending, setErrorUserTrending] = useState<string | null>(null);
+  const isFetchingTrending = useRef(false);
 
   useEffect(() => {
     const fetchTrending = async () => {
+      if (isFetchingTrending.current) return;
+      isFetchingTrending.current = true;
       setLoadingTrending(true);
+
       try {
         const res = await fetch("http://localhost:3000/api/hardcover/trending");
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
@@ -33,87 +38,48 @@ export default function LibrosPopulares() {
           return;
         }
 
-        const mapped = (response.books ?? []).map((b: any) => ({
+        const mapped: LibroTrending[] = (response.books ?? []).map((b: any) => ({
           id: b.id,
           title: b.title,
           slug: b.slug,
           activities_count: b.activities_count,
           coverUrl: b.coverUrl ?? null,
+          authors: b.authors ?? [],
+          description: b.description ?? null,
         }));
 
         setTrending(mapped);
         setErrorTrending(null);
       } catch (err: any) {
-        setErrorTrending(err.message);
+        setErrorTrending(err.message || "Error al cargar libros populares");
       } finally {
         setLoadingTrending(false);
+        isFetchingTrending.current = false;
       }
     };
 
     fetchTrending();
   }, []);
 
-  useEffect(() => {
-    const fetchUserTrending = async () => {
-      setLoadingUserTrending(true);
-      try {
-        const res = await fetch("http://localhost:3000/api/user/trending");
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const response = await res.json();
-
-        if (response.loading) {
-          setTimeout(fetchUserTrending, 2000);
-          return;
-        }
-
-        const mapped = (response.books ?? []).map((b: any) => ({
-          id: b.id,
-          title: b.title,
-          slug: b.slug,
-          activities_count: b.activities_count,
-          coverUrl: b.coverUrl ?? null,
-        }));
-
-        setUserTrending(mapped);
-        setErrorUserTrending(null);
-      } catch (err: any) {
-        setErrorUserTrending(err.message);
-      } finally {
-        setLoadingUserTrending(false);
-      }
-    };
-
-    fetchUserTrending();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-      <style>
-        {`
-          @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradientShift 3s ease infinite;
-          }
-        `}
-      </style>
-      {/* Título principal */}
-      <h2 className="text-5xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-purple-600 animate-gradient mb-14">
-        Libros populares
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+      <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+          Libros populares
+        </span>
       </h2>
+      <p className="text-center text-sm text-gray-600 mb-14">
+        Descubre los libros más leídos y trending
+      </p>
 
       {/* Loading */}
       {loadingTrending && (
-        <div className="flex justify-center items-center h-72">
+        <div className="flex justify-center items-center my-8">
           <DotLottieReact
             src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
             loop
             autoplay
-            style={{ width: 200, height: 200 }}
+            style={{ width: 140, height: 140 }}
           />
         </div>
       )}
@@ -133,12 +99,7 @@ export default function LibrosPopulares() {
             </h3>
             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
               {trending.slice(0, 5).map((libro, index) => (
-                <Link
-                  to={`/libro/${libro.slug}`}
-                  key={libro.id}
-                  className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-3 hover:scale-105 duration-500 flex flex-col overflow-hidden"
-                >
-                  {/* Ranking Badge SVG */}
+                <Link to={`/libro/${libro.slug}`} state={{ from: location.pathname }} key={libro.id} className="group relative block">
                   <div className="absolute top-4 left-4 z-10">
                     <svg
                       className="w-12 h-12"
@@ -152,8 +113,8 @@ export default function LibrosPopulares() {
                         y="50%"
                         dominantBaseline="middle"
                         textAnchor="middle"
-                        className="text-white font-bold text-lg"
                         fill="white"
+                        className="text-white font-bold text-lg"
                       >
                         {index + 1}
                       </text>
@@ -165,33 +126,12 @@ export default function LibrosPopulares() {
                       </defs>
                     </svg>
                   </div>
-
-                  {/* Portada */}
-                  <div className="w-full h-64 bg-gray-50 flex items-center justify-center overflow-hidden relative">
-                    {libro.coverUrl ? (
-                      <img
-                        src={libro.coverUrl}
-                        alt={libro.title}
-                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-110 group-hover:brightness-110"
-                      />
-                    ) : (
-                      <img
-                        src="/placeholder-cover.png"
-                        alt="Sin portada"
-                        className="h-full w-full object-contain opacity-50"
-                      />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-2 truncate">
-                      {libro.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      Actividad: {libro.activities_count}
-                    </p>
-                  </div>
+                  <LibroCard
+                    title={libro.title}
+                    authors={libro.authors}
+                    image={libro.coverUrl}
+                    extraInfo={`Actividad: ${libro.activities_count}`}
+                  />
                 </Link>
               ))}
             </div>
@@ -204,35 +144,17 @@ export default function LibrosPopulares() {
             </h3>
             <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               {trending.slice(5, visibleCount).map((libro) => (
-                <Link
-                  to={`/libro/${libro.slug}`}
-                  key={libro.id}
-                  className="bg-white rounded-3xl shadow-md hover:shadow-xl transform hover:-translate-y-2 hover:scale-105 transition duration-300 flex flex-col overflow-hidden"
-                >
-                  <div className="w-full h-56 bg-gray-50 flex items-center justify-center overflow-hidden">
-                    {libro.coverUrl ? (
-                      <img
-                        src={libro.coverUrl}
-                        alt={libro.title}
-                        className="h-full w-full object-contain transition-transform duration-300 hover:scale-105 hover:brightness-105"
-                      />
-                    ) : (
-                      <img
-                        src="/placeholder-cover.png"
-                        alt="Sin portada"
-                        className="h-full w-full object-contain opacity-50"
-                      />
-                    )}
-                  </div>
-                  <div className="p-4 flex flex-col flex-grow">
-                    <h3 className="text-md font-semibold mb-1 truncate">{libro.title}</h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      Actividad: {libro.activities_count}
-                    </p>
-                  </div>
+                <Link key={libro.id} to={`/libro/${libro.slug}`} state={{ from: location.pathname }} className="block">
+                  <LibroCard
+                    title={libro.title}
+                    authors={libro.authors}
+                    image={libro.coverUrl}
+                    extraInfo={`Actividad: ${libro.activities_count}`}
+                  />
                 </Link>
               ))}
             </div>
+
             {visibleCount < trending.length && (
               <div className="flex justify-center mt-6">
                 <button
@@ -246,15 +168,6 @@ export default function LibrosPopulares() {
           </section>
         </>
       )}
-
-      {/* Libros más leídos esta semana por usuarios */}
-      <section className="mt-20">
-        <h3 className="text-3xl font-bold text-slate-800 mb-10 text-center flex items-center justify-center gap-2">
-          Libros más leídos esta semana
-        </h3>
-
-        <p className="text-center text-gray-500 italic">En construcción</p>
-      </section>
     </div>
   );
 }

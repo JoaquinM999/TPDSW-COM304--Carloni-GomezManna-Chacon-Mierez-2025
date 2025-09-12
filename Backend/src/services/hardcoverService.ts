@@ -12,6 +12,8 @@ export interface HardcoverBook {
   slug: string;
   activities_count: number;
   coverUrl: string | null;
+  authors: string[];
+  description: string | null;
 }
 
 interface HardcoverEdition {
@@ -66,7 +68,8 @@ async function fetchWithRetry(
     retries = 3,
     baseDelayMs = 500,
     timeoutMs = 15_000, // 15s por defecto
-  }: { retries?: number; baseDelayMs?: number; timeoutMs?: number } = {}
+    variables,
+  }: { retries?: number; baseDelayMs?: number; timeoutMs?: number; variables?: any } = {}
 ): Promise<any> {
   if (!TOKEN) throw new Error("HARDCOVER_TOKEN no definido en .env");
 
@@ -84,7 +87,7 @@ async function fetchWithRetry(
           Accept: "application/json",
           Authorization: `Bearer ${TOKEN}`,
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, ...(variables && { variables }) }),
         signal: controller.signal,
       } as RequestInit);
 
@@ -243,6 +246,7 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
           title
           slug
           activities_count
+          description
           editions {
             image { url width height }
             language { id }
@@ -270,6 +274,8 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
       slug: b.slug,
       activities_count: b.activities_count,
       coverUrl: getBestCover(b.editions || []),
+      authors: [],
+      description: b.description || null,
     }));
 
     // guardar en memoria (LRU cache maneja TTL internamente)
@@ -396,6 +402,62 @@ export async function getTrendingBooks(): Promise<HardcoverBook[] | null> {
 }
 
 /**
+ * buscarLibroHardcover: Busca un libro específico por slug en Hardcover API
+ */
+export async function buscarLibroHardcover(slug: string): Promise<HardcoverBook | null> {
+  if (!slug) return null;
+
+  console.log('buscarLibroHardcover: intentando buscar libro con slug:', slug);
+
+  const query = `
+    query GetBookBySlug($slug: String!) {
+      books(where: { slug: { _eq: $slug } }, limit: 1) {
+        id
+        title
+        slug
+        activities_count
+        description
+        editions {
+          image { url width height }
+          language { id }
+        }
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchWithRetry(query, {
+      retries: 2,
+      baseDelayMs: 300,
+      timeoutMs: 10_000,
+      variables: { slug },
+    });
+
+    console.log('buscarLibroHardcover: respuesta de la API:', data);
+
+    if (!data || !Array.isArray(data.books) || data.books.length === 0) {
+      console.log('buscarLibroHardcover: no se encontró el libro o respuesta inválida');
+      return null;
+    }
+
+    const book = data.books[0];
+    console.log('buscarLibroHardcover: libro encontrado:', book);
+    return {
+      id: book.id,
+      title: book.title,
+      slug: book.slug,
+      activities_count: book.activities_count,
+      coverUrl: getBestCover(book.editions || []),
+      authors: [],
+      description: book.description || null,
+    };
+  } catch (error) {
+    console.error('Error buscando libro por slug en Hardcover:', error);
+    return null;
+  }
+}
+
+/**
  * maybeBackgroundRefresh:
  * - Lanza un refresh en background si no hay uno en vuelo, pasó el intervalo mínimo
  *   y (si se pasa expiresAt) la memoria está cerca de expirar.
@@ -421,4 +483,5 @@ function maybeBackgroundRefresh(expiresAt?: number) {
         console.error("Background refreshTrendingBooks falló:", String(err));
       });
   }, jitter);
+  return;
 }

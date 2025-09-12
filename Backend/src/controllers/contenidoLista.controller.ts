@@ -44,7 +44,7 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  const contenido = orm.em.create(ContenidoLista, { lista, libro });
+  const contenido = orm.em.create(ContenidoLista, { lista, libro, createdAt: new Date() });
   lista.ultimaModificacion = new Date();
 
   await orm.em.persistAndFlush(contenido);

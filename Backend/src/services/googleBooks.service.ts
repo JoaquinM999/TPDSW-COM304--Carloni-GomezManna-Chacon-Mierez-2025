@@ -20,7 +20,7 @@ type BookResult = {
 };
 
 // Map mantiene orden de inserción -> permite eliminación LRU simple
-const memoryCache = new Map<string, { data: BookResult[]; expiresAt: number }>();
+const memoryCache = new Map<string, { data: BookResult[] | BookResult; expiresAt: number }>();
 
 // Para evitar múltiples fetches concurrentes para la misma query
 const inFlightRequests = new Map<string, Promise<BookResult[]>>();
@@ -48,7 +48,81 @@ function ttlWithJitter(baseSec: number, maxJitterSec = 60) {
   return baseSec + jitter;
 }
 
-export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
+export const getBookById = async (bookId: string): Promise<BookResult | null> => {
+  if (!bookId) return null;
+
+  const cacheKey = `${CACHE_KEY_PREFIX}id:${bookId}`;
+  const now = Date.now();
+
+  // 1️⃣ Cache en memoria
+  const mem = memoryCache.get(cacheKey);
+  if (mem && mem.expiresAt > now) return mem.data as BookResult;
+  if (mem) memoryCache.delete(cacheKey);
+
+  // 2️⃣ Cache Redis
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      const parsed = safeParse<BookResult>(cached);
+      if (parsed) {
+        memoryCache.set(cacheKey, { data: parsed, expiresAt: now + CACHE_TTL_SEC * 1000 });
+        if (memoryCache.size > MAX_MEM_ENTRIES) {
+          const oldestKey = memoryCache.keys().next().value;
+          if (oldestKey !== undefined) memoryCache.delete(oldestKey);
+        }
+        return parsed;
+      }
+    } catch (err) {
+      redisFailureCount++;
+      console.error("Redis get error:", err);
+    }
+  }
+
+  // 3️⃣ Fetch desde Google Books
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const url = `${GOOGLE_BOOKS_API}/${bookId}${API_KEY ? `?key=${API_KEY}` : ""}`;
+    const res = await fetch(url, { signal: controller.signal } as RequestInit);
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.error(`Google Books API returned ${res.status} for book ID ${bookId}`);
+      return null;
+    }
+
+    const item: any = await res.json();
+    const result: BookResult = {
+      id: item.id,
+      titulo: item.volumeInfo?.title || "Título desconocido",
+      autores: item.volumeInfo?.authors || [],
+      descripcion: item.volumeInfo?.description || null,
+      imagen: item.volumeInfo?.imageLinks?.thumbnail || null,
+      enlace: item.volumeInfo?.infoLink || null,
+    };
+
+    memoryCache.set(cacheKey, { data: result, expiresAt: now + CACHE_TTL_SEC * 1000 });
+    if (memoryCache.size > MAX_MEM_ENTRIES) {
+      const oldestKey = memoryCache.keys().next().value;
+      if (oldestKey !== undefined) memoryCache.delete(oldestKey);
+    }
+
+    // Removed Redis caching for Google Books data
+
+    return result;
+  } catch (err: any) {
+    clearTimeout(timeout);
+    console.error("Error obteniendo libro por ID:", err);
+    return null;
+  }
+};
+
+export const buscarLibro = async (
+  rawQuery: string,
+  startIndex: number = 0,
+  maxResults: number = 40
+): Promise<BookResult[]> => {
   if (!rawQuery) return [];
 
   if (!API_KEY) {
@@ -58,7 +132,8 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
   }
 
   const query = normalizeQuery(rawQuery);
-  const cacheKey = makeCacheKey(query);
+  // Include pagination params in cache key to avoid cache collisions
+  const cacheKey = `${makeCacheKey(query)}:startIndex=${startIndex}:maxResults=${maxResults}`;
   const now = Date.now();
 
   // 0️⃣ Si hay una petición en vuelo, reusa su Promise
@@ -69,7 +144,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
   const promise = (async (): Promise<BookResult[]> => {
     // 1️⃣ Cache en memoria (Map)
     const mem = memoryCache.get(cacheKey);
-    if (mem && mem.expiresAt > now) return mem.data;
+    if (mem && mem.expiresAt > now) return mem.data as BookResult[];
     if (mem) memoryCache.delete(cacheKey); // entry expirada
 
     // 2️⃣ Cache Redis
@@ -97,7 +172,9 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
     const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
     try {
-      const url = `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&maxResults=40${API_KEY ? `&key=${API_KEY}` : ""}`;
+      const url = `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&startIndex=${startIndex}&maxResults=${maxResults}${
+        API_KEY ? `&key=${API_KEY}` : ""
+      }`;
       const res = await fetch(url, { signal: controller.signal } as RequestInit);
       clearTimeout(timeout);
 
@@ -109,15 +186,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
           const oldestKey = memoryCache.keys().next().value;
           if (oldestKey !== undefined) memoryCache.delete(oldestKey);
         }
-        if (redis) {
-          try {
-            const ttl = ttlWithJitter(EMPTY_TTL_SEC, 10);
-            await redis.setex(cacheKey, ttl, JSON.stringify([]));
-          } catch (err) {
-            redisFailureCount++;
-            console.error("Redis set error (on non-ok response):", err);
-          }
-        }
+        // Removed Redis caching for Google Books data
         return [];
       }
 
@@ -141,16 +210,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
         if (oldestKey !== undefined) memoryCache.delete(oldestKey);
       }
 
-      if (redis) {
-        try {
-          const baseTtl = results.length === 0 ? EMPTY_TTL_SEC : REDIS_TTL_SEC;
-          const ttl = ttlWithJitter(baseTtl, 300);
-          await redis.setex(cacheKey, ttl, JSON.stringify(results));
-        } catch (err) {
-          redisFailureCount++;
-          console.error("Redis set error:", err);
-        }
-      }
+      // Removed Redis caching for Google Books data
 
       return results;
     } catch (err: any) {
@@ -168,15 +228,7 @@ export const buscarLibro = async (rawQuery: string): Promise<BookResult[]> => {
         if (oldestKey !== undefined) memoryCache.delete(oldestKey);
       }
 
-      if (redis) {
-        try {
-          const ttl = ttlWithJitter(EMPTY_TTL_SEC, 10);
-          await redis.setex(cacheKey, ttl, JSON.stringify([]));
-        } catch (e) {
-          redisFailureCount++;
-          console.error("Redis set error (on fetch failure):", e);
-        }
-      }
+      // Removed Redis caching for Google Books data
 
       return [];
     } finally {

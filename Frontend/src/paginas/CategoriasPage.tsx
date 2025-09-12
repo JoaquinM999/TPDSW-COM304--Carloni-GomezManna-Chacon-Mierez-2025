@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Search, Book, Tag, Filter, Grid, List } from 'lucide-react';
 
 interface Categoria {
@@ -40,6 +40,7 @@ const mockLibros: Libro[] = [
 ];
 
 export const CategoriasPage: React.FC = () => {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [filteredLibros, setFilteredLibros] = useState<Libro[]>([]);
@@ -221,6 +222,7 @@ export const CategoriasPage: React.FC = () => {
                 <Link
                   key={libro.id}
                   to={`/libro/${libro.id}`}
+                  state={{ from: location.pathname }}
                   className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden ${
                     viewMode === 'list' ? 'flex items-center p-4' : ''
                   }`}

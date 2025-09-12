@@ -1,7 +1,7 @@
 // src/controllers/resena.controller.ts
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
-import { Resena } from '../entities/resena.entity';
+import { Resena, EstadoResena } from '../entities/resena.entity';
 import { Libro } from '../entities/libro.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
@@ -66,6 +66,8 @@ export const createResena = async (req: Request, res: Response) => {
       fechaResena: new Date(),
       libro,
       usuario,
+      estado: EstadoResena.PENDING,
+      createdAt: new Date(),
     });
 
     await orm.em.persistAndFlush(nuevaResena);
@@ -135,6 +137,46 @@ export const deleteResena = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Error al eliminar la reseña',
+    });
+  }
+};
+
+export const approveResena = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const resena = await orm.em.findOne(Resena, { id: +req.params.id });
+    if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
+
+    if (resena.estado !== EstadoResena.PENDING) {
+      return res.status(400).json({ error: 'La reseña ya ha sido moderada' });
+    }
+
+    resena.estado = EstadoResena.APPROVED;
+    await orm.em.persistAndFlush(resena);
+    res.json({ message: 'Reseña aprobada', resena });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Error al aprobar la reseña',
+    });
+  }
+};
+
+export const rejectResena = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const resena = await orm.em.findOne(Resena, { id: +req.params.id });
+    if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
+
+    if (resena.estado !== EstadoResena.PENDING) {
+      return res.status(400).json({ error: 'La reseña ya ha sido moderada' });
+    }
+
+    resena.estado = EstadoResena.FLAGGED;
+    await orm.em.persistAndFlush(resena);
+    res.json({ message: 'Reseña rechazada', resena });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Error al rechazar la reseña',
     });
   }
 };

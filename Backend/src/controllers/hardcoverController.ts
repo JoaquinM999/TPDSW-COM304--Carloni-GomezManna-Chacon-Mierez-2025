@@ -1,6 +1,6 @@
 // src/controllers/hardcoverController.ts
 import { Request, Response } from 'express';
-import { getTrendingBooks } from '../services/hardcoverService';
+import { getTrendingBooks, buscarLibroHardcover } from '../services/hardcoverService';
 
 export async function trendingBooksController(req: Request, res: Response) {
   try {
@@ -15,5 +15,26 @@ export async function trendingBooksController(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Hardcover trending error:', error?.message || error);
     res.status(500).json({ error: 'No se pudieron obtener libros', details: error?.message });
+  }
+}
+
+export async function getBookBySlugController(req: Request, res: Response) {
+  try {
+    const { slug } = req.params;
+
+    if (!slug) {
+      return res.status(400).json({ error: 'Slug es requerido' });
+    }
+
+    const book = await buscarLibroHardcover(slug);
+
+    if (!book) {
+      return res.status(404).json({ error: 'Libro no encontrado' });
+    }
+
+    res.json(book);
+  } catch (error: any) {
+    console.error('Hardcover book by slug error:', error?.message || error);
+    res.status(500).json({ error: 'No se pudo obtener el libro', details: error?.message });
   }
 }

@@ -1,12 +1,24 @@
 // src/controllers/lista.controller.ts
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
-import { Lista } from '../entities/lista.entity';
+import { Lista, TipoLista } from '../entities/lista.entity';
+import { Usuario } from '../entities/usuario.entity';
 
-export const getListas = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as MikroORM;
-  const listas = await orm.em.find(Lista, {});
-  res.json(listas);
+interface AuthRequest extends Request {
+  user?: { id: number; [key: string]: any };
+}
+
+export const getListas = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const listas = await orm.em.find(Lista, { usuario: { id: userId } }, { populate: ['usuario'] });
+    res.json(listas);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener listas' });
+  }
 };
 
 export const getListaById = async (req: Request, res: Response) => {
@@ -16,11 +28,30 @@ export const getListaById = async (req: Request, res: Response) => {
   res.json(lista);
 };
 
-export const createLista = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as MikroORM;
-  const lista = orm.em.create(Lista, req.body);
-  await orm.em.persistAndFlush(lista);
-  res.status(201).json(lista);
+export const createLista = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const usuario = await orm.em.findOne(Usuario, { id: userId });
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const { nombre, tipo } = req.body;
+    if (!nombre || !tipo) return res.status(400).json({ error: 'Nombre y tipo requeridos' });
+
+    const lista = orm.em.create(Lista, {
+      nombre,
+      tipo: tipo as TipoLista,
+      usuario,
+      createdAt: new Date(),
+      ultimaModificacion: new Date()
+    });
+    await orm.em.persistAndFlush(lista);
+    res.status(201).json(lista);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al crear lista' });
+  }
 };
 
 export const updateLista = async (req: Request, res: Response) => {

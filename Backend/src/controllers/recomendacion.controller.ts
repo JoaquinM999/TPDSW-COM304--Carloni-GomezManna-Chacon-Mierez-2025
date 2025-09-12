@@ -9,7 +9,7 @@ export const getRecomendaciones = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
 
-    const usuarioPayload = req.user;
+    const usuarioPayload = (req as any).user;
     if (!usuarioPayload || typeof usuarioPayload === 'string' || !('id' in usuarioPayload)) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }

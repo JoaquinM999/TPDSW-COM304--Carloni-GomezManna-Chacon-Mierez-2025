@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { User, UserPlus, UserCheck, Star, Heart, Book, List, MessageCircle, Calendar, MapPin, Mail, Users, Eye, Lock } from 'lucide-react';
+import { seguimientoService } from '../services/seguimientoService';
 
 interface Usuario {
   id: number;
@@ -159,20 +161,23 @@ export const PerfilUsuario: React.FC = () => {
 
   const handleSeguir = async () => {
     if (!usuario) return;
-    
+
     try {
-      // TODO: Replace with actual API call
-      // if (usuario.esSeguido) {
-      //   await unfollowUser(usuario.id);
-      // } else {
-      //   await followUser(usuario.id);
-      // }
-      
-      setUsuario({
-        ...usuario,
-        esSeguido: !usuario.esSeguido,
-        seguidores: usuario.esSeguido ? usuario.seguidores - 1 : usuario.seguidores + 1
-      });
+      if (usuario.esSeguido) {
+        await seguimientoService.unfollowUser(usuario.id);
+        setUsuario({
+          ...usuario,
+          esSeguido: false,
+          seguidores: usuario.seguidores - 1
+        });
+      } else {
+        await seguimientoService.followUser(usuario.id);
+        setUsuario({
+          ...usuario,
+          esSeguido: true,
+          seguidores: usuario.seguidores + 1
+        });
+      }
     } catch (error) {
       console.error('Error al seguir/dejar de seguir usuario:', error);
     }
@@ -217,7 +222,12 @@ export const PerfilUsuario: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <DotLottieReact
+            src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+            loop
+            autoplay
+            style={{ width: 140, height: 140 }}
+          />
           <p className="text-gray-600">Cargando perfil...</p>
         </div>
       </div>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye, Plus, X, Edit, Trash2 } from 'lucide-react';
+import { listaService, Lista, ContenidoLista } from '../services/listaService';
 
 interface LibroFavorito {
   id: number;
@@ -101,6 +102,50 @@ const mockCategoriasFavoritas: CategoriaFavorita[] = [
 export const FavoritosPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'libros' | 'autores' | 'categorias'>('libros');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+  const [listas, setListas] = useState<Lista[]>([]);
+  const [librosFavoritos, setLibrosFavoritos] = useState<LibroFavorito[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userListas = await listaService.getUserListas();
+        setListas(userListas);
+
+        // Fetch contents of all lists
+        const allContenidos: ContenidoLista[] = [];
+        for (const lista of userListas) {
+          const contenidos = await listaService.getContenidoLista(lista.id);
+          allContenidos.push(...contenidos);
+        }
+
+        // Map to LibroFavorito format
+        const libros: LibroFavorito[] = allContenidos.map(contenido => {
+          const lista = userListas.find(l => l.id === contenido.lista.id);
+          const estado = lista?.tipo === 'read' ? 'leido' :
+                         lista?.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
+          return {
+            id: contenido.libro.id,
+            titulo: contenido.libro.titulo,
+            autor: contenido.libro.autores.join(', '),
+            categoria: contenido.libro.categoria.nombre,
+            rating: contenido.libro.ratingPromedio,
+            imagen: contenido.libro.imagenPortada,
+            estado,
+            fechaAgregado: contenido.createdAt
+          };
+        });
+
+        setLibrosFavoritos(libros);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Animation variants
   const containerVariants = {
@@ -124,9 +169,58 @@ export const FavoritosPage: React.FC = () => {
     }
   };
 
-  const cambiarEstadoLibro = (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
-    // Aquí implementarías la lógica para cambiar el estado en tu base de datos
-    console.log(`Cambiar estado del libro ${libroId} a ${nuevoEstado}`);
+  const cambiarEstadoLibro = async (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
+    try {
+      // Map estado to lista tipo
+      const tipoLista = nuevoEstado === 'leido' ? 'read' :
+                       nuevoEstado === 'ver-mas-tarde' ? 'to_read' : 'pending';
+
+      // Find if user already has a list of this type
+      const listaExistente = listas.find(l => l.tipo === tipoLista);
+
+      if (listaExistente) {
+        // Add book to existing list
+        await listaService.addLibroALista(listaExistente.id, libroId);
+      } else {
+        // Create new list and add book
+        const nuevaLista = await listaService.createLista(
+          tipoLista === 'read' ? 'Leídos' :
+          tipoLista === 'to_read' ? 'Para Leer' : 'Pendientes',
+          tipoLista
+        );
+        await listaService.addLibroALista(nuevaLista.id, libroId);
+        // Refresh lists
+        const userListas = await listaService.getUserListas();
+        setListas(userListas);
+      }
+
+      // Refresh librosFavoritos
+      const allContenidos: ContenidoLista[] = [];
+      for (const lista of listas) {
+        const contenidos = await listaService.getContenidoLista(lista.id);
+        allContenidos.push(...contenidos);
+      }
+
+      const libros: LibroFavorito[] = allContenidos.map(contenido => {
+        const lista = listas.find(l => l.id === contenido.lista.id);
+        const estado = lista?.tipo === 'read' ? 'leido' :
+                       lista?.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
+        return {
+          id: contenido.libro.id,
+          titulo: contenido.libro.titulo,
+          autor: contenido.libro.autores.join(', '),
+          categoria: contenido.libro.categoria.nombre,
+          rating: contenido.libro.ratingPromedio,
+          imagen: contenido.libro.imagenPortada,
+          estado,
+          fechaAgregado: contenido.createdAt
+        };
+      });
+
+      setLibrosFavoritos(libros);
+    } catch (error) {
+      console.error('Error cambiando estado del libro:', error);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -166,9 +260,9 @@ export const FavoritosPage: React.FC = () => {
     }
   };
 
-  const librosFiltrados = filtroEstado === 'todos' 
-    ? mockLibrosFavoritos 
-    : mockLibrosFavoritos.filter(libro => libro.estado === filtroEstado);
+  const librosFiltrados = filtroEstado === 'todos'
+    ? librosFavoritos
+    : librosFavoritos.filter(libro => libro.estado === filtroEstado);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -261,7 +355,7 @@ export const FavoritosPage: React.FC = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Todos ({mockLibrosFavoritos.length})
+                Todos ({librosFavoritos.length})
               </motion.button>
               <motion.button
                 onClick={() => setFiltroEstado('leido')}
@@ -274,7 +368,7 @@ export const FavoritosPage: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <CheckCircle className="w-4 h-4" />
-                <span>Leídos ({mockLibrosFavoritos.filter(l => l.estado === 'leido').length})</span>
+                <span>Leídos ({librosFavoritos.filter(l => l.estado === 'leido').length})</span>
               </motion.button>
               <motion.button
                 onClick={() => setFiltroEstado('ver-mas-tarde')}
@@ -287,7 +381,7 @@ export const FavoritosPage: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Eye className="w-4 h-4" />
-                <span>Ver más tarde ({mockLibrosFavoritos.filter(l => l.estado === 'ver-mas-tarde').length})</span>
+                <span>Ver más tarde ({librosFavoritos.filter(l => l.estado === 'ver-mas-tarde').length})</span>
               </motion.button>
               <motion.button
                 onClick={() => setFiltroEstado('pendiente')}
@@ -300,7 +394,7 @@ export const FavoritosPage: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Clock className="w-4 h-4" />
-                <span>Pendientes ({mockLibrosFavoritos.filter(l => l.estado === 'pendiente').length})</span>
+                <span>Pendientes ({librosFavoritos.filter(l => l.estado === 'pendiente').length})</span>
               </motion.button>
             </motion.div>
 

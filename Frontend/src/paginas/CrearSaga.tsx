@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, Upload, User, Calendar } from 'lucide-react';
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export const CrearSaga: React.FC = () => {
   const navigate = useNavigate();
@@ -339,7 +340,12 @@ export const CrearSaga: React.FC = () => {
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <DotLottieReact
+                  src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+                  loop
+                  autoplay
+                  style={{ width: 20, height: 20 }}
+                />
               ) : (
                 <Plus className="w-5 h-5" />
               )}

@@ -129,7 +129,7 @@ function Layout() {
           <Route path="/perfil" element={<PerfilPage />} />
           <Route path="/configuracion" element={<ConfiguracionUsuario />} />
           <Route path="/categorias" element={<CategoriasPage />} />
-          <Route path="/libro/:id" element={<DetalleLibro />} />
+          <Route path="/libro/:slug" element={<DetalleLibro />} />
           <Route path="/favoritos" element={<FavoritosPage />} />
           <Route path="/libros" element={<LibrosPage />} />
           <Route path="/usuario/:id" element={<PerfilUsuario />} />

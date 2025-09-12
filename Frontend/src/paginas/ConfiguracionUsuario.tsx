@@ -19,6 +19,25 @@ import {
 interface ConfiguracionUsuarioProps {}
 
 const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
+  const countries = [
+    'Argentina',
+    'Australia',
+    'Brasil',
+    'Canadá',
+    'Chile',
+    'Colombia',
+    'España',
+    'Estados Unidos',
+    'Francia',
+    'Italia',
+    'México',
+    'Perú',
+    'Reino Unido',
+    'Uruguay',
+    'Venezuela',
+    // Add more as needed
+  ];
+
   const [formData, setFormData] = useState({
     nombre: "",
     biografia: "",
@@ -330,18 +349,23 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                 {/* Ubicación */}
                 <div>
                   <label className="block text-sm font-semibold mb-3" htmlFor="ubicacion">
-                    Ubicación
+                    País
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                    <input
+                    <select
                       id="ubicacion"
-                      type="text"
                       value={formData.ubicacion}
                       onChange={(e) => handleInputChange("ubicacion", e.target.value)}
-                      className="w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 focus-visible:ring-blue-500/20 border-gray-200"
-                      placeholder="Ciudad, País"
-                    />
+                      className="w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 focus-visible:ring-blue-500/20 border-gray-200 bg-white"
+                    >
+                      <option value="">Selecciona tu país</option>
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

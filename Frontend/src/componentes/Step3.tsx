@@ -14,6 +14,25 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
   const { data, updateData } = useRegistration();
   const [loading, setLoading] = useState(false);
 
+  const countries = [
+    'Argentina',
+    'Australia',
+    'Brasil',
+    'Canadá',
+    'Chile',
+    'Colombia',
+    'España',
+    'Estados Unidos',
+    'Francia',
+    'Italia',
+    'México',
+    'Perú',
+    'Reino Unido',
+    'Uruguay',
+    'Venezuela',
+    // Add more as needed
+  ];
+
   const handleSubmit = async () => {
     setError('');
     setSuccess('');
@@ -71,16 +90,21 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
           <label htmlFor="pais" className="block text-sm font-medium text-gray-700 mb-2">
             País
           </label>
-          <input
+          <select
             id="pais"
             name="pais"
-            type="text"
             required
             value={data.pais}
             onChange={(e) => updateData({ pais: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-            placeholder="Tu país"
-          />
+            className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          >
+            <option value="">Selecciona tu país</option>
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

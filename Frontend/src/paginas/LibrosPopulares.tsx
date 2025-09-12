@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Link } from "react-router-dom";
 
 interface LibroTrending {
   id: string;
@@ -132,7 +133,8 @@ export default function LibrosPopulares() {
             </h3>
             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
               {trending.slice(0, 5).map((libro, index) => (
-                <div
+                <Link
+                  to={`/libro/${libro.slug}`}
                   key={libro.id}
                   className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-3 hover:scale-105 duration-500 flex flex-col overflow-hidden"
                 >
@@ -189,19 +191,8 @@ export default function LibrosPopulares() {
                     <p className="text-sm text-gray-500 mb-4">
                       Actividad: {libro.activities_count}
                     </p>
-
-                    {/* Botón Moderno */}
-                    <a
-                      href={`https://hardcover.app/books/${libro.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-auto px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium shadow-md relative overflow-hidden group"
-                    >
-                      <span className="relative z-10">Ver en Hardcover</span>
-                      <span className="absolute inset-0 bg-white opacity-10 group-hover:opacity-20 transition duration-300 rounded-xl"></span>
-                    </a>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -213,7 +204,8 @@ export default function LibrosPopulares() {
             </h3>
             <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               {trending.slice(5, visibleCount).map((libro) => (
-                <div
+                <Link
+                  to={`/libro/${libro.slug}`}
                   key={libro.id}
                   className="bg-white rounded-3xl shadow-md hover:shadow-xl transform hover:-translate-y-2 hover:scale-105 transition duration-300 flex flex-col overflow-hidden"
                 >
@@ -237,19 +229,8 @@ export default function LibrosPopulares() {
                     <p className="text-sm text-gray-500 mb-3">
                       Actividad: {libro.activities_count}
                     </p>
-    
-                    {/* Botón Moderno */}
-                    <a
-                      href={`https://hardcover.app/books/${libro.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-auto px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium shadow-md relative overflow-hidden group"
-                    >
-                      <span className="relative z-10">Ver en Hardcover</span>
-                      <span className="absolute inset-0 bg-white opacity-10 group-hover:opacity-20 transition duration-300 rounded-lg"></span>
-                    </a>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             {visibleCount < trending.length && (

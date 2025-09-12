@@ -8,6 +8,7 @@ import axios from 'axios';
 import { setupAxiosInterceptors } from './services/authService';
 
 import LoginPage from './paginas/LoginPage';
+import RegistrationPage from './paginas/RegistrationPage';
 import { CategoriasPage } from './paginas/CategoriasPage';
 import { DetalleLibro } from './paginas/DetalleLibro';
 import { FavoritosPage } from './paginas/FavoritosPage';
@@ -78,7 +79,7 @@ function Layout() {
     },
   ];
 
-  const hideLayout = location.pathname === '/LoginPage';
+  const hideLayout = location.pathname === '/LoginPage' || location.pathname === '/registro';
 
   // Hide newsletter and features section on /perfil and /configuracion
   const hideNewsletterAndFeatures = location.pathname === '/perfil' || location.pathname === '/configuracion';
@@ -124,6 +125,7 @@ function Layout() {
 
           {/* Rutas originales */}
           <Route path="/LoginPage" element={<LoginPage />} />
+          <Route path="/registro" element={<RegistrationPage />} />
           <Route path="/perfil" element={<PerfilPage />} />
           <Route path="/configuracion" element={<ConfiguracionUsuario />} />
           <Route path="/categorias" element={<CategoriasPage />} />

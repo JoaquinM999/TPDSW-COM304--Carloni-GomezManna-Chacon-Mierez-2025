@@ -10,15 +10,33 @@ const PerfilPage = () => {
 
   useEffect(() => {
     axios.get('http://localhost:3000/api/usuarios/me')
-    .then((res) => {
-      setPerfil(res.data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      setError(err.response?.data?.error || 'Error al cargar perfil');
-      setLoading(false);
-    });
+      .then((res) => {
+        setPerfil(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.response?.data?.error || 'Error al cargar perfil');
+        setLoading(false);
+      });
   }, []);
+
+  // Mapeo de avatars (igual que en ConfiguracionUsuario)
+  const avatarMap: { [key: string]: string } = {
+    avatar1: '/assets/avatar1.svg',
+    avatar2: '/assets/avatar2.svg',
+    avatar3: '/assets/avatar3.svg',
+    avatar4: '/assets/avatar4.svg',
+    avatar5: '/assets/avatar5.svg',
+    avatar6: '/assets/avatar6.svg',
+  };
+
+  const resolveAvatarSrc = (avatarValue: string | undefined | null) => {
+    if (!avatarValue) return null;
+    // Si ya es una URL absoluta o una ruta que empieza con '/', usarla tal cual
+    if (avatarValue.startsWith('http') || avatarValue.startsWith('/')) return avatarValue;
+    // Si es un id tipo 'avatar1', mapearlo
+    return avatarMap[avatarValue] ?? null;
+  };
 
   if (loading) {
     return (
@@ -53,6 +71,8 @@ const PerfilPage = () => {
 
   if (!perfil) return null;
 
+  const currentAvatarSrc = resolveAvatarSrc(perfil.avatar);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header Section */}
@@ -61,8 +81,16 @@ const PerfilPage = () => {
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <div className="w-32 h-32 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30">
-                <User className="w-16 h-16 text-white" />
+              <div className="w-32 h-32 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30 overflow-hidden">
+                {currentAvatarSrc ? (
+                  <img
+                    src={currentAvatarSrc}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-16 h-16 text-white" />
+                )}
               </div>
             </div>
 
@@ -168,12 +196,12 @@ const PerfilPage = () => {
                       <div>
                         <p className="text-sm text-gray-500">Miembro desde</p>
                         <p className="font-medium text-gray-900">
-                          {new Date(perfil.createdAt).toLocaleDateString('es-ES', {
+                          {perfil.createdAt ? new Date(perfil.createdAt).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                             timeZone: 'UTC'
-                          })}
+                          }) : '-'}
                         </p>
                       </div>
                     </div>

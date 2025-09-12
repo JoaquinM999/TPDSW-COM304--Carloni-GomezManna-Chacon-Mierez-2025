@@ -141,7 +141,7 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response) => {
     }
 
     // Only allow updating profile fields, not sensitive data like password or role
-    const allowedFields = ['nombre', 'biografia', 'ubicacion', 'genero', 'email', 'username'];
+    const allowedFields = ['nombre', 'biografia', 'ubicacion', 'genero', 'email', 'username', 'avatar'];
     const updates: any = {};
 
     for (const field of allowedFields) {
@@ -163,24 +163,50 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Delete user
-export const deleteUser = async (req: AuthRequest, res: Response) => {
+// Check if username or email already exists
+export const checkUserExists = async (req: AuthRequest, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const userId = +req.params.id;
+    const { username, email } = req.body;
 
-    if (!req.user || (typeof req.user === 'object' && req.user.id !== userId)) {
-      return res.status(403).json({ error: 'Not authorized to delete this user' });
+    if (!username && !email) {
+      return res.status(400).json({ error: 'Username or email is required' });
     }
 
-    const user = await orm.em.findOne(Usuario, { id: userId });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    const existingUserByEmail = email ? await orm.em.findOne(Usuario, { email }) : null;
+    const existingUserByUsername = username ? await orm.em.findOne(Usuario, { username }) : null;
+
+    const result: any = {};
+
+    if (existingUserByEmail) {
+      result.emailExists = true;
     }
 
-    await orm.em.removeAndFlush(user);
-    res.json({ message: 'User deleted successfully' });
+    if (existingUserByUsername) {
+      result.usernameExists = true;
+    }
+
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Error deleting user' });
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+};
+
+// Delete all users
+export const deleteAllUsers = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+
+    // Optional: Add authorization check here if needed
+    // For example, check if user is admin: if (!req.user || req.user.rol !== RolUsuario.ADMIN) { ... }
+
+    const users = await orm.em.find(Usuario, {});
+    await orm.em.removeAndFlush(users);
+
+    res.json({ message: 'All users deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting users' });
   }
 };

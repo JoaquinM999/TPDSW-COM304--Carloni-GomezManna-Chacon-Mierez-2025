@@ -45,6 +45,9 @@ export class Usuario {
   @Property({ columnType: 'varchar(20)', nullable: true })
   genero?: 'masculino' | 'femenino' | 'otro';
 
+  @Property({ nullable: true })
+  avatar?: string;
+
   // Auditoría
   @Property({ type: 'date', onCreate: () => new Date() })
   createdAt: Date = new Date();

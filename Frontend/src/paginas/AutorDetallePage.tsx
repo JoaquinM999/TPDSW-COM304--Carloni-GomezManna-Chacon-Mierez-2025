@@ -1,39 +1,65 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
-const autoresMock = [
-  { id: 1, nombre: 'Gabriel', apellido: 'García Márquez', libros: ['Cien años de soledad', 'El amor en los tiempos del cólera'] },
-  { id: 2, nombre: 'Isabel', apellido: 'Allende', libros: ['La casa de los espíritus', 'Eva Luna'] },
-  { id: 3, nombre: 'J.K.', apellido: 'Rowling', libros: ['Harry Potter y la piedra filosofal', 'Harry Potter y la cámara secreta'] },
-];
+interface AutorDetalle {
+  id: string;
+  nombre: string;
+  apellido: string;
+  bio?: string;
+  libros: number;
+}
 
 const AutorDetallePage: React.FC = () => {
-  const { id } = useParams();
-  const autor = autoresMock.find((a) => a.id === Number(id));
+  const { id } = useParams<{ id?: string }>();
+  const [autor, setAutor] = useState<AutorDetalle | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!id) {
+    return <div className="text-center py-6">ID de autor inválido</div>;
+  }
+
+  const authorId = id;
+
+  useEffect(() => {
+    const fetchAutorDetalle = async () => {
+      try {
+        const response = await axios.get(`/api/open-library/authors/${authorId}`);
+        const data = response.data;
+        setAutor({
+          id: authorId,
+          nombre: data.name ? data.name.split(' ')[0] : '',
+          apellido: data.name ? data.name.split(' ').slice(1).join(' ') : '',
+          bio: typeof data.bio === 'string' ? data.bio : (data.bio?.value ?? ''),
+          libros: data.work_count || 0,
+        });
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar detalles del autor');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAutorDetalle();
+  }, [id]);
+
+  if (loading) {
+    return <div className="text-center py-6">Cargando detalles del autor...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-6 text-red-600">Error: {error}</div>;
+  }
 
   if (!autor) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-red-600">Autor no encontrado</h1>
-        <Link to="/autores" className="text-green-600 underline">Volver a la lista de autores</Link>
-      </div>
-    );
+    return <div className="text-center py-6">Autor no encontrado</div>;
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-green-700">
-        {autor.nombre} {autor.apellido}
-      </h1>
-      <h2 className="text-lg text-gray-700 mt-2">Libros publicados:</h2>
-      <ul className="list-disc list-inside mt-2">
-        {autor.libros.map((libro, index) => (
-          <li key={index} className="text-gray-800">{libro}</li>
-        ))}
-      </ul>
-      <Link to="/autores" className="mt-4 inline-block text-green-600 hover:text-green-800">
-        ← Volver a Autores
-      </Link>
+      <h1 className="text-3xl font-bold mb-4">{autor.nombre} {autor.apellido}</h1>
+      {autor.bio && <p className="mb-4">{autor.bio}</p>}
+      <p>Libros publicados: {autor.libros}</p>
     </div>
   );
 };

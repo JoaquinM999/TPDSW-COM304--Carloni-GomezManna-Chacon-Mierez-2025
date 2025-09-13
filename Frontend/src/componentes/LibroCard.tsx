@@ -8,7 +8,7 @@ interface LibroCardProps {
   extraInfo?: string;
 }
 
-const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, description, extraInfo }) => {
+const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo }) => {
   const imagenValida = (img: string | null | undefined) =>
     !!img &&
     typeof img === "string" &&

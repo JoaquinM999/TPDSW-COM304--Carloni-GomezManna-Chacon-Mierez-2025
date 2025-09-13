@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye, Plus, X, Edit, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Eye } from 'lucide-react';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
 
 interface LibroFavorito {
@@ -31,39 +31,7 @@ interface CategoriaFavorita {
   fechaAgregado: string;
 }
 
-// Mock data - replace with your database
-const mockLibrosFavoritos: LibroFavorito[] = [
-  {
-    id: 1,
-    titulo: 'Cien años de soledad',
-    autor: 'Gabriel García Márquez',
-    categoria: 'Ficción',
-    rating: 4.8,
-    imagen: 'https://images.pexels.com/photos/1741230/pexels-photo-1741230.jpeg',
-    estado: 'leido',
-    fechaAgregado: '2024-01-15'
-  },
-  {
-    id: 2,
-    titulo: 'Dune',
-    autor: 'Frank Herbert',
-    categoria: 'Ciencia Ficción',
-    rating: 4.7,
-    imagen: 'https://images.pexels.com/photos/1029141/pexels-photo-1029141.jpeg',
-    estado: 'ver-mas-tarde',
-    fechaAgregado: '2024-01-10'
-  },
-  {
-    id: 3,
-    titulo: 'El Código Da Vinci',
-    autor: 'Dan Brown',
-    categoria: 'Misterio',
-    rating: 4.2,
-    imagen: 'https://images.pexels.com/photos/1130980/pexels-photo-1130980.jpeg',
-    estado: 'pendiente',
-    fechaAgregado: '2024-01-08'
-  }
-];
+
 
 const mockAutoresFavoritos: AutorFavorito[] = [
   {
@@ -104,7 +72,6 @@ export const FavoritosPage: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [listas, setListas] = useState<Lista[]>([]);
   const [librosFavoritos, setLibrosFavoritos] = useState<LibroFavorito[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,8 +106,6 @@ export const FavoritosPage: React.FC = () => {
         setLibrosFavoritos(libros);
       } catch (error) {
         console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 

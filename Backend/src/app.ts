@@ -18,6 +18,7 @@ import { reaccionRoutes } from './routes/reaccion.routes';
 import { seguimientoRoutes } from './routes/seguimiento.routes';
 import { recomendacionRoutes } from './routes/recomendacion.routes';
 import { protectedRoutes } from './routes/protected.route';
+import { openLibraryRoutes } from './routes/openLibrary.routes';
 import { authenticateJWT } from './middleware/auth.middleware';
 
 const app = express(); 
@@ -34,7 +35,7 @@ app.use('/api/favoritos', favoritosRoutes);
 app.use('/api/lista', listaRoutes);
 app.use('/api/saga', sagaRoutes);
 app.use('/api/categoria', categoriaRoutes);
-app.use('/api/autor', autorRoutes);
+app.use('/api/autores', autorRoutes);
 app.use('/api/libro', libroRoutes);
 app.use('/api/resena', resenaRoutes);
 app.use('/api/contenido-lista', contenidoListaRoutes);
@@ -44,6 +45,7 @@ app.use('/api/recomendaciones', recomendacionRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
+app.use('/api/open-library', openLibraryRoutes);
 
 // Global error handler middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

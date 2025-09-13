@@ -1,11 +1,18 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/core';
 import { Autor } from '../entities/autor.entity';
+import { OpenLibraryService } from '../services/openLibrary.service';
+
+const openLibraryService = new OpenLibraryService();
 
 export const getAutores = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as MikroORM;
-  const autores = await orm.em.find(Autor, {});
-  res.json(autores);
+  try {
+    const searchQuery = req.query.q ? String(req.query.q) : '';
+    const authorsFromOpenLibrary = await openLibraryService.searchAuthors(searchQuery);
+    res.json(authorsFromOpenLibrary);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching authors from Open Library API' });
+  }
 };
 
 export const getAutorById = async (req: Request, res: Response) => {
@@ -39,4 +46,16 @@ export const deleteAutor = async (req: Request, res: Response) => {
 
   await orm.em.removeAndFlush(autor);
   res.json({ mensaje: 'Autor eliminado' });
+};
+
+export const getAutoresWithBooks = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const autores = await orm.em.find(Autor, {}, { populate: ['libros'] });
+  const autoresWithBooks = autores.filter(autor => autor.libros.length > 0).map(autor => ({
+    id: autor.id,
+    nombre: autor.nombre,
+    apellido: autor.apellido,
+    libros: autor.libros.length
+  }));
+  res.json(autoresWithBooks);
 };

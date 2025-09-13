@@ -1,5 +1,4 @@
-// src/componentes/DashboardPage.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAccessToken, getNewAccessToken } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 

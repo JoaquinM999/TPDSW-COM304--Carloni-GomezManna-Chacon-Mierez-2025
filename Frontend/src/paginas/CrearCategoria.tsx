@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tag, Plus, Palette } from 'lucide-react';
+import { Tag, Plus } from 'lucide-react';
 
 const coloresDisponibles = [
   { nombre: 'Azul', clase: 'bg-blue-500', valor: '#3B82F6' },

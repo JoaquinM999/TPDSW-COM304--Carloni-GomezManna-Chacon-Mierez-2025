@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Book, Upload, Plus, X, Globe, Users, Calendar, FileText, Tag, Building } from 'lucide-react';
+import { Book, Upload, Plus, Globe } from 'lucide-react';
 
 interface Idioma {
   codigo: string;

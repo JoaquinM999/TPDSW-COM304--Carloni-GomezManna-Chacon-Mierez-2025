@@ -1,7 +1,9 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import LibroCard from "../componentes/LibroCard";
+import BookDetailsFromGoogle from "../componentes/BookDetailsFromGoogle";
 
 interface Libro {
   id: string;
@@ -375,6 +377,10 @@ export default function TodosLosLibros() {
           </div>
         </details>
       </main>
+      {/* Integración del componente BookDetailsFromGoogle para un bookId de ejemplo */}
+      <section className="max-w-5xl mx-auto mt-12 p-6 bg-white rounded-3xl shadow-lg border border-gray-100">
+        <BookDetailsFromGoogle bookId="example" />
+      </section>
     </div>
   );
 }

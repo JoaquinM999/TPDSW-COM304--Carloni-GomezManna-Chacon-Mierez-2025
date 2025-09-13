@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { trendingBooksController, getBookBySlugController } from '../controllers/hardcoverController';
+import { trendingBooksController, buscarLibroHardcoverController } from '../controllers/hardcoverController';
 
 const router = Router();
 
 router.get('/trending', trendingBooksController);
-router.get('/libro/:slug', getBookBySlugController);
+router.get('/buscar', buscarLibroHardcoverController);
 
 export default router;

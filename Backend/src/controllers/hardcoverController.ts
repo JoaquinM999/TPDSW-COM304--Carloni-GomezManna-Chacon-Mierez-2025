@@ -18,23 +18,17 @@ export async function trendingBooksController(req: Request, res: Response) {
   }
 }
 
-export async function getBookBySlugController(req: Request, res: Response) {
+export async function buscarLibroHardcoverController(req: Request, res: Response) {
+  const query = req.query.q as string | undefined;
+  if (!query) {
+    return res.status(400).json({ error: 'Parámetro de búsqueda "q" es requerido' });
+  }
+
   try {
-    const { slug } = req.params;
-
-    if (!slug) {
-      return res.status(400).json({ error: 'Slug es requerido' });
-    }
-
-    const book = await buscarLibroHardcover(slug);
-
-    if (!book) {
-      return res.status(404).json({ error: 'Libro no encontrado' });
-    }
-
-    res.json(book);
+    const books = await buscarLibroHardcover(query);
+    res.json(books);
   } catch (error: any) {
-    console.error('Hardcover book by slug error:', error?.message || error);
-    res.status(500).json({ error: 'No se pudo obtener el libro', details: error?.message });
+    console.error('Error buscando libros en Hardcover:', error?.message || error);
+    res.status(500).json({ error: 'Error buscando libros en Hardcover', details: error?.message });
   }
 }

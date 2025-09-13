@@ -485,3 +485,46 @@ function maybeBackgroundRefresh(expiresAt?: number) {
   }, jitter);
   return;
 }
+
+// --- Función de búsqueda ---
+export async function buscarLibroHardcover(rawQuery: string): Promise<HardcoverBook[]> {
+  if (!rawQuery) return [];
+
+  const query = rawQuery.trim();
+  if (!query) return [];
+
+  const searchQuery = `
+    query {
+      books(where: {title: {_ilike: "%${query.replace(/"/g, '\\"')}%"}}, limit: 20) {
+        id
+        title
+        slug
+        activities_count
+        editions {
+          image { url width height }
+          language { id }
+        }
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchWithRetry(searchQuery);
+    if (!data || !Array.isArray(data.books)) {
+      return [];
+    }
+
+    const books: HardcoverBook[] = data.books.map((b: any) => ({
+      id: b.id,
+      title: b.title,
+      slug: b.slug,
+      activities_count: b.activities_count,
+      coverUrl: getBestCover(b.editions || []),
+    }));
+
+    return books;
+  } catch (err) {
+    console.error("Error buscando en Hardcover:", String(err));
+    return [];
+  }
+}

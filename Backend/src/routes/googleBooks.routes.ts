@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { obtenerLibros, obtenerLibroPorId } from '../controllers/googleBooks.controller';
+import { obtenerLibros, obtenerSugerencias } from '../controllers/googleBooks.controller';
 
 const router = Router();
 
 router.get('/buscar', obtenerLibros);
-router.get('/:id', obtenerLibroPorId);
+router.get('/sugerencias', obtenerSugerencias);
 
 export default router;

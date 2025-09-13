@@ -17,6 +17,7 @@ interface SearchBarProps {
   onSearch?: (query: string) => void;
   database?: SearchItem[];
   className?: string;
+  fetchSuggestions?: (query: string) => Promise<SearchItem[]>;
 }
 
 const mockDatabase: SearchItem[] = [

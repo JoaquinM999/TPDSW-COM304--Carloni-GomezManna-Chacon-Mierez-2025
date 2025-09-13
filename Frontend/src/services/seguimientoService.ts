@@ -66,4 +66,15 @@ export const seguimientoService = {
 
     return response.json();
   },
+
+  async getFollowCounts(userId: number): Promise<{ seguidores: number; siguiendo: number }> {
+    const response = await fetchWithRefresh(`/seguimiento/counts/${userId}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Error al obtener conteos de seguimiento');
+    }
+
+    return response.json();
+  },
 };

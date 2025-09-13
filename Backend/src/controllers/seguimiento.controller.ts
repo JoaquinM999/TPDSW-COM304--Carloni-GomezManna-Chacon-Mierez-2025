@@ -84,3 +84,13 @@ export const getSeguidos = async (req: Request, res: Response) => {
 
   res.json(usuariosSeguidos);
 };
+
+export const getFollowCounts = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const userId = Number(req.params.userId);
+
+  const seguidoresCount = await orm.em.count(Seguimiento, { seguido: userId });
+  const siguiendoCount = await orm.em.count(Seguimiento, { seguidor: userId });
+
+  res.json({ seguidores: seguidoresCount, siguiendo: siguiendoCount });
+};

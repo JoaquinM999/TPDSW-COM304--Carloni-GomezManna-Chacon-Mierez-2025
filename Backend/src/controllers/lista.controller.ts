@@ -58,6 +58,16 @@ export const updateLista = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const lista = await orm.em.findOne(Lista, { id: +req.params.id });
   if (!lista) return res.status(404).json({ error: 'No encontrada' });
+
+  // Check authentication
+  const userId = (req as any).user?.id;
+  if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+  // Check ownership
+  if (lista.usuario.id !== userId) {
+    return res.status(403).json({ error: 'No autorizado para modificar esta lista' });
+  }
+
   orm.em.assign(lista, req.body);
   await orm.em.flush();
   res.json(lista);
@@ -67,6 +77,16 @@ export const deleteLista = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const lista = await orm.em.findOne(Lista, { id: +req.params.id });
   if (!lista) return res.status(404).json({ error: 'No encontrada' });
+
+  // Check authentication
+  const userId = (req as any).user?.id;
+  if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+  // Check ownership
+  if (lista.usuario.id !== userId) {
+    return res.status(403).json({ error: 'No autorizado para eliminar esta lista' });
+  }
+
   await orm.em.removeAndFlush(lista);
   res.json({ mensaje: 'Eliminada' });
 };

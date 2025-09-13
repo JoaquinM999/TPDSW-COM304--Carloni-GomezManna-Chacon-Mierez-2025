@@ -60,9 +60,9 @@
 
 ## Phase 2: Frontend Lists Management
 - [x] Update FavoritosPage to fetch user's lists from backend
-- [ ] Add UI for creating new lists and managing list contents
 - [x] Connect book state buttons to Lista operations
-- [ ] Update lista.controller.ts with auth checks
+- [ ] Add UI for creating new lists and managing list contents
+- [x] Update lista.controller.ts with auth checks
 
 ## Phase 3: Recommendations Implementation
 - [x] Implement LibrosRecomendados.tsx to fetch from /recomendacion endpoint
@@ -73,6 +73,7 @@
 - [ ] Display real follow counts and follower lists
 
 ## Phase 5: Admin Moderation UI
-- [ ] Create AdminModerationPage component
-- [ ] Fetch pending reviews and allow approve/reject actions
-- [ ] Add admin navigation/routing
+- [x] Update resenaService.ts with functions for getting pending reviews, approve, reject
+- [x] Create AdminModerationPage component
+- [x] Fetch pending reviews and allow approve/reject actions
+- [x] Add admin navigation/routing in App.tsx

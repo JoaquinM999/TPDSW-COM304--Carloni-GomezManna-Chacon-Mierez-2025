@@ -29,3 +29,35 @@ export const agregarReseña = async (
 
   return res.json();
 };
+
+export const obtenerResenasPendientes = async (token: string) => {
+  const res = await fetch(`${API_URL}?estado=PENDING`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Error al obtener reseñas pendientes');
+  return res.json();
+};
+
+export const aprobarResena = async (id: number, token: string) => {
+  const res = await fetch(`${API_URL}/${id}/approve`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Error al aprobar reseña');
+  return res.json();
+};
+
+export const rechazarResena = async (id: number, token: string) => {
+  const res = await fetch(`${API_URL}/${id}/reject`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Error al rechazar reseña');
+  return res.json();
+};

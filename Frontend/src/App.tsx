@@ -15,6 +15,7 @@ import { FavoritosPage } from './paginas/FavoritosPage';
 import LibrosPage from './paginas/LibrosPage';
 import { PerfilUsuario } from './paginas/PerfilUsuario';
 import { CrearLibro } from './paginas/CrearLibro';
+// de crear libro hay /crear-libro dentro de perfilpage
 import { CrearCategoria } from './paginas/CrearCategoria';
 import { CrearEditorial } from './paginas/CrearEditorial';
 import { CrearSaga } from './paginas/CrearSaga';
@@ -31,6 +32,7 @@ import LibrosRecomendados from './paginas/LibrosRecomendados';
 import LibrosPopulares from './paginas/LibrosPopulares';
 
 import ConfiguracionUsuario from './paginas/ConfiguracionUsuario';
+import AdminModerationPage from './paginas/AdminModerationPage';
 
 interface FooterLink {
   name: string;
@@ -137,6 +139,7 @@ function Layout() {
           <Route path="/crear-categoria" element={<CrearCategoria />} />
           <Route path="/crear-editorial" element={<CrearEditorial />} />
           <Route path="/crear-saga" element={<CrearSaga />} />
+          <Route path="/admin/moderation" element={<AdminModerationPage />} />
         </Routes>
       </main>
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { User, UserPlus, UserCheck, Star, Heart, Book, List, MessageCircle, Calendar, MapPin, Mail, Users, Eye, Lock } from 'lucide-react';
+import { User, UserPlus, UserCheck, Star, Heart, Book, List, MessageCircle, Calendar, MapPin, Users, Eye, Lock } from 'lucide-react';
 import { seguimientoService } from '../services/seguimientoService';
 
 interface Usuario {

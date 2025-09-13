@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Eye } from 'lucide-react';
@@ -67,7 +67,7 @@ const mockCategoriasFavoritas: CategoriaFavorita[] = [
   }
 ];
 
-export const FavoritosPage: React.FC = () => {
+export const FavoritosPage = () => {
   const [activeTab, setActiveTab] = useState<'libros' | 'autores' | 'categorias'>('libros');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [listas, setListas] = useState<Lista[]>([]);

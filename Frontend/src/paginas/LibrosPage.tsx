@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import LibroCard from "../componentes/LibroCard";
@@ -201,14 +201,7 @@ export default function TodosLosLibros() {
   }, [debouncedSearchTerm, pagina, searchFilter]);
 
   // helper imagen válida
-  const imagenValida = (img: string | null | undefined) =>
-    !!img &&
-    typeof img === "string" &&
-    !img.toLowerCase().includes("image_not_available") &&
-    !img.toLowerCase().includes("no_image") &&
-    !img.toLowerCase().includes("nophoto");
 
-  const totalPages = totalItems ? Math.ceil(totalItems / librosPorPagina) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">

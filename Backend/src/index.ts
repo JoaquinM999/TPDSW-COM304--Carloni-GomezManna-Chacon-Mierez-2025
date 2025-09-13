@@ -25,7 +25,7 @@ async function main() {
   // Guardar ORM en app para acceder desde req.app.get('orm')
   app.set('orm', orm);
 
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3002;
   app.listen(PORT, () => {
     console.log(`🚀 Servidor en puerto ${PORT}`);
   });

@@ -13,24 +13,39 @@ const AutoresPage: React.FC = () => {
   const [autores, setAutores] = useState<Autor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  const fetchAutores = async (pageNumber: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`/api/autores/with-books?page=${pageNumber}&limit=10`);
+      if (response.data && Array.isArray(response.data.data)) {
+        setAutores(response.data.data);
+        setPage(response.data.pagination.page);
+        setTotalPages(response.data.pagination.totalPages);
+      } else {
+        setAutores([]);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al cargar autores');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAutores = async () => {
-      try {
-        const response = await axios.get('/api/open-library/authors/search'); // Get authors from Open Library
-        if (Array.isArray(response.data)) {
-          setAutores(response.data);
-        } else {
-          setAutores([]);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar autores');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAutores();
-  }, []);
+    fetchAutores(page);
+  }, [page]);
+
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
 
   if (loading) {
     return <div className="text-center py-6">Cargando autores...</div>;
@@ -59,6 +74,25 @@ const AutoresPage: React.FC = () => {
             </Link>
           </div>
         ))}
+      </div>
+      <div className="flex justify-center mt-6 space-x-4">
+        <button
+          onClick={handlePrevPage}
+          disabled={page === 1}
+          className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+        >
+          Anterior
+        </button>
+        <span className="self-center">
+          Página {page} de {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={page === totalPages}
+          className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );

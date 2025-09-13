@@ -4,13 +4,14 @@ import {
   getLibros, getLibroById, createLibro, updateLibro, deleteLibro,
   getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController
 } from '../controllers/libro.controller';
+import { validateLibro } from '../middleware/libroValidation.middleware';
 
 const router = Router();
 
 router.get('/', getLibros);
 router.get('/:id', getLibroById);
-router.post('/', createLibro);
-router.put('/:id', updateLibro);
+router.post('/', validateLibro, createLibro);
+router.put('/:id', validateLibro, updateLibro);
 router.delete('/:id', deleteLibro);
 
 router.get('/categoria/:categoriaId', getLibrosByCategoria);

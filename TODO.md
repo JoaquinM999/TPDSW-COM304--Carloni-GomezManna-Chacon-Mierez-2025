@@ -1,36 +1,35 @@
-# TODO: Corregir errores de TypeScript en el frontend
+# ✅ TODO: Corregir errores de TypeScript y APIs externas - EN PROGRESO
 
-## Errores encontrados:
-- 27 errores en 12 archivos
-- Principalmente imports no usados y variables no usadas
-- Un error de tipo en AutorDetallePage.tsx
+## Errores identificados:
+
+### Frontend:
+- ❌ 29 errores de TypeScript debido a configuración restrictiva `"types": []`
+- ❌ Definiciones de tipos bloqueadas para dependencias de testing
+- ✅ Build de producción funciona correctamente
+
+### Backend:
+- ✅ Tests pasando (88/88)
+- ❌ Errores de API externa (NeutrinoAPI - 403 Forbidden)
+- ❌ Advertencias de Redis en entorno de testing
+- ❌ Falta documentación de variables de entorno
 
 ## Plan de corrección:
-1. [x] Corregir error de tipo en AutorDetallePage.tsx (línea 25: 'id' es string | undefined pero esperado string)
-2. Remover imports no usados en:
-   - Dashboard.tsx: React
-   - LibroCard.tsx: description (variable)
-   - ResenaList.tsx: React
-   - CategoriasPage.tsx: Filter
-   - CrearCategoria.tsx: Palette
-   - CrearLibro.tsx: X, Users, Calendar, FileText, Tag, Building
-   - FavoritosPage.tsx: AnimatePresence, Bookmark, Plus, X, Edit, Trash2, mockLibrosFavoritos, loading
-   - LibrosPage.tsx: React, useRef, imagenValida, totalPages
-   - LibrosPorCategoria.tsx: React
-   - PerfilUsuario.tsx: Mail
-   - SagasPage.tsx: React
 
-## Pasos:
-- [x] Leer y corregir AutorDetallePage.tsx
-- [x] Corregir Dashboard.tsx
-- [x] Corregir LibroCard.tsx
-- [x] Corregir ResenaList.tsx
-- [x] Corregir CategoriasPage.tsx
-- [x] Corregir CrearCategoria.tsx
-- [x] Corregir CrearLibro.tsx
-- [ ] Corregir FavoritosPage.tsx
-- [ ] Corregir LibrosPage.tsx
-- [ ] Corregir LibrosPorCategoria.tsx
-- [ ] Corregir PerfilUsuario.tsx
-- [ ] Corregir SagasPage.tsx
-- [ ] Verificar que no hay errores corriendo tsc --noEmit --project tsconfig.app.json
+### 1. Frontend - Configuración TypeScript
+- [ ] Remover restricción `"types": []` de tsconfig.json
+- [ ] Verificar compilación TypeScript sin errores
+- [ ] Mantener funcionalidad de build
+
+### 2. Backend - Manejo de APIs externas
+- [ ] Mejorar manejo de errores en filtrarMalasPalabras.ts
+- [ ] Agregar validación de tokens de API
+- [ ] Crear archivo .env.example con documentación
+
+### 3. Documentación
+- [ ] Actualizar TODO.md con estado actual
+- [ ] Documentar requisitos de configuración
+
+## Estado actual:
+- Frontend: Build exitoso pero errores de TypeScript
+- Backend: Funcional con advertencias de configuración
+- Tests: Todos pasando pero con logs de error esperados

@@ -12,5 +12,6 @@
     "skipLibCheck": true,
     "types": ["jest", "node"]
   },
-  "include": ["src", "test", "mikro-orm.config.ts"]
+  "include": ["src", "mikro-orm.config.ts"],
+  "exclude": ["test"]
 }

@@ -189,7 +189,7 @@ const BACKGROUND_REFRESH_THRESHOLD_MS = Math.max(15 * 1000, Math.round(MEMORY_TT
 const BACKGROUND_REFRESH_JITTER_MS = 5_000; // hasta 5s de jitter
 
 // cuánto esperar por la promesa inFlight antes de devolver "loading" (ms)
-const INFLIGHT_WAIT_MS = 2000; // 2s: ajustable según experiencia de UX
+const INFLIGHT_WAIT_MS = 10000; // 10s: ajustable según experiencia de UX
 
 // métrica simple para fallos de redis (puedes exponer esto por logs/metrics)
 let redisFailureCount = 0;
@@ -241,15 +241,21 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
 
     const query = `
       query {
-        books(order_by: {activities_count: desc}, limit: 20) {
+        books(order_by: {activities_count: desc}, limit: 15) {
           id
           title
           slug
           activities_count
           description
-          editions {
+          editions(limit: 5) {
             image { url width height }
             language { id }
+          }
+          contributions {
+            author {
+              id
+              name
+            }
           }
         }
       }
@@ -274,7 +280,7 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
       slug: b.slug,
       activities_count: b.activities_count,
       coverUrl: getBestCover(b.editions || []),
-      authors: [],
+      authors: b.contributions?.map((c: any) => c.author?.name).filter(Boolean) || [],
       description: b.description || null,
     }));
 
@@ -417,7 +423,14 @@ export async function buscarLibroHardcover(slug: string): Promise<HardcoverBook 
         slug
         activities_count
         description
-        editions {
+        release_date
+        subtitle
+        contributions {
+          author {
+            name
+          }
+        }
+        editions(limit: 10) {
           image { url width height }
           language { id }
         }
@@ -448,7 +461,7 @@ export async function buscarLibroHardcover(slug: string): Promise<HardcoverBook 
       slug: book.slug,
       activities_count: book.activities_count,
       coverUrl: getBestCover(book.editions || []),
-      authors: book.authors?.map((a: any) => a.name) || [],
+      authors: book.contributions?.map((c: any) => c.author?.name).filter(Boolean) || [],
       description: book.description || null,
     };
   } catch (error) {

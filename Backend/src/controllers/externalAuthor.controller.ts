@@ -69,8 +69,8 @@ async function setCachedData(key: string, data: any): Promise<void> {
   // Set in-memory cache
   authorCache.set(key, { data, timestamp: Date.now() });
 
-  // Set Redis cache
-  if (redis) {
+  // Set Redis cache only for hardcover related data
+  if (redis && key.startsWith('hardcover_')) {
     try {
       await redis.setex(key, REDIS_TTL_SEC, JSON.stringify(data));
     } catch (err) {
@@ -230,6 +230,21 @@ async function getWikipediaAuthorInfo(authorName: string): Promise<{ bio?: strin
   }
 }
 
+async function getHardcoverCoverWithoutCache(title: string): Promise<string | null> {
+  try {
+    const response = await retryWithBackoff(() =>
+      axios.get(`https://api.hardcover.app/v1/books?title=${encodeURIComponent(title)}&limit=1`)
+    );
+    const data = response.data;
+    if (data && data.length > 0) {
+      return data[0].coverUrl || null;
+    }
+  } catch (error) {
+    console.error('Error fetching cover from Hardcover:', error);
+  }
+  return null;
+}
+
 function combineWorksWithGoogleBooks(works: OpenLibraryWork[], googleBooks: GoogleBookItem[]): Work[] {
   const googleBooksMap: { [key: string]: GoogleBookInfo } = {};
   googleBooks.forEach(book => {
@@ -246,8 +261,12 @@ function combineWorksWithGoogleBooks(works: OpenLibraryWork[], googleBooks: Goog
     const title = work.title;
     const googleInfo = googleBooksMap[title.toLowerCase()] || {};
 
-    if (!googleInfo.thumbnail && work.covers && work.covers.length > 0) {
-      googleInfo.thumbnail = `https://covers.openlibrary.org/b/id/${work.covers[0]}-M.jpg`;
+    // Fallback to OpenLibrary cover if Google Books thumbnail is missing
+    if (!googleInfo.thumbnail) {
+      if (work.covers && work.covers.length > 0) {
+        googleInfo.thumbnail = `https://covers.openlibrary.org/b/id/${work.covers[0]}-M.jpg`;
+      }
+      // No placeholder set here, will be handled later for Hardcover fallback
     }
 
     return { title, googleBooks: googleInfo };
@@ -271,13 +290,14 @@ export const searchAuthor = async (req: Request, res: Response) => {
     const authors = response.data.docs || [];
     const numFound = response.data.numFound || 0;
 
-    // Filter unique authors by name to avoid duplicates
+    // Filter unique authors by normalized name to avoid duplicates
     const seen = new Set<string>();
     const uniqueAuthors = authors.filter((author: any) => {
-      if (seen.has(author.name)) {
+      const normalized = author.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+      if (seen.has(normalized)) {
         return false;
       } else {
-        seen.add(author.name);
+        seen.add(normalized);
         return true;
       }
     });
@@ -336,6 +356,26 @@ export const getAuthor = async (req: Request, res: Response) => {
   const googleBooks = await searchBooksByAuthor(authorDetails.name);
   const combinedWorks = combineWorksWithGoogleBooks(works, googleBooks);
 
+  // Deduplicate works by normalized title to avoid duplicates
+  const seenWorks = new Set<string>();
+  const uniqueWorks = combinedWorks.filter(work => {
+    const normalized = work.title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+    if (seenWorks.has(normalized)) {
+      return false;
+    } else {
+      seenWorks.add(normalized);
+      return true;
+    }
+  });
+
+  // Fallback to Hardcover for works without thumbnail
+  for (const work of uniqueWorks) {
+    if (!work.googleBooks.thumbnail) {
+      const hardcoverCover = await getHardcoverCoverWithoutCache(work.title);
+      work.googleBooks.thumbnail = hardcoverCover || 'https://placehold.co/128x193?text=No+Cover';
+    }
+  }
+
   let bio = typeof authorDetails.bio === 'string'
     ? authorDetails.bio
     : authorDetails.bio?.value || undefined;
@@ -361,7 +401,7 @@ export const getAuthor = async (req: Request, res: Response) => {
       bio,
       photo
     },
-    works: combinedWorks
+    works: uniqueWorks
   };
 
   res.json(response);

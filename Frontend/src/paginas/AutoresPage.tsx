@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface Autor {
   id: string;
   name: string;
+  photo?: string;
 }
 
 const AutoresPage: React.FC = () => {
@@ -12,8 +13,57 @@ const AutoresPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const fetchAutores = async (name: string) => {
+  // Calculate total pages
+  const totalPages = Math.ceil(total / limit);
+
+  // Generate pagination numbers with ellipsis
+  const getPaginationNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    const halfMax = Math.floor(maxPagesToShow / 2);
+
+    let startPage = Math.max(1, page - halfMax);
+    let endPage = Math.min(totalPages, page + halfMax);
+
+    // Adjust if we're near the beginning or end
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      if (startPage === 1) {
+        endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+      } else if (endPage === totalPages) {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+    }
+
+    // Add first page and ellipsis if needed
+    if (startPage > 1) {
+      pages.push(1);
+      if (startPage > 2) {
+        pages.push('...');
+      }
+    }
+
+    // Add middle pages
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    // Add last page and ellipsis if needed
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pages.push('...');
+      }
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  const fetchAutores = async (name: string, page: number = 1, limit: number = 12) => {
     if (!name.trim()) {
       setAutores([]);
       return;
@@ -21,12 +71,15 @@ const AutoresPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/api/external-authors/search-author?name=${encodeURIComponent(name)}`);
+      const response = await fetch(`http://localhost:3000/api/external-authors/search-author?name=${encodeURIComponent(name)}&page=${page}&limit=${limit}`);
       if (!response.ok) {
         throw new Error('Error al buscar autores');
       }
-      const data: Autor[] = await response.json();
-      setAutores(data);
+      const data = await response.json();
+      setAutores(data.authors);
+      setTotal(data.total);
+      setPage(data.page);
+      setLimit(data.limit);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -35,12 +88,18 @@ const AutoresPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchAutores(searchTerm);
-    }, 500);
+    fetchAutores('Shakespeare'); // better default search term for meaningful authors
+  }, []);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (value.trim().length >= 2) {
+      fetchAutores(value);
+    } else {
+      setAutores([]);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
@@ -58,7 +117,7 @@ const AutoresPage: React.FC = () => {
             type="text"
             placeholder="Buscar autores por nombre..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full px-6 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-md bg-white"
           />
           <svg
@@ -90,17 +149,14 @@ const AutoresPage: React.FC = () => {
             className="bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
           >
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
+              <img
+                src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=48&background=0ea5e9&color=fff&format=png`}
+                alt={autor.name}
+                className="w-12 h-12 rounded-full mr-4 object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/default-avatar.png';
+                }}
+              />
               <h2 className="text-xl font-bold text-gray-800 group-hover:text-cyan-600 transition-colors">{autor.name}</h2>
             </div>
             <Link
@@ -121,6 +177,67 @@ const AutoresPage: React.FC = () => {
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-8">
+          <div className="flex items-center space-x-2">
+            {/* Previous button */}
+            <button
+              onClick={() => {
+                if (page > 1) {
+                  const newPage = page - 1;
+                  setPage(newPage);
+                  fetchAutores(searchTerm, newPage, limit);
+                }
+              }}
+              disabled={page === 1}
+              className="px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center space-x-1">
+              {getPaginationNumbers().map((pageNum, index) => (
+                <React.Fragment key={index}>
+                  {pageNum === '...' ? (
+                    <span className="px-3 py-2 text-gray-500">...</span>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const newPage = pageNum as number;
+                        setPage(newPage);
+                        fetchAutores(searchTerm, newPage, limit);
+                      }}
+                      className={`px-3 py-2 rounded-md transition-colors ${
+                        page === pageNum
+                          ? 'bg-cyan-600 text-white'
+                          : 'bg-white text-cyan-600 border border-cyan-600 hover:bg-cyan-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={() => {
+                if (page < totalPages) {
+                  const newPage = page + 1;
+                  setPage(newPage);
+                  fetchAutores(searchTerm, newPage, limit);
+                }
+              }}
+              disabled={page === totalPages}
+              className="px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

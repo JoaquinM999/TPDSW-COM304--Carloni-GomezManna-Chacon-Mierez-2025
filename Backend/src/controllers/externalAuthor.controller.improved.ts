@@ -4,8 +4,8 @@ import redis from '../redis';
 
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
-// Rate limiting and caching - optimized for maximum speed
-const REQUEST_DELAY = 1; // ms between requests - minimal delay for rate limiting
+// Rate limiting and caching - improved performance
+const REQUEST_DELAY = 25; // ms between requests - significantly reduced for better performance
 const MAX_RETRIES = 3;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in memory
 const REDIS_TTL_SEC = 12 * 60 * 60; // 12 hours in Redis
@@ -225,9 +225,32 @@ async function getWikipediaAuthorInfo(authorName: string): Promise<{ bio?: strin
     await setCachedData(cacheKey, result);
     return result;
   } catch (error) {
-    console.error('Error fetching from Wikipedia:', error);
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) {
+      console.log(`Wikipedia page not found for author: ${authorName}`);
+    } else {
+      console.error('Error fetching from Wikipedia:', error);
+    }
     return {};
   }
+}
+
+// Improved function to get author photo with multiple fallbacks
+async function getAuthorPhoto(authorId: string, authorName: string): Promise<string | undefined> {
+  // First try OpenLibrary details
+  const details = await getAuthorDetails(authorId);
+  if (details?.photos?.length) {
+    return `https://covers.openlibrary.org/a/id/${details.photos[0]}-L.jpg`;
+  }
+
+  // Fallback to Wikipedia
+  const wikiInfo = await getWikipediaAuthorInfo(authorName);
+  if (wikiInfo.photo) {
+    return wikiInfo.photo;
+  }
+
+  // Final fallback - generate avatar from name
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&size=96&background=0ea5e9&color=fff&format=png`;
 }
 
 function combineWorksWithGoogleBooks(works: OpenLibraryWork[], googleBooks: GoogleBookItem[]): Work[] {
@@ -255,7 +278,7 @@ function combineWorksWithGoogleBooks(works: OpenLibraryWork[], googleBooks: Goog
 }
 
 export const searchAuthor = async (req: Request, res: Response) => {
-  const { name, page = '1', limit = '12' } = req.query; // Default limit set to 12 authors per page
+  const { name, page = '1', limit = '20' } = req.query; // Default limit increased to 20
   if (!name || typeof name !== 'string') {
     return res.status(400).json({ error: 'Name parameter is required' });
   }
@@ -264,9 +287,9 @@ export const searchAuthor = async (req: Request, res: Response) => {
   const limitNum = parseInt(limit as string, 10);
 
   try {
-    // Fetch up to 200 authors for more pages (maintains speed with instant avatars)
+    // Fetch up to 1000 authors to handle duplicates and pagination correctly
     const response = await retryWithBackoff(() =>
-      axios.get(`https://openlibrary.org/search/authors.json?q=${encodeURIComponent(name)}&limit=200`)
+      axios.get(`https://openlibrary.org/search/authors.json?q=${encodeURIComponent(name)}&limit=1000`)
     );
     const authors = response.data.docs || [];
     const numFound = response.data.numFound || 0;
@@ -286,15 +309,15 @@ export const searchAuthor = async (req: Request, res: Response) => {
     const startIndex = (pageNum - 1) * limitNum;
     const paginatedAuthors = uniqueAuthors.slice(startIndex, startIndex + limitNum);
 
-    // For speed like books API - use instant avatar fallbacks instead of API calls
-    const result = paginatedAuthors.map((a: OpenLibraryAuthor) => {
+    // Fetch photos in parallel for better performance
+    const photoPromises = paginatedAuthors.map(async (a: OpenLibraryAuthor) => {
       const id = a.key.replace('/authors/', '');
-      // Use photo from initial search if available, otherwise instant avatar
-      const photo = (a.photos && a.photos.length > 0)
-        ? `https://covers.openlibrary.org/a/id/${a.photos[0]}-L.jpg`
-        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(a.name)}&size=96&backgroundColor=0ea5e9`;
+      const photo = await getAuthorPhoto(id, a.name);
       return { id, name: a.name, photo };
     });
+
+    // Wait for all photos to be fetched
+    const result = await Promise.all(photoPromises);
 
     res.json({
       total: uniqueAuthors.length,
@@ -325,7 +348,7 @@ export const getAuthor = async (req: Request, res: Response) => {
   }
 
   const authorDetails = await getAuthorDetails(authorKey);
-  if (!authorDetails || !authorDetails.name) {
+  if (!authorDetails) {
     return res.status(404).json({ error: 'Author details not found' });
   }
 
@@ -355,7 +378,7 @@ export const getAuthor = async (req: Request, res: Response) => {
   const response: AuthorDetailsResponse = {
     author: {
       id: authorKey,
-      name: authorDetails.name,
+      name: authorDetails.name || '',
       birth_date,
       death_date: authorDetails.death_date || undefined,
       bio,
@@ -369,8 +392,3 @@ export const getAuthor = async (req: Request, res: Response) => {
 
 // Export utility functions for testing
 export { retryWithBackoff, getCachedData, setCachedData };
-
-// Function to clear cache for testing
-export function clearCache() {
-  authorCache.clear();
-}

@@ -225,7 +225,7 @@ export const DetalleLibro: React.FC = () => {
             {libro.autores.map((a, i) => (
               <Link
                 key={i}
-                to={`/autor/${a}`}
+                to={`/autores/${encodeURIComponent(a)}`}
                 className="px-3 py-1 bg-white rounded-full shadow hover:shadow-md text-sm font-medium text-gray-700"
               >
                 <User className="w-4 h-4 inline mr-1" />

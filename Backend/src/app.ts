@@ -18,14 +18,15 @@ import { reaccionRoutes } from './routes/reaccion.routes';
 import { seguimientoRoutes } from './routes/seguimiento.routes';
 import { recomendacionRoutes } from './routes/recomendacion.routes';
 import { protectedRoutes } from './routes/protected.route';
+import { externalAuthorRoutes } from './routes/externalAuthor.routes';
 import { authenticateJWT } from './middleware/auth.middleware';
 
 const app = express(); 
 app.use(express.json());
 
-// ✅ Habilitar CORS para React (localhost:5173)
+// ✅ Habilitar CORS para React (localhost:5173 y 5174)
 app.use(cors({
-  origin: "http://localhost:5173"
+  origin: ["http://localhost:5173", "http://localhost:5174"]
 }));
 
 app.use('/api/auth', authRoutes);
@@ -44,6 +45,7 @@ app.use('/api/recomendaciones', recomendacionRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
+app.use('/api/external-authors', externalAuthorRoutes);
 
 // Global error handler middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

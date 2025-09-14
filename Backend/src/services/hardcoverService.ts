@@ -247,6 +247,9 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
           slug
           activities_count
           description
+          authors {
+            name
+          }
           editions {
             image { url width height }
             language { id }
@@ -274,7 +277,7 @@ export async function refreshTrendingBooks(): Promise<HardcoverBook[]> {
       slug: b.slug,
       activities_count: b.activities_count,
       coverUrl: getBestCover(b.editions || []),
-      authors: [],
+      authors: b.authors?.map((a: any) => a.name) || [],
       description: b.description || null,
     }));
 
@@ -417,6 +420,9 @@ export async function buscarLibroHardcover(slug: string): Promise<HardcoverBook 
         slug
         activities_count
         description
+        authors {
+          name
+        }
         editions {
           image { url width height }
           language { id }
@@ -448,7 +454,7 @@ export async function buscarLibroHardcover(slug: string): Promise<HardcoverBook 
       slug: book.slug,
       activities_count: book.activities_count,
       coverUrl: getBestCover(book.editions || []),
-      authors: [],
+      authors: book.authors?.map((a: any) => a.name) || [],
       description: book.description || null,
     };
   } catch (error) {

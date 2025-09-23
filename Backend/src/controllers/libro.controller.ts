@@ -3,6 +3,9 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/core';
 import { Libro } from '../entities/libro.entity';
 import { Categoria } from '../entities/categoria.entity';
+import { Autor } from '../entities/autor.entity';
+import { Editorial } from '../entities/editorial.entity';
+import { Saga } from '../entities/saga.entity';
 import { getReviewsByBookId } from '../services/reviewService';
 
 export const getLibros = async (req: Request, res: Response) => {
@@ -23,7 +26,27 @@ export const getLibroById = async (req: Request, res: Response) => {
 export const createLibro = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
-  const nuevoLibro = em.create(Libro, req.body);
+
+  const { autorId, categoriaId, editorialId, sagaId, ...libroData } = req.body;
+
+  // Fetch related entities
+  const autor = await em.findOne(Autor, { id: autorId });
+  const categoria = await em.findOne(Categoria, { id: categoriaId });
+  const editorial = await em.findOne(Editorial, { id: editorialId });
+  const saga = sagaId ? await em.findOne(Saga, { id: sagaId }) : undefined;
+
+  if (!autor || !categoria || !editorial) {
+    return res.status(404).json({ error: 'Autor, categoría o editorial no encontrado' });
+  }
+
+  const nuevoLibro = em.create(Libro, {
+    ...libroData,
+    autor,
+    categoria,
+    editorial,
+    saga
+  });
+
   await em.persistAndFlush(nuevoLibro);
   res.status(201).json(nuevoLibro);
 };

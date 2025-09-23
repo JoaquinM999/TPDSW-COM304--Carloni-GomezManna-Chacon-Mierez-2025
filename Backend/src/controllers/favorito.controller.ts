@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Favorito } from '../entities/favorito.entity';
+import { ActividadService } from '../services/actividad.service';
 
 export const getFavoritos = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
@@ -47,6 +48,18 @@ export const addFavorito = async (req: Request, res: Response): Promise<void> =>
   });
 
   await orm.em.persistAndFlush(favorito);
+
+  // Crear registro de actividad
+  try {
+    const actividadService = new ActividadService(orm);
+    const usuarioId = typeof usuario === 'object' ? usuario.id : usuario;
+    const libroId = typeof libro === 'object' ? libro.id : libro;
+    await actividadService.crearActividadFavorito(usuarioId, libroId);
+  } catch (actividadError) {
+    console.error('Error al crear registro de actividad:', actividadError);
+    // No fallar la creación de favorito si falla el registro de actividad
+  }
+
   res.status(201).json(favorito);
 };
 

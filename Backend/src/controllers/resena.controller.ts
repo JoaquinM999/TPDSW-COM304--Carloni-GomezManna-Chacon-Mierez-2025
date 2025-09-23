@@ -5,6 +5,7 @@ import { Resena, EstadoResena } from '../entities/resena.entity';
 import { Libro } from '../entities/libro.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
+import { ActividadService } from '../services/actividad.service';
 
 // Extendemos Request para tipar req.user con un payload que tiene id
 interface AuthRequest extends Request {
@@ -71,6 +72,16 @@ export const createResena = async (req: Request, res: Response) => {
     });
 
     await orm.em.persistAndFlush(nuevaResena);
+
+    // Crear registro de actividad
+    try {
+      const actividadService = new ActividadService(orm);
+      await actividadService.crearActividadResena(usuarioPayload.id, nuevaResena.id);
+    } catch (actividadError) {
+      console.error('Error al crear registro de actividad:', actividadError);
+      // No fallar la creación de reseña si falla el registro de actividad
+    }
+
     res.status(201).json({ message: 'Reseña creada', resena: nuevaResena });
   } catch (error) {
     res.status(500).json({

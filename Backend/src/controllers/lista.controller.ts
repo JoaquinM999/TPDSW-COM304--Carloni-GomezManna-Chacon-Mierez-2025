@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Lista, TipoLista } from '../entities/lista.entity';
 import { Usuario } from '../entities/usuario.entity';
+import { ActividadService } from '../services/actividad.service';
 
 interface AuthRequest extends Request {
   user?: { id: number; [key: string]: any };
@@ -48,6 +49,16 @@ export const createLista = async (req: AuthRequest, res: Response) => {
       ultimaModificacion: new Date()
     });
     await orm.em.persistAndFlush(lista);
+
+    // Crear registro de actividad
+    try {
+      const actividadService = new ActividadService(orm);
+      await actividadService.crearActividadLista(userId);
+    } catch (actividadError) {
+      console.error('Error al crear registro de actividad:', actividadError);
+      // No fallar la creación de lista si falla el registro de actividad
+    }
+
     res.status(201).json(lista);
   } catch (error) {
     res.status(500).json({ error: 'Error al crear lista' });

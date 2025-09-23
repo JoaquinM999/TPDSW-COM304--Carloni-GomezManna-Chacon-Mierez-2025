@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Reaccion } from '../entities/reaccion.entity';
+import { ActividadService } from '../services/actividad.service';
 
 export const addOrUpdateReaccion = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
@@ -29,6 +30,18 @@ export const addOrUpdateReaccion = async (req: Request, res: Response) => {
   }
 
   await orm.em.flush();
+
+  // Crear registro de actividad (solo para nuevas reacciones, no para actualizaciones)
+  if (!reaccion.id) {
+    try {
+      const actividadService = new ActividadService(orm);
+      await actividadService.crearActividadReaccion(usuarioId, resenaId);
+    } catch (actividadError) {
+      console.error('Error al crear registro de actividad:', actividadError);
+      // No fallar la creación de reacción si falla el registro de actividad
+    }
+  }
+
   res.status(201).json(reaccion);
 };
 

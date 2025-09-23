@@ -11,6 +11,7 @@ import { listaRoutes } from './routes/lista.routes';
 import { sagaRoutes } from './routes/saga.routes';
 import { categoriaRoutes } from './routes/categoria.routes';
 import { autorRoutes } from './routes/autor.routes';
+import { editorialRoutes } from './routes/editorial.routes';
 import { libroRoutes } from './routes/libro.routes';
 import { resenaRoutes } from './routes/resena.routes';
 import { contenidoListaRoutes } from './routes/contenidoLista.routes';
@@ -19,6 +20,12 @@ import { seguimientoRoutes } from './routes/seguimiento.routes';
 import { recomendacionRoutes } from './routes/recomendacion.routes';
 import { protectedRoutes } from './routes/protected.route';
 import { externalAuthorRoutes } from './routes/externalAuthor.routes';
+
+// 🔹 Nuevas rutas
+import { actividadRoutes } from './routes/actividad.routes';
+import { permisoRoutes } from './routes/permiso.routes';
+import { ratingLibroRoutes } from './routes/ratingLibro.routes';
+
 import { authenticateJWT } from './middleware/auth.middleware';
 
 const app = express(); 
@@ -29,6 +36,7 @@ app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174"]
 }));
 
+// Rutas principales
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes); 
 app.use('/api/favoritos', favoritosRoutes);
@@ -36,6 +44,7 @@ app.use('/api/lista', listaRoutes);
 app.use('/api/saga', sagaRoutes);
 app.use('/api/categoria', categoriaRoutes);
 app.use('/api/autor', autorRoutes);
+app.use('/api/editorial', editorialRoutes);
 app.use('/api/libro', libroRoutes);
 app.use('/api/resena', resenaRoutes);
 app.use('/api/contenido-lista', contenidoListaRoutes);
@@ -46,6 +55,11 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
 app.use('/api/external-authors', externalAuthorRoutes);
+
+// 🔹 Nuevos endpoints
+app.use('/api/actividades', actividadRoutes);
+app.use('/api/permisos', permisoRoutes);
+app.use('/api/rating-libro', ratingLibroRoutes);
 
 // Global error handler middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

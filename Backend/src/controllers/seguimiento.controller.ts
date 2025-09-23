@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Seguimiento } from '../entities/seguimiento.entity';
 import { Usuario } from '../entities/usuario.entity';
+import { ActividadService } from '../services/actividad.service';
 
 export const followUser = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
@@ -36,6 +37,16 @@ export const followUser = async (req: Request, res: Response) => {
     fechaSeguido: new Date(),
   });
   await orm.em.persistAndFlush(nuevoSeguimiento);
+
+  // Crear registro de actividad
+  try {
+    const actividadService = new ActividadService(orm);
+    await actividadService.crearActividadSeguimiento(seguidorPayload.id);
+  } catch (actividadError) {
+    console.error('Error al crear registro de actividad:', actividadError);
+    // No fallar el seguimiento si falla el registro de actividad
+  }
+
   res.status(201).json({ message: `Ahora sigues a ${seguido.username}` });
 };
 

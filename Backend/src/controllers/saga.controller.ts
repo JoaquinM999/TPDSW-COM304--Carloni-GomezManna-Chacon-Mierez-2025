@@ -5,8 +5,12 @@ import { Saga } from '../entities/saga.entity';
 
 export const getSagas = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const sagas = await orm.em.find(Saga, {});
-  res.json(sagas);
+  const sagas = await orm.em.find(Saga, {}, { populate: ['libros'] });
+  const sagasWithCount = sagas.map(saga => ({
+    ...saga,
+    cantidadLibros: saga.libros.length
+  }));
+  res.json(sagasWithCount);
 };
 
 export const getSagaById = async (req: Request, res: Response) => {

@@ -33,6 +33,9 @@ import LibrosPopulares from './paginas/LibrosPopulares';
 
 import ConfiguracionUsuario from './paginas/ConfiguracionUsuario';
 import AdminModerationPage from './paginas/AdminModerationPage';
+import AdminActividadPage from './paginas/AdminActividadPage';
+import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
+import AdminPermisoPage from './paginas/AdminPermisoPage';
 
 interface FooterLink {
   name: string;
@@ -140,6 +143,9 @@ function Layout() {
           <Route path="/crear-editorial" element={<CrearEditorial />} />
           <Route path="/crear-saga" element={<CrearSaga />} />
           <Route path="/admin/moderation" element={<AdminModerationPage />} />
+          <Route path="/admin/actividad" element={<AdminActividadPage />} />
+          <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
+          <Route path="/admin/permiso" element={<AdminPermisoPage />} />
         </Routes>
       </main>
 

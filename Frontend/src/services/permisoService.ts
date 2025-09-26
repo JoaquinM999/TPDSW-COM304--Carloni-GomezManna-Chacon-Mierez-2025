@@ -1,59 +1,59 @@
-// src/services/userService.ts
-const API_URL = 'http://localhost:3000/api/usuario';
+// src/services/permisoService.ts
+const API_URL = 'http://localhost:3000/api/permisos';
 
-export const getUsuarios = async () => {
+export const getPermisos = async () => {
   const response = await fetch(API_URL);
   if (!response.ok) {
-    throw new Error('No se pudieron obtener los usuarios');
+    throw new Error('No se pudieron obtener los permisos');
   }
   return await response.json();
 };
 
-export const getUsuarioById = async (id: number) => {
+export const getPermisoById = async (id: number) => {
   const response = await fetch(`${API_URL}/${id}`);
   if (!response.ok) {
-    throw new Error('No se pudo obtener el usuario');
+    throw new Error('No se pudo obtener el permiso');
   }
   return await response.json();
 };
 
-export const createUsuario = async (usuarioData: any, token: string) => {
+export const createPermiso = async (permisoData: any, token: string) => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(usuarioData),
+    body: JSON.stringify(permisoData),
   });
 
   if (!response.ok) {
     const data = await response.json();
-    throw new Error(data.error || 'Error al crear el usuario');
+    throw new Error(data.error || 'Error al crear el permiso');
   }
 
   return await response.json();
 };
 
-export const updateUsuario = async (id: number, usuarioData: any, token: string) => {
+export const updatePermiso = async (id: number, permisoData: any, token: string) => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(usuarioData),
+    body: JSON.stringify(permisoData),
   });
 
   if (!response.ok) {
     const data = await response.json();
-    throw new Error(data.error || 'Error al actualizar el usuario');
+    throw new Error(data.error || 'Error al actualizar el permiso');
   }
 
   return await response.json();
 };
 
-export const deleteUsuario = async (id: number, token: string) => {
+export const deletePermiso = async (id: number, token: string) => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'DELETE',
     headers: {
@@ -63,7 +63,7 @@ export const deleteUsuario = async (id: number, token: string) => {
 
   if (!response.ok) {
     const data = await response.json();
-    throw new Error(data.error || 'Error al eliminar el usuario');
+    throw new Error(data.error || 'Error al eliminar el permiso');
   }
 
   return await response.json();

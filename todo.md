@@ -18,9 +18,11 @@ Some pages appear to use mock data instead of real API calls:
 AutoresPage.tsx - Uses mock author data
 SagasPage.tsx - Uses mock saga data
 Some pages may not be fully connected to the backend APIs
-🔴 PASO 5 Missing Admin Pages:
-No admin pages for managing Actividad, Permiso, or RatingLibro entities
-No admin interface for user permissions management
+✅ PASO 5 Admin Pages Implemented:
+Admin pages created for managing Actividad, Permiso, and RatingLibro entities
+Admin interface for user permissions management included in AdminPermisoPage
+Frontend services added: actividadService.ts, permisoService.ts, ratingLibroService.ts, userService.ts
+Routes added: /admin/actividad, /admin/ratingLibro, /admin/permiso
 ✅ What's Already Complete:
 All minimum requirements (CRUD operations, relationships, lists, reviews)
 Moderation system with bad word filtering
@@ -29,3 +31,33 @@ Following system
 Recommendation system
 Most frontend pages exist
 Summary: The core functionality is solid, but you need 4 frontend services, 3 backend controllers/routes, and an activity tracking system to have a complete implementation according to the README specifications.
+
+
+
+Servicios frontend: creados actividadService.ts, permisoService.ts, ratingLibroService.ts y userService.ts con CRUD conectado a endpoints (/actividades, /permisos, /rating-libro).
+
+Páginas admin:
+
+AdminActividadPage.tsx: lista/elimina actividades.
+
+AdminRatingLibroPage.tsx: lista/elimina valoraciones de libros.
+
+AdminPermisoPage.tsx: CRUD de permisos + formulario para asignar permisos (requiere endpoint backend).
+
+Rutas agregadas: /admin/actividad, /admin/ratingLibro, /admin/permiso en App.tsx.
+
+Todo.md: marcado PASO 5 como completo.
+
+Pruebas:
+
+API: GET en actividades, permisos y rating-libro responde [] (OK, sin datos).
+
+UI: páginas admin cargan pero requieren autenticación (timeout sin token).
+
+Pendiente:
+
+Testear UI con usuario admin (CRUD y asignación de permisos).
+
+Probar edge cases en API (POST, PUT, DELETE, errores de auth/ID inválido).
+
+Manejo de datos vacíos, errores y auth en frontend.

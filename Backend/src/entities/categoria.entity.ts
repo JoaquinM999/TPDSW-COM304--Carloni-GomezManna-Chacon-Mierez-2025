@@ -12,6 +12,9 @@ export class Categoria {
   @Unique() // evita categorías duplicadas
   nombre!: string;
 
+  @Property({ nullable: true })
+  descripcion?: string;
+
   @OneToMany(() => Libro, libro => libro.categoria, { cascade: [Cascade.PERSIST] })
   libros = new Collection<Libro>(this);
 

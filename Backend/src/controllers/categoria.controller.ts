@@ -4,8 +4,12 @@ import { Categoria } from '../entities/categoria.entity';
 
 export const getCategorias = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const categorias = await orm.em.find(Categoria, {});
-  res.json(categorias);
+  const categorias = await orm.em.find(Categoria, {}, { populate: ['libros'] });
+  const categoriasWithCount = categorias.map(categoria => ({
+    ...categoria,
+    librosCount: categoria.libros.length
+  }));
+  res.json(categoriasWithCount);
 };
 
 export const getCategoriaById = async (req: Request, res: Response) => {

@@ -90,12 +90,13 @@ export const createResena = async (req: Request, res: Response) => {
 
     console.log('📋 Datos del libro:', libroData);
 
-    // Buscar libro existente por título y fuente para evitar duplicados
-    let libro = await em.findOne(Libro, { nombre: libroData.titulo, source: libroData.source });
+    // Buscar libro existente por externalId para asegurar unicidad
+    const externalId = libroData.id || libroData.slug || req.body.libroId || '';
+    let libro = await em.findOne(Libro, { externalId });
     if (!libro) {
       console.log('📖 Libro no encontrado, creando nuevo');
       const nuevoLibro = em.create(Libro, {
-        externalId: libroData.id || libroData.slug || req.body.libroId || '',
+        externalId,
         nombre: libroData.titulo,
         sinopsis: libroData.descripcion || null,
         imagen: libroData.imagen || libroData.coverUrl || null,
@@ -108,12 +109,36 @@ export const createResena = async (req: Request, res: Response) => {
       console.log('✅ Libro creado con ID:', libro.id);
     } else {
       console.log('✅ Libro existente encontrado con ID:', libro.id);
+      // Actualizar campos si han cambiado o están vacíos
+      if (libroData.titulo && libro.nombre !== libroData.titulo) {
+        libro.nombre = libroData.titulo;
+      }
+      if (libroData.descripcion && (!libro.sinopsis || libro.sinopsis !== libroData.descripcion)) {
+        libro.sinopsis = libroData.descripcion;
+      }
+      if (libroData.imagen && (!libro.imagen || libro.imagen !== libroData.imagen)) {
+        libro.imagen = libroData.imagen || libroData.coverUrl || null;
+      }
+      if (libroData.enlace && libro.enlace !== libroData.enlace) {
+        libro.enlace = libroData.enlace;
+      }
+      if (libroData.source && libro.source !== libroData.source) {
+        libro.source = libroData.source;
+      }
+      em.persist(libro);
+      await em.flush();
     }
 
     console.log('🔍 Verificando malas palabras');
-    const esOfensivo = await contieneMalasPalabras(comentario);
-    if (esOfensivo)
-      return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
+    try {
+      const esOfensivo = await contieneMalasPalabras(comentario);
+      if (esOfensivo)
+        return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
+    } catch (error) {
+      console.error('Error en verificación de malas palabras:', error);
+      // Si falla la verificación, asumir que no es ofensivo para permitir guardar la reseña
+      console.log('⚠️ No se pudo verificar malas palabras, procediendo con la creación de la reseña');
+    }
 
     console.log('📝 Creando reseña');
     const nuevaResena = em.create(Resena, {
@@ -167,9 +192,15 @@ export const updateResena = async (req: Request, res: Response) => {
       if (typeof req.body.comentario !== 'string')
         return res.status(400).json({ error: 'Comentario inválido' });
 
-      const esOfensivo = await contieneMalasPalabras(req.body.comentario);
-      if (esOfensivo)
-        return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
+      try {
+        const esOfensivo = await contieneMalasPalabras(req.body.comentario);
+        if (esOfensivo)
+          return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
+      } catch (error) {
+        console.error('Error en verificación de malas palabras:', error);
+        // Si falla la verificación, asumir que no es ofensivo para permitir actualizar la reseña
+        console.log('⚠️ No se pudo verificar malas palabras, procediendo con la actualización de la reseña');
+      }
     }
 
     if (req.body.estrellas !== undefined) {

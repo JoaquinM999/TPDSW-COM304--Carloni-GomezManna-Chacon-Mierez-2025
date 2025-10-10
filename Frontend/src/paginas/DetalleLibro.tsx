@@ -305,7 +305,7 @@ const DetalleLibro: React.FC = () => {
   };
 
   // Formulario inline para crear reseña (estrellas + textarea grande)
-  const NewReviewForm: React.FC<{ libroId: string; onAdded?: () => void; onOptimisticAdd?: (r: Reseña) => void }> = ({ libroId, onAdded, onOptimisticAdd }) => {
+  const NewReviewForm: React.FC<{ libroId: string; onAdded?: () => void; onOptimisticAdd?: (r: Reseña) => void }> = ({ onAdded, onOptimisticAdd }) => {
     const [estrellas, setEstrellas] = useState<number>(5);
     const [comentario, setComentario] = useState<string>("");
     const [submitting, setSubmitting] = useState(false);

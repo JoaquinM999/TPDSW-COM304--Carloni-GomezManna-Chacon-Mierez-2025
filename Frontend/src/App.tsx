@@ -37,6 +37,7 @@ import AdminActividadPage from './paginas/AdminActividadPage';
 import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
 
+
 interface FooterLink {
   name: string;
   href: string;

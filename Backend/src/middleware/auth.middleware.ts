@@ -34,3 +34,30 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
+
+export const optionalAuthenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return next(); // No token, proceed without user
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return next(); // No token, proceed without user
+  }
+
+  try {
+    const secret = process.env.JWT_SECRET || 'secretkey';
+    const decoded = jwt.verify(token, secret);
+
+    if (typeof decoded !== 'object' || decoded === null) {
+      return next(); // Invalid token, proceed without user
+    }
+
+    req.user = decoded as JwtPayload & { id?: number };
+    next();
+  } catch (err) {
+    return next(); // Invalid or expired token, proceed without user
+  }
+};

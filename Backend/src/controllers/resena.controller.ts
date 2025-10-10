@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Resena, EstadoResena } from '../entities/resena.entity';
 import { Libro } from '../entities/libro.entity';
-import { Usuario } from '../entities/usuario.entity';
+import { Usuario, RolUsuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
 import { ActividadService } from '../services/actividad.service';
 
@@ -15,7 +15,30 @@ interface AuthRequest extends Request {
 export const getResenas = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const resenas = await orm.em.find(Resena, {}, { populate: ['usuario', 'libro'] });
+    const { libroId, usuarioId, estado } = req.query;
+
+    // Check permissions for pending reviews
+    if (estado === 'PENDING') {
+      const usuarioPayload = (req as AuthRequest).user;
+      if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+      const usuario = await orm.em.findOne(Usuario, { id: usuarioPayload.id });
+      if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
+        return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+      }
+    }
+
+    const where: any = {};
+
+    if (libroId) {
+      where.libro = libroId;
+    }
+
+    if (usuarioId) {
+      where.usuario = usuarioId;
+    }
+
+    const resenas = await orm.em.find(Resena, where, { populate: ['usuario', 'reacciones'] });
     res.json(resenas);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener las reseñas' });
@@ -64,14 +87,16 @@ export const createResena = async (req: Request, res: Response) => {
     const nuevaResena = orm.em.create(Resena, {
       comentario,
       estrellas: estrellasNum,
-      fechaResena: new Date(),
       libro,
+      fechaResena: new Date(),
       usuario,
       estado: EstadoResena.PENDING,
       createdAt: new Date(),
     });
 
+    console.log('Intentando guardar reseña en base de datos:', { comentario: nuevaResena.comentario, estrellas: nuevaResena.estrellas, libroId: libro.id, usuarioId: usuario.id });
     await orm.em.persistAndFlush(nuevaResena);
+    console.log('Reseña guardada exitosamente con ID:', nuevaResena.id);
 
     // Crear registro de actividad
     try {
@@ -155,6 +180,14 @@ export const deleteResena = async (req: Request, res: Response) => {
 export const approveResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
+    const usuarioPayload = (req as AuthRequest).user;
+    if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const usuario = await orm.em.findOne(Usuario, { id: usuarioPayload.id });
+    if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
+      return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+    }
+
     const resena = await orm.em.findOne(Resena, { id: +req.params.id });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
@@ -175,6 +208,14 @@ export const approveResena = async (req: Request, res: Response) => {
 export const rejectResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
+    const usuarioPayload = (req as AuthRequest).user;
+    if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const usuario = await orm.em.findOne(Usuario, { id: usuarioPayload.id });
+    if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
+      return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+    }
+
     const resena = await orm.em.findOne(Resena, { id: +req.params.id });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 

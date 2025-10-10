@@ -158,3 +158,36 @@ export const getReviewsByBookIdController = async (req: Request, res: Response) 
     res.status(500).json({ error: 'Error al obtener reseñas' });
   }
 };
+
+export const searchLibros = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ error: 'La consulta de búsqueda debe tener al menos 2 caracteres' });
+    }
+
+    // Search by title
+    const librosByTitle = await em.find(Libro, {
+      nombre: { $like: `%${query}%` }
+    }, { populate: ['autor', 'categoria'] });
+
+    // Search by author name
+    const librosByAuthor = await em.find(Libro, {
+      autor: { nombre: { $like: `%${query}%` } }
+    }, { populate: ['autor', 'categoria'] });
+
+    // Combine and deduplicate results
+    const allLibros = [...librosByTitle, ...librosByAuthor];
+    const uniqueLibros = allLibros.filter((libro, index, self) =>
+      index === self.findIndex(l => l.id === libro.id)
+    );
+
+    res.json(uniqueLibros);
+  } catch (error) {
+    console.error('Error en searchLibros:', error);
+    res.status(500).json({ error: 'Error al buscar libros' });
+  }
+};

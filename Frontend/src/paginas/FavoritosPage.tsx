@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye, Plus, X, Edit, Trash2 } from 'lucide-react';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
+import { getAutores } from '../services/autorService';
+import { getCategorias } from '../services/categoriaService';
 
 interface LibroFavorito {
   id: number;
@@ -104,6 +106,8 @@ export const FavoritosPage: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [listas, setListas] = useState<Lista[]>([]);
   const [librosFavoritos, setLibrosFavoritos] = useState<LibroFavorito[]>([]);
+  const [autoresFavoritos, setAutoresFavoritos] = useState<AutorFavorito[]>([]);
+  const [categoriasFavoritas, setCategoriasFavoritas] = useState<CategoriaFavorita[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -137,6 +141,47 @@ export const FavoritosPage: React.FC = () => {
         });
 
         setLibrosFavoritos(libros);
+
+        // Derive favorite authors from user's books
+        const autorMap = new Map<string, { id: number; nombre: string; libros: number; imagen: string; fechaAgregado: string }>();
+        const categoriaMap = new Map<string, { id: number; nombre: string; librosCount: number; color: string; fechaAgregado: string }>();
+
+        libros.forEach(libro => {
+          // Process authors
+          const autoresArray = libro.autor.split(', ');
+          autoresArray.forEach((autorNombre, index) => {
+            if (!autorMap.has(autorNombre)) {
+              autorMap.set(autorNombre, {
+                id: Date.now() + index, // Temporary ID since we don't have author IDs from this data
+                nombre: autorNombre,
+                libros: 1,
+                imagen: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg', // Default image
+                fechaAgregado: libro.fechaAgregado
+              });
+            } else {
+              const existing = autorMap.get(autorNombre)!;
+              existing.libros += 1;
+            }
+          });
+
+          // Process categories
+          if (!categoriaMap.has(libro.categoria)) {
+            categoriaMap.set(libro.categoria, {
+              id: Date.now() + Math.random(), // Temporary ID
+              nombre: libro.categoria,
+              librosCount: 1,
+              color: getRandomColor(),
+              fechaAgregado: libro.fechaAgregado
+            });
+          } else {
+            const existing = categoriaMap.get(libro.categoria)!;
+            existing.librosCount += 1;
+          }
+        });
+
+        setAutoresFavoritos(Array.from(autorMap.values()));
+        setCategoriasFavoritas(Array.from(categoriaMap.values()));
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -146,6 +191,11 @@ export const FavoritosPage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const getRandomColor = () => {
+    const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
 
   // Animation variants
   const containerVariants = {
@@ -503,73 +553,139 @@ export const FavoritosPage: React.FC = () => {
 
         {/* Autores Tab */}
         {activeTab === 'autores' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockAutoresFavoritos.map((autor) => (
-              <div key={autor.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                <img
-                  src={autor.imagen}
-                  alt={autor.nombre}
-                  className="w-full h-48 object-cover"
-                />
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {autoresFavoritos.length > 0 ? autoresFavoritos.map((autor) => (
+              <motion.div
+                key={autor.id}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                variants={cardVariants}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="relative group">
+                  <img
+                    src={autor.imagen}
+                    alt={autor.nombre}
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <motion.div
+                    className="absolute top-4 right-4"
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Heart className="w-7 h-7 text-red-500 drop-shadow-lg" fill="currentColor" />
+                  </motion.div>
+                </div>
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <Link 
-                        to={`/usuario/${autor.id}`}
-                        className="font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors duration-200 block"
-                      >
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">
                         {autor.nombre}
-                      </Link>
-                      <p className="text-gray-600 text-sm">{autor.libros} libros</p>
+                      </h3>
+                      <p className="text-gray-600 text-sm font-medium">{autor.libros} libro{autor.libros !== 1 ? 's' : ''} en tu colección</p>
                     </div>
-                    <Heart className="w-6 h-6 text-red-500 fill-current" />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">
                       Agregado el {new Date(autor.fechaAgregado).toLocaleDateString('es-ES')}
                     </span>
                     <Link
-                      to={`/autor/${autor.id}`}
+                      to={`/autores`}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
-                      Ver perfil
+                      Ver más
                     </Link>
                   </div>
                 </div>
+              </motion.div>
+            )) : (
+              <div className="col-span-full text-center py-12">
+                <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No tienes autores favoritos aún</h3>
+                <p className="text-gray-500 mb-6">Agrega libros a tus listas para ver aquí a tus autores favoritos</p>
+                <Link
+                  to="/libros"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-2xl hover:shadow-lg transition-all duration-300"
+                >
+                  <Book className="w-5 h-5 mr-2" />
+                  Explorar libros
+                </Link>
               </div>
-            ))}
-          </div>
+            )}
+          </motion.div>
         )}
 
         {/* Categorías Tab */}
         {activeTab === 'categorias' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockCategoriasFavoritas.map((categoria) => (
-              <div key={categoria.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {categoriasFavoritas.length > 0 ? categoriasFavoritas.map((categoria) => (
+              <motion.div
+                key={categoria.id}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                variants={cardVariants}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <div className={`h-32 ${categoria.color} flex items-center justify-center relative`}>
                   <Tag className="w-12 h-12 text-white" />
-                  <div className="absolute top-3 right-3">
-                    <Heart className="w-6 h-6 text-white fill-current" />
-                  </div>
+                  <motion.div
+                    className="absolute top-3 right-3"
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Heart className="w-6 h-6 text-white fill-current drop-shadow-lg" />
+                  </motion.div>
                 </div>
                 <div className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">{categoria.nombre}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{categoria.librosCount.toLocaleString()} libros</p>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
+                  <p className="text-gray-600 text-sm mb-4 font-medium">{categoria.librosCount} libro{categoria.librosCount !== 1 ? 's' : ''} en tu colección</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">
                       Agregado el {new Date(categoria.fechaAgregado).toLocaleDateString('es-ES')}
                     </span>
                     <Link
-                      to={`/categoria/${categoria.id}`}
+                      to={`/categorias`}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
-                      Explorar
+                      Ver más
                     </Link>
                   </div>
                 </div>
+              </motion.div>
+            )) : (
+              <div className="col-span-full text-center py-12">
+                <Tag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No tienes categorías favoritas aún</h3>
+                <p className="text-gray-500 mb-6">Agrega libros a tus listas para ver aquí tus categorías favoritas</p>
+                <Link
+                  to="/libros"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-2xl hover:shadow-lg transition-all duration-300"
+                >
+                  <Book className="w-5 h-5 mr-2" />
+                  Explorar libros
+                </Link>
               </div>
-            ))}
-          </div>
+            )}
+          </motion.div>
         )}
       </div>
     </div>

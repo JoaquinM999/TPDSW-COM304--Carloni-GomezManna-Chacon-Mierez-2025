@@ -5,6 +5,12 @@ import { Actividad, TipoActividad } from '../entities/actividad.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { Libro } from '../entities/libro.entity';
 import { Resena } from '../entities/resena.entity';
+import { Seguimiento } from '../entities/seguimiento.entity';
+
+// Extendemos Request para tipar req.user con un payload que tiene id
+interface AuthRequest extends Request {
+  user?: { id: number; [key: string]: any };
+}
 
 export const getActividades = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
@@ -73,3 +79,5 @@ export const deleteActividad = async (req: Request, res: Response) => {
   await orm.em.removeAndFlush(actividad);
   res.json({ mensaje: 'Actividad eliminada' });
 };
+
+

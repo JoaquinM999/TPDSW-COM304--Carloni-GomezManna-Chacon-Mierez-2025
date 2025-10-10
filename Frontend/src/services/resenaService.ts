@@ -1,4 +1,5 @@
-// src/servicios/reseñaService.ts
+import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+
 const API_URL = 'http://localhost:3000/api/resena';
 
 export const obtenerReseñas = async (idLibro: number) => {
@@ -19,7 +20,7 @@ export const agregarReseña = async (
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ libro: libroId, comentario, estrellas }),
+    body: JSON.stringify({ libroId, comentario, estrellas }),
   });
 
   if (!res.ok) {
@@ -36,7 +37,11 @@ export const obtenerResenasPendientes = async (token: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  if (!res.ok) throw new Error('Error al obtener reseñas pendientes');
+  if (!res.ok) {
+    const error = new Error('Error al obtener reseñas pendientes');
+    (error as any).status = res.status;
+    throw error;
+  }
   return res.json();
 };
 
@@ -60,4 +65,26 @@ export const rechazarResena = async (id: number, token: string) => {
   });
   if (!res.ok) throw new Error('Error al rechazar reseña');
   return res.json();
+};
+
+export const getResenasByUsuario = async (userId: number) => {
+  const response = await fetchWithRefresh(`${API_URL}?usuarioId=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Error al obtener reseñas del usuario');
+  return response.json();
+};
+
+export const getResenasByLibro = async (libroId: number) => {
+  const response = await fetchWithRefresh(`${API_URL}?libroId=${libroId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Error al obtener reseñas del libro');
+  return response.json();
 };

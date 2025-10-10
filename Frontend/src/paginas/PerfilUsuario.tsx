@@ -1,8 +1,13 @@
+// NOTE: Esta funcionalidad no anda correctamente - revisar implementación
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { User, UserPlus, UserCheck, Star, Heart, Book, List, MessageCircle, Calendar, MapPin, Mail, Users, Eye, Lock } from 'lucide-react';
 import { seguimientoService } from '../services/seguimientoService';
+import { getUsuarioById } from '../services/userService';
+import { getResenasByUsuario } from '../services/resenaService';
+import { listaService } from '../services/listaService';
+import { isAuthenticated } from '../services/authService';
 
 interface Usuario {
   id: number;
@@ -47,117 +52,98 @@ interface Lista {
   librosPortada: string[];
 }
 
-// Mock data - replace with your database
-const mockUsuario: Usuario = {
-  id: 1,
-  nombre: 'María González',
-  username: 'maria_lectora',
-  email: 'maria@example.com',
-  genero: 'femenino',
-  fechaRegistro: '2023-01-15',
-  ubicacion: 'Madrid, España',
-  biografia: 'Apasionada por la literatura clásica y contemporánea. Siempre en busca de nuevas historias que me transporten a otros mundos.',
-  seguidores: 1250,
-  siguiendo: 890,
-  librosLeidos: 247,
-  reseñasEscritas: 89,
-  listasCreadas: 12,
-  esSeguido: false,
-  esPerfilPropio: false
-};
 
-const mockReseñas: Reseña[] = [
-  {
-    id: 1,
-    libroId: 1,
-    libroTitulo: 'Cien años de soledad',
-    libroAutor: 'Gabriel García Márquez',
-    libroImagen: 'https://images.pexels.com/photos/1741230/pexels-photo-1741230.jpeg',
-    rating: 5,
-    titulo: 'Una obra maestra del realismo mágico',
-    comentario: 'García Márquez logra crear un mundo completamente inmersivo donde lo fantástico se mezcla perfectamente con la realidad...',
-    fecha: '2024-01-15',
-    likes: 24,
-    esPublica: true
-  },
-  {
-    id: 2,
-    libroId: 2,
-    libroTitulo: 'El amor en los tiempos del cólera',
-    libroAutor: 'Gabriel García Márquez',
-    libroImagen: 'https://images.pexels.com/photos/1029141/pexels-photo-1029141.jpeg',
-    rating: 4,
-    titulo: 'Una historia de amor épica',
-    comentario: 'Una narrativa hermosa sobre el amor que perdura a través del tiempo...',
-    fecha: '2024-01-10',
-    likes: 18,
-    esPublica: true
-  }
-];
-
-const mockListas: Lista[] = [
-  {
-    id: 1,
-    titulo: 'Mis Favoritos de 2024',
-    descripcion: 'Los libros que más me han marcado este año',
-    librosCount: 15,
-    esPublica: true,
-    fechaCreacion: '2024-01-01',
-    seguidores: 234,
-    librosPortada: [
-      'https://images.pexels.com/photos/1741230/pexels-photo-1741230.jpeg',
-      'https://images.pexels.com/photos/1029141/pexels-photo-1029141.jpeg',
-      'https://images.pexels.com/photos/1370295/pexels-photo-1370295.jpeg'
-    ]
-  },
-  {
-    id: 2,
-    titulo: 'Clásicos Imprescindibles',
-    descripcion: 'Literatura clásica que todo el mundo debería leer',
-    librosCount: 28,
-    esPublica: true,
-    fechaCreacion: '2023-12-15',
-    seguidores: 189,
-    librosPortada: [
-      'https://images.pexels.com/photos/1130980/pexels-photo-1130980.jpeg',
-      'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg',
-      'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg'
-    ]
-  },
-  {
-    id: 3,
-    titulo: 'Lista Privada de Lectura',
-    descripcion: 'Mis próximas lecturas planificadas',
-    librosCount: 12,
-    esPublica: false,
-    fechaCreacion: '2024-01-20',
-    seguidores: 0,
-    librosPortada: []
-  }
-];
 
 export const PerfilUsuario: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [reseñas, setReseñas] = useState<Reseña[]>([]);
   const [listas, setListas] = useState<Lista[]>([]);
   const [activeTab, setActiveTab] = useState<'reseñas' | 'listas'>('reseñas');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    // fetchUsuario(id).then(setUsuario);
-    // fetchReseñasUsuario(id).then(setReseñas);
-    // fetchListasUsuario(id).then(setListas);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setUsuario(mockUsuario);
-      setReseñas(mockReseñas);
-      setListas(mockListas);
-      setLoading(false);
-    }, 1000);
-  }, [id]);
+    const fetchData = async () => {
+      if (!id) return;
+
+      // Check if user is authenticated
+      if (!isAuthenticated()) {
+        navigate('/LoginPage');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const userId = parseInt(id);
+        const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+
+        // Fetch user data
+        const usuarioData = await getUsuarioById(userId);
+
+        // Fetch reviews
+        const reseñasData = await getResenasByUsuario(userId);
+
+        // Fetch lists
+        const listasData = await listaService.getListasByUsuario(userId);
+
+        // Map data to component interfaces
+        let esSeguido = false;
+        if (userId !== currentUserId) {
+          try {
+            esSeguido = await seguimientoService.isFollowing(userId);
+          } catch (err) {
+            console.error('Error checking follow status:', err);
+          }
+        }
+
+        const usuario: Usuario = {
+          ...usuarioData,
+          esPerfilPropio: userId === currentUserId,
+          esSeguido: esSeguido,
+        };
+
+        const reseñas: Reseña[] = reseñasData.map((r: any) => ({
+          id: r.id,
+          libroId: r.libro?.id || r.libroId,
+          libroTitulo: r.libro?.titulo || r.libroTitulo,
+          libroAutor: r.libro?.autores?.join(', ') || r.libroAutor,
+          libroImagen: r.libro?.imagenPortada || r.libroImagen,
+          rating: r.estrellas || r.rating,
+          titulo: r.titulo,
+          comentario: r.comentario,
+          fecha: r.createdAt || r.fecha,
+          likes: r.likes || 0,
+          esPublica: r.esPublica !== false,
+        }));
+
+        const listas: Lista[] = listasData.map((l: any) => ({
+          id: l.id,
+          titulo: l.nombre || l.titulo,
+          descripcion: l.descripcion || '',
+          librosCount: l.librosCount || 0,
+          esPublica: l.tipo !== 'custom' || l.esPublica !== false,
+          fechaCreacion: l.createdAt || l.fechaCreacion,
+          seguidores: l.seguidores || 0,
+          librosPortada: [], // TODO: Implement book covers
+        }));
+
+        setUsuario(usuario);
+        setReseñas(reseñas);
+        setListas(listas);
+      } catch (err) {
+        console.error('Error fetching user profile data:', err);
+        setError('Error al cargar el perfil del usuario');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, navigate]);
 
   const handleSeguir = async () => {
     if (!usuario) return;
@@ -229,6 +215,18 @@ export const PerfilUsuario: React.FC = () => {
             style={{ width: 140, height: 140 }}
           />
           <p className="text-gray-600">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <User className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar perfil</h2>
+          <p className="text-gray-600">{error}</p>
         </div>
       </div>
     );

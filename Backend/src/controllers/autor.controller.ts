@@ -40,3 +40,23 @@ export const deleteAutor = async (req: Request, res: Response) => {
   await orm.em.removeAndFlush(autor);
   res.json({ mensaje: 'Autor eliminado' });
 };
+
+export const searchAutores = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ error: 'La consulta de búsqueda debe tener al menos 2 caracteres' });
+    }
+
+    const autores = await em.find(Autor, {
+      nombre: { $like: `%${query}%` }
+    });
+
+    res.json(autores);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al buscar autores' });
+  }
+};

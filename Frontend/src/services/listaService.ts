@@ -78,4 +78,15 @@ export const listaService = {
     });
     if (!response.ok) throw new Error('Error al remover libro de lista');
   },
+
+  async getListasByUsuario(userId: number): Promise<Lista[]> {
+    const response = await fetchWithRefresh(`/api/lista?usuarioId=${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Error al obtener listas del usuario');
+    return response.json();
+  },
 };

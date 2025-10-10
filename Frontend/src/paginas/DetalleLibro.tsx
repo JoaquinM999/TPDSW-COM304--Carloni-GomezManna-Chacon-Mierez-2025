@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+ import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
@@ -14,7 +14,13 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
+  Loader2,
+  MoreHorizontal,
 } from "lucide-react";
+import { getResenasByLibro } from "../services/resenaService";
+import { getRatingLibroByLibroId } from "../services/ratingLibroService";
+import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService";
+import { isAuthenticated, getToken } from "../services/authService";
 
 interface Libro {
   id: string;
@@ -32,57 +38,36 @@ interface Libro {
 
 interface Reseña {
   id: number;
-  usuario: string;
-  avatar: string;
-  rating: number;
-  titulo: string;
   comentario: string;
-  fecha: string;
-  likes: number;
-  esUtil: boolean;
+  estrellas: number;
+  estado: string;
+  fechaResena: string;
+  usuario: {
+    id: number;
+    username: string;
+    nombre?: string;
+  };
+  reacciones?: { id: number; tipo: string; usuarioId?: number }[];
 }
 
-export const DetalleLibro: React.FC = () => {
+const DetalleLibro: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const from = location.state?.from || "/libros"; // Página de origen
+  const from = (location.state as any)?.from || "/libros";
+
   const [libro, setLibro] = useState<Libro | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reseñas, setReseñas] = useState<Reseña[]>([]);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
   const [esFavorito, setEsFavorito] = useState(false);
   const [mostrarSinopsis, setMostrarSinopsis] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-
-  const mockReseñas: Reseña[] = [
-    {
-      id: 1,
-      usuario: "María García",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      rating: 5,
-      titulo: "Una obra maestra",
-      comentario:
-        "Este libro me ha cautivado desde la primera página. La narrativa es excepcional y los personajes están perfectamente desarrollados.",
-      fecha: "2024-01-15",
-      likes: 12,
-      esUtil: true,
-    },
-    {
-      id: 2,
-      usuario: "Carlos Rodríguez",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      rating: 4,
-      titulo: "Muy recomendable",
-      comentario:
-        "Una lectura fascinante que te mantiene enganchado hasta el final. El autor tiene un estilo único.",
-      fecha: "2024-01-10",
-      likes: 8,
-      esUtil: false,
-    },
-  ];
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'mas_recientes' | 'mejor_valoradas'>('mas_recientes');
+  const [expandedReviewIds, setExpandedReviewIds] = useState<Record<number, boolean>>({});
+  const [likedByUser, setLikedByUser] = useState<Record<number, boolean>>({}); // reviewId -> liked?
 
   useEffect(() => {
     const fetchLibro = async () => {
@@ -92,8 +77,10 @@ export const DetalleLibro: React.FC = () => {
 
       try {
         let response = await fetch(`http://localhost:3000/api/hardcover/libro/${slug}`);
+        let data: any = null;
+
         if (response.ok) {
-          const data = await response.json();
+          data = await response.json();
           setLibro({
             id: data.id.toString(),
             titulo: data.title,
@@ -112,15 +99,14 @@ export const DetalleLibro: React.FC = () => {
           if (!response.ok) {
             const searchQuery = slug.replace(/-/g, " ");
             response = await fetch(
-              `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(
-                searchQuery
-              )}&maxResults=1`
+              `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(searchQuery)}&maxResults=1`
             );
             if (!response.ok) throw new Error("Libro no encontrado");
 
             const searchData = await response.json();
             if (searchData && searchData.length > 0) {
               const libroGoogle = searchData[0];
+              data = libroGoogle;
               setLibro({
                 id: libroGoogle.id,
                 titulo: libroGoogle.title || "Título desconocido",
@@ -137,11 +123,33 @@ export const DetalleLibro: React.FC = () => {
             } else throw new Error("Libro no encontrado");
           } else {
             const libroData = await response.json();
+            data = libroData;
             setLibro({ ...libroData, source: "google" });
           }
         }
 
-        setReseñas(mockReseñas);
+        // ahora que tenemos data (si existe id/int), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
+        try {
+          const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
+          const libroId = libroIdCandidate ? parseInt(String(libroIdCandidate)) : NaN;
+          if (!isNaN(libroId)) {
+            setReviewsLoading(true);
+            const [reviewsData, ratingData] = await Promise.all([
+              getResenasByLibro(libroId),
+              getRatingLibroByLibroId(libroId),
+            ]);
+            setReseñas(reviewsData || []);
+            setAverageRating(ratingData?.promedio ?? null);
+            // Nota: si tu API devuelve info sobre si el usuario actual reaccionó,
+            // aquí podrías inicializar likedByUser.
+          }
+        } catch (reviewError) {
+          console.warn("Error fetching reviews:", reviewError);
+          setReseñas([]);
+          setAverageRating(null);
+        } finally {
+          setReviewsLoading(false);
+        }
       } catch (err: any) {
         setError(err.message || "Error al cargar el libro");
       } finally {
@@ -150,17 +158,67 @@ export const DetalleLibro: React.FC = () => {
     };
 
     fetchLibro();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const toggleFavorito = () => setEsFavorito(!esFavorito);
 
-  const renderStars = (rating: number) =>
+  const refreshResenas = async () => {
+    if (!libro) return;
+    const libroId = parseInt(libro.id);
+    if (isNaN(libroId)) return;
+    try {
+      setReviewsLoading(true);
+      const reviewsData = await getResenasByLibro(libroId);
+      setReseñas(reviewsData || []);
+    } catch (error) {
+      console.warn("Error refreshing reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const addResenaLocally = (r: Reseña) => {
+    setReseñas(prev => [r, ...prev]);
+  };
+
+  const renderStars = (rating: number, sizeClass = "w-4 h-4") =>
     Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-5 h-5 ${i < Math.floor(rating) ? "text-amber-400 fill-current" : "text-gray-300"}`}
+        className={`${sizeClass} ${i < Math.floor(rating) ? "text-amber-400 fill-current" : "text-gray-300"}`}
       />
     ));
+
+  // StarsInput: componente para seleccionar rating con estrellas clicables
+  const StarsInput: React.FC<{
+    value: number;
+    onChange: (v: number) => void;
+    sizeClass?: string;
+  }> = ({ value, onChange, sizeClass = "w-7 h-7" }) => {
+    const [hover, setHover] = useState<number>(0);
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, i) => {
+          const idx = i + 1;
+          const active = hover ? idx <= hover : idx <= value;
+          return (
+            <button
+              key={idx}
+              type="button"
+              aria-label={`${idx} estrellas`}
+              onMouseEnter={() => setHover(idx)}
+              onMouseLeave={() => setHover(0)}
+              onClick={() => onChange(idx)}
+              className={`p-1 rounded ${active ? "text-amber-400" : "text-gray-300"} transition`}
+            >
+              <Star className={`${sizeClass} ${active ? "fill-current" : ""}`} />
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("es-ES", {
@@ -168,6 +226,197 @@ export const DetalleLibro: React.FC = () => {
       month: "long",
       day: "numeric",
     });
+
+  const sortedResenas = () => {
+    const filtered = reseñas;
+    if (sortOrder === "mas_recientes")
+      return [...filtered].sort((a, b) => Number(new Date(b.fechaResena)) - Number(new Date(a.fechaResena)));
+    return [...filtered].sort((a, b) => b.estrellas - a.estrellas);
+  };
+
+  const toggleExpand = (id: number) =>
+    setExpandedReviewIds((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // Helper: extraer userId desde un token JWT (si es que hay uno)
+  const getUserIdFromToken = (token?: string): number => {
+    if (!token) return 0;
+    try {
+      const parts = token.split(".");
+      if (parts.length < 2) return 0;
+      const payload = parts[1];
+      // atob + manejo unicode
+      const jsonString = decodeURIComponent(
+        Array.prototype.map
+          .call(atob(payload), (c: string) => {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+      const parsed = JSON.parse(jsonString);
+      // buscar campos comunes
+      return Number(parsed.id || parsed.sub || parsed.userId || parsed.usuarioId || 0) || 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  // toggle like/unlike con manejo optimista y llamadas a servicios
+  const handleToggleLike = async (reviewId: number) => {
+    const token = getToken();
+    if (!token) {
+      alert("Debes iniciar sesión para dar like a una reseña.");
+      return;
+    }
+
+    const usuarioId = getUserIdFromToken(token);
+    const currentlyLiked = !!likedByUser[reviewId];
+
+    // snapshots para revertir en caso de error
+    const prevResenas = reseñas;
+    const prevLiked = likedByUser;
+
+    // optimista: actualizar contador y estado liked
+    setLikedByUser(prev => ({ ...prev, [reviewId]: !currentlyLiked }));
+    setReseñas(prev =>
+      prev.map(r =>
+        r.id === reviewId
+          ? {
+              ...r,
+              reacciones: !currentlyLiked
+                ? [...(r.reacciones || []), { id: Date.now(), tipo: "like", usuarioId }]
+                : (r.reacciones?.filter(rec => !(rec.tipo === "like" && (rec.usuarioId ?? 0) === usuarioId)) ?? []),
+            }
+          : r
+      )
+    );
+
+    try {
+      if (!currentlyLiked) {
+        // dar like: usamos resenaId y pasamos usuarioId también si el servicio lo espera
+        await addOrUpdateReaccion({ usuarioId, resenaId: reviewId, tipo: "like" }, token);
+      } else {
+        // quitar like: deleteReaccion espera (usuarioId, resenaId, tipo)
+        await deleteReaccion(usuarioId, reviewId, "like");
+      }
+    } catch (err) {
+      console.warn("Error guardando reaccion:", err);
+      // revertir a los snapshots previos
+      setLikedByUser(prevLiked);
+      setReseñas(prevResenas);
+      alert("No se pudo actualizar la reacción. Intentá de nuevo.");
+    }
+  };
+
+  // Formulario inline para crear reseña (estrellas + textarea grande)
+  const NewReviewForm: React.FC<{ libroId: number; onAdded?: () => void; onOptimisticAdd?: (r: Reseña) => void }> = ({ libroId, onAdded, onOptimisticAdd }) => {
+    const [estrellas, setEstrellas] = useState<number>(5);
+    const [comentario, setComentario] = useState<string>("");
+    const [submitting, setSubmitting] = useState(false);
+    const [errorLocal, setErrorLocal] = useState<string | null>(null);
+
+    const submit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!isAuthenticated()) {
+        alert("Debes iniciar sesión para publicar una reseña.");
+        return;
+      }
+      if (!comentario.trim()) {
+        setErrorLocal("El comentario no puede estar vacío.");
+        return;
+      }
+
+      setSubmitting(true);
+      setErrorLocal(null);
+
+      // Optimistic add: construir reseña temporal
+      const tempReview: Reseña = {
+        id: Date.now(),
+        comentario,
+        estrellas,
+        estado: "pending", // optimista
+        fechaResena: new Date().toISOString(),
+        usuario: { id: 0, username: "Tú", nombre: undefined },
+        reacciones: [],
+      };
+
+      try {
+        // mostrar inmediatamente
+        onOptimisticAdd?.(tempReview);
+
+        const token = getToken();
+        const res = await fetch("http://localhost:3000/api/resena", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            libroId,
+            estrellas,
+            comentario,
+            libro: {
+              id: libro!.id,
+              titulo: libro!.titulo,
+              autores: libro!.autores,
+              descripcion: libro!.descripcion,
+              imagen: libro!.imagen,
+              enlace: libro!.enlace,
+              source: libro!.source,
+            },
+          }),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || "Error creando reseña");
+        }
+
+        // si todo ok, refrescar reseñas reales desde servidor
+        onAdded?.();
+        setComentario("");
+        setEstrellas(5);
+      } catch (err: any) {
+        console.error("Error creando reseña:", err);
+        setErrorLocal(err.message || "No se pudo crear la reseña");
+        onAdded?.();
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    return (
+      <form onSubmit={submit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Tu calificación</label>
+          <StarsInput value={estrellas} onChange={setEstrellas} sizeClass="w-7 h-7" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Tu reseña</label>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            rows={6}
+            className="w-full min-h-[8rem] resize-y rounded-lg border border-gray-200 p-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-lg"
+            placeholder="Escribe tu reseña: qué te gustó, qué no, para quién recomendarías este libro..."
+          />
+          <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+            <div>{comentario.length} caracteres</div>
+            <div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Publicar reseña"}
+              </button>
+            </div>
+          </div>
+          {errorLocal && <div className="mt-2 text-sm text-red-600">{errorLocal}</div>}
+        </div>
+      </form>
+    );
+  };
 
   if (loading)
     return (
@@ -255,6 +504,7 @@ export const DetalleLibro: React.FC = () => {
                 href={libro.enlace}
                 target="_blank"
                 className="px-5 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 shadow hover:bg-indigo-700 transition"
+                rel="noreferrer"
               >
                 <ExternalLink className="w-4 h-4" /> Ver en Google Books
               </a>
@@ -292,40 +542,130 @@ export const DetalleLibro: React.FC = () => {
         </div>
       </div>
 
-      {/* Reseñas */}
+      {/* Reseñas mejoradas */}
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="text-3xl font-bold mb-8 flex items-center gap-2">
-          <Award className="w-6 h-6 text-purple-600" /> Reseñas
-        </h2>
-        <div className="space-y-6">
-          {reseñas.map((r) => (
-            <div key={r.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition">
-              <div className="flex gap-4">
-                <img src={r.avatar} alt={r.usuario} className="w-14 h-14 rounded-full object-cover" />
-                <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-lg">{r.usuario}</h4>
-                    <span className="text-sm text-gray-500">
-                      <Calendar className="w-4 h-4 inline mr-1" />
-                      {formatDate(r.fecha)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    {renderStars(r.rating)} <span className="text-sm text-gray-500 ml-2">{r.rating}/5</span>
-                  </div>
-                  <p className="mt-3 text-gray-700">{r.comentario}</p>
-                  <div className="flex gap-6 mt-4 text-sm">
-                    <button className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
-                      <ThumbsUp className="w-4 h-4" /> {r.likes}
-                    </button>
-                    <button className="text-gray-600 hover:text-indigo-600">Responder</button>
-                  </div>
-                </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold flex items-center gap-3">
+            <Award className="w-6 h-6 text-purple-600" /> Reseñas
+          </h2>
+
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-600 text-right">
+              <div className="font-semibold">{reseñas.length} reseñas</div>
+              <div className="flex items-center gap-1">
+                {averageRating ? (
+                  <>
+                    <div className="flex items-center gap-1">{renderStars(averageRating, "w-4 h-4")}</div>
+                    <span className="ml-2 font-medium">{averageRating.toFixed(1)}/5</span>
+                  </>
+                ) : (
+                  <span className="text-gray-400">Sin calificaciones</span>
+                )}
               </div>
             </div>
-          ))}
+
+            <div className="flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2">
+              <button
+                onClick={() => setSortOrder('mas_recientes')}
+                className={`text-sm px-2 py-1 rounded ${sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+              >
+                Más recientes
+              </button>
+              <button
+                onClick={() => setSortOrder('mejor_valoradas')}
+                className={`text-sm px-2 py-1 rounded ${sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+              >
+                Mejor valoradas
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {isAuthenticated() && (
+          <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-4">Agregar una reseña</h3>
+            <NewReviewForm
+              libroId={parseInt(libro.id)}
+              onAdded={refreshResenas}
+              onOptimisticAdd={(r) => addResenaLocally(r)}
+            />
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {reviewsLoading ? (
+            <div className="flex items-center justify-center p-8 bg-white rounded-xl shadow">
+              <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600" /> Cargando reseñas...
+            </div>
+          ) : sortedResenas().length === 0 ? (
+            <div className="bg-white rounded-xl shadow p-8 text-center">
+              <MessageCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">Aún no hay reseñas disponibles para este libro. ¡Sé el primero en comentar!</p>
+            </div>
+          ) : (
+            sortedResenas().map((r) => (
+              <article key={r.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition">
+                <div className="flex gap-4">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg">
+                    {((r.usuario.nombre || r.usuario.username) || "?").split(" ").map(s => s[0]).slice(0,2).join("")}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-lg">{r.usuario.nombre || r.usuario.username}</h4>
+                          {r.estado === "pending" && (
+                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+                              Pendiente de moderación
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1">
+                            {renderStars(r.estrellas, "w-4 h-4")} <span className="ml-2">{r.estrellas}/5</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-gray-400 flex items-center gap-2">
+                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(r.fechaResena)}</span>
+                        <button className="p-1 rounded hover:bg-gray-100" title="Más opciones"><MoreHorizontal className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-gray-700">
+                      {/* bloque de comentario más grande: text-lg y mayor line-height */}
+                      <p className={`${expandedReviewIds[r.id] ? '' : 'line-clamp-5'} text-lg leading-relaxed`}>{r.comentario}</p>
+                      {r.comentario && r.comentario.length > 300 && (
+                        <button onClick={() => toggleExpand(r.id)} className="mt-2 text-sm text-indigo-600 hover:underline flex items-center gap-1">
+                          {expandedReviewIds[r.id] ? <><ChevronUp className="w-4 h-4"/> Ver menos</> : <><ChevronDown className="w-4 h-4"/> Ver más</>}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex gap-6 mt-4 text-sm items-center">
+                      <button
+                        onClick={() => handleToggleLike(r.id)}
+                        className={`flex items-center gap-2 ${likedByUser[r.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{r.reacciones?.length || 0}</span>
+                      </button>
+
+                      <button className="text-gray-600 hover:text-indigo-600">Responder</button>
+
+                      <span className="ml-auto text-xs text-gray-400">ID: {r.id}</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+export { DetalleLibro };

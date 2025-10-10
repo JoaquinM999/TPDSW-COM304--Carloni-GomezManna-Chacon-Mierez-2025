@@ -1,8 +1,10 @@
 // src/services/userService.ts
-const API_URL = 'http://localhost:3000/api/usuario';
+import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+
+const API_URL = 'http://localhost:3000/api/usuarios';
 
 export const getUsuarios = async () => {
-  const response = await fetch(API_URL);
+  const response = await fetchWithRefresh(API_URL);
   if (!response.ok) {
     throw new Error('No se pudieron obtener los usuarios');
   }
@@ -10,7 +12,7 @@ export const getUsuarios = async () => {
 };
 
 export const getUsuarioById = async (id: number) => {
-  const response = await fetch(`${API_URL}/${id}`);
+  const response = await fetchWithRefresh(`${API_URL}/${id}`);
   if (!response.ok) {
     throw new Error('No se pudo obtener el usuario');
   }

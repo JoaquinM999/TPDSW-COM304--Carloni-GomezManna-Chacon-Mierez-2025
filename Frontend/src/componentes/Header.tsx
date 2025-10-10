@@ -1,9 +1,10 @@
 // src/componentes/Header.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle } from "lucide-react";
+import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAuthenticated, logoutUser } from "../services/authService";
+import { isAdmin } from "../utils/jwtUtils";
 
 // Tipos
 interface HeaderProps {
@@ -319,6 +320,11 @@ export const Header: React.FC<HeaderProps> = ({
                         <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100">
                           Configuración
                         </Link>
+                        {isAdmin() && (
+                          <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100">
+                            Admin
+                          </Link>
+                        )}
                         <button
                           onClick={() => {
                             logoutUser();
@@ -398,6 +404,18 @@ export const Header: React.FC<HeaderProps> = ({
                       <span>Configuración</span>
                     </Link>
                   </li>
+                  {isAdmin() && (
+                    <li>
+                      <Link
+                        to="/admin/moderation"
+                        className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span>Admin</span>
+                      </Link>
+                    </li>
+                  )}
                 </>
               )}
               {!isAuth && (

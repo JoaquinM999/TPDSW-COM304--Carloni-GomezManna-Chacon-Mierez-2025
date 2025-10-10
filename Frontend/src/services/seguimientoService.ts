@@ -67,6 +67,18 @@ export const seguimientoService = {
     return response.json();
   },
 
+  async isFollowing(seguidoId: number): Promise<boolean> {
+    const response = await fetchWithRefresh(`/seguimiento/is-following/${seguidoId}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Error al verificar seguimiento');
+    }
+
+    const data = await response.json();
+    return data.isFollowing;
+  },
+
   async getFollowCounts(userId: number): Promise<{ seguidores: number; siguiendo: number }> {
     const response = await fetchWithRefresh(`/seguimiento/counts/${userId}`);
 

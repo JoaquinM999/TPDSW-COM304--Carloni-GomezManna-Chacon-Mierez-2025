@@ -68,3 +68,12 @@ export const deleteAutor = async (id: number, token: string) => {
 
   return await response.json();
 };
+
+// ✅ Buscar autores
+export const searchAutores = async (query: string) => {
+  const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
+  if (!response.ok) {
+    throw new Error('Error al buscar autores');
+  }
+  return await response.json();
+};

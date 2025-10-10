@@ -1,5 +1,6 @@
 // src/routes/actividad.routes.ts
 import { Router } from 'express';
+import { authenticateJWT } from '../middleware/auth.middleware';
 import {
   getActividades,
   getActividadById,

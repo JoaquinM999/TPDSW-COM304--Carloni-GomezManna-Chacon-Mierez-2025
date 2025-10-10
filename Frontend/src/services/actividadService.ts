@@ -25,6 +25,8 @@ export const getActividadesByUsuario = async (usuarioId: number) => {
   return await response.json();
 };
 
+
+
 export const createActividad = async (actividadData: any, token: string) => {
   const response = await fetch(API_URL, {
     method: 'POST',

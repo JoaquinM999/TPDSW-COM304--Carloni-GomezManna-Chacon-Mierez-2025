@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as resenaController from '../controllers/resena.controller';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { authenticateJWT, optionalAuthenticateJWT } from '../middleware/auth.middleware';
 import { requireAdmin } from '../middleware/admin.middleware';
 
 const router = Router();
 
-router.get('/', resenaController.getResenas);
+router.get('/', optionalAuthenticateJWT, resenaController.getResenas);
 router.get('/:id', resenaController.getResenaById);
 router.post('/', authenticateJWT, resenaController.createResena);
 router.put('/:id', authenticateJWT, resenaController.updateResena);

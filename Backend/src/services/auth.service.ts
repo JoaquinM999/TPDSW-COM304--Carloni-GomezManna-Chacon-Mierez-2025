@@ -9,6 +9,7 @@ const generateToken = (usuario: Usuario) => {
     id: usuario.id,
     username: usuario.username,
     email: usuario.email,
+    rol: usuario.rol,
   };
   return jwt.sign(payload, process.env.JWT_SECRET || 'secretkey', { expiresIn: '1h' });
 };

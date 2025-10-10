@@ -13,21 +13,30 @@ export class Libro {
   @PrimaryKey()
   id!: number;
 
-  @Property()
+  @Property({ nullable: true })
   @Index() // permite búsquedas rápidas por nombre de libro
-  nombre!: string;
+  nombre?: string;
 
-  @Property({ type: 'text' }) // sinopsis puede ser larga
-  sinopsis!: string;
+  @Property({ type: 'text', nullable: true }) // sinopsis puede ser larga
+  sinopsis?: string;
 
-  @ManyToOne(() => Autor, { nullable: false })
-  autor!: Autor;
+  @Property({ nullable: true })
+  imagen?: string;
 
-  @ManyToOne(() => Categoria, { nullable: false })
-  categoria!: Categoria;
+  @Property({ nullable: true })
+  enlace?: string;
 
-  @ManyToOne(() => Editorial, { nullable: false })
-  editorial!: Editorial;
+  @Property({ nullable: true })
+  source?: string;
+
+  @ManyToOne(() => Autor, { nullable: true })
+  autor?: Autor;
+
+  @ManyToOne(() => Categoria, { nullable: true })
+  categoria?: Categoria;
+
+  @ManyToOne(() => Editorial, { nullable: true })
+  editorial?: Editorial;
 
   @ManyToOne(() => Saga, { nullable: true })
   saga?: Saga;

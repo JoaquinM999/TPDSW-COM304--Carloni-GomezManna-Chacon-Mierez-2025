@@ -64,7 +64,7 @@ export const getUserById = async (req: AuthRequest, res: Response) => {
     const orm = req.app.get('orm') as MikroORM;
     const userId = +req.params.id;
 
-    if (!req.user || (typeof req.user === 'object' && req.user.id !== userId)) {
+    if (!req.user) {
       return res.status(403).json({ error: 'Not authorized to view this user' });
     }
 

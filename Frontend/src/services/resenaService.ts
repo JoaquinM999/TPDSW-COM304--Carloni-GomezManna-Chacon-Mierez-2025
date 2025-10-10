@@ -2,25 +2,24 @@ import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
 const API_URL = 'http://localhost:3000/api/resena';
 
-export const obtenerReseñas = async (idLibro: number) => {
+export const obtenerReseñas = async (idLibro: string) => {
   const res = await fetch(`${API_URL}?libroId=${idLibro}`);
   if (!res.ok) throw new Error('Error al obtener reseñas');
   return res.json();
 };
 
 export const agregarReseña = async (
-  libroId: number,
+  libroId: string,
   comentario: string,
   estrellas: number,
-  token: string
+  libro: any
 ) => {
-  const res = await fetch(API_URL, {
+  const res = await fetchWithRefresh(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ libroId, comentario, estrellas }),
+    body: JSON.stringify({ libroId, comentario, estrellas, libro }),
   });
 
   if (!res.ok) {
@@ -78,7 +77,7 @@ export const getResenasByUsuario = async (userId: number) => {
   return response.json();
 };
 
-export const getResenasByLibro = async (libroId: number) => {
+export const getResenasByLibro = async (libroId: string) => {
   const response = await fetchWithRefresh(`${API_URL}?libroId=${libroId}`, {
     method: 'GET',
     headers: {

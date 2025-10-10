@@ -3,7 +3,7 @@ import { Resena } from '../entities/resena.entity';
 import { Libro } from '../entities/libro.entity';
 import redis from '../redis';
 
-export const getReviewsByBookId = async (orm: MikroORM, bookId: number) => {
+export const getReviewsByBookId = async (orm: MikroORM, bookId: string) => {
   const cacheKey = `reviews:book:${bookId}`;
   const cacheTTL = parseInt(process.env.CACHE_TTL || '300', 10);
 
@@ -23,13 +23,13 @@ export const getReviewsByBookId = async (orm: MikroORM, bookId: number) => {
 
   // Cache miss, query DB
   const em = orm.em.fork();
-  const libro = await em.findOne(Libro, { id: bookId });
+  const libro = await em.findOne(Libro, { externalId: bookId });
   if (!libro) {
     throw new Error('Libro no encontrado');
   }
 
   // Fetch reviews from the database
-  const reviews = await em.find(Resena, { libro: bookId });
+  const reviews = await em.find(Resena, { libro: { externalId: bookId } });
 
   // Cache the result with TTL
   if (redis) {

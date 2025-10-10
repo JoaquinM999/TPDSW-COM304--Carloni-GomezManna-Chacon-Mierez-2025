@@ -17,7 +17,7 @@ import {
   Loader2,
   MoreHorizontal,
 } from "lucide-react";
-import { getResenasByLibro } from "../services/resenaService";
+import { getResenasByLibro, agregarReseña } from "../services/resenaService";
 import { getRatingLibroByLibroId } from "../services/ratingLibroService";
 import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService";
 import { isAuthenticated, getToken } from "../services/authService";
@@ -128,15 +128,14 @@ const DetalleLibro: React.FC = () => {
           }
         }
 
-        // ahora que tenemos data (si existe id/int), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
+        // ahora que tenemos data (si existe id/string), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
         try {
           const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
-          const libroId = libroIdCandidate ? parseInt(String(libroIdCandidate)) : NaN;
-          if (!isNaN(libroId)) {
+          if (libroIdCandidate) {
             setReviewsLoading(true);
             const [reviewsData, ratingData] = await Promise.all([
-              getResenasByLibro(libroId),
-              getRatingLibroByLibroId(libroId),
+              getResenasByLibro(libroIdCandidate),
+              getRatingLibroByLibroId(parseInt(libroIdCandidate) || 0), // assuming rating service still takes number
             ]);
             setReseñas(reviewsData || []);
             setAverageRating(ratingData?.promedio ?? null);
@@ -165,11 +164,9 @@ const DetalleLibro: React.FC = () => {
 
   const refreshResenas = async () => {
     if (!libro) return;
-    const libroId = parseInt(libro.id);
-    if (isNaN(libroId)) return;
     try {
       setReviewsLoading(true);
-      const reviewsData = await getResenasByLibro(libroId);
+      const reviewsData = await getResenasByLibro(libro.id);
       setReseñas(reviewsData || []);
     } catch (error) {
       console.warn("Error refreshing reviews:", error);
@@ -308,7 +305,7 @@ const DetalleLibro: React.FC = () => {
   };
 
   // Formulario inline para crear reseña (estrellas + textarea grande)
-  const NewReviewForm: React.FC<{ libroId: number; onAdded?: () => void; onOptimisticAdd?: (r: Reseña) => void }> = ({ libroId, onAdded, onOptimisticAdd }) => {
+  const NewReviewForm: React.FC<{ libroId: string; onAdded?: () => void; onOptimisticAdd?: (r: Reseña) => void }> = ({ libroId, onAdded, onOptimisticAdd }) => {
     const [estrellas, setEstrellas] = useState<number>(5);
     const [comentario, setComentario] = useState<string>("");
     const [submitting, setSubmitting] = useState(false);
@@ -316,6 +313,7 @@ const DetalleLibro: React.FC = () => {
 
     const submit = async (e: React.FormEvent) => {
       e.preventDefault();
+      if (!libro) return;
       if (!isAuthenticated()) {
         alert("Debes iniciar sesión para publicar una reseña.");
         return;
@@ -343,32 +341,18 @@ const DetalleLibro: React.FC = () => {
         // mostrar inmediatamente
         onOptimisticAdd?.(tempReview);
 
-        const token = getToken();
-        const res = await fetch("http://localhost:3000/api/resena", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            libroId,
-            estrellas,
-            comentario,
-            libro: {
-              id: libro!.id,
-              titulo: libro!.titulo,
-              autores: libro!.autores,
-              descripcion: libro!.descripcion,
-              imagen: libro!.imagen,
-              enlace: libro!.enlace,
-              source: libro!.source,
-            },
-          }),
+        const res = await agregarReseña(libro.id, comentario, estrellas, {
+          id: libro.id,
+          titulo: libro.titulo,
+          autores: libro.autores,
+          descripcion: libro.descripcion,
+          imagen: libro.imagen,
+          enlace: libro.enlace,
+          source: libro.source,
         });
 
         if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || "Error creando reseña");
+          throw new Error("Error creando reseña");
         }
 
         // si todo ok, refrescar reseñas reales desde servidor
@@ -585,7 +569,7 @@ const DetalleLibro: React.FC = () => {
           <div className="bg-white rounded-xl shadow p-6 mb-8">
             <h3 className="text-xl font-semibold mb-4">Agregar una reseña</h3>
             <NewReviewForm
-              libroId={parseInt(libro.id)}
+              libroId={libro.id}
               onAdded={refreshResenas}
               onOptimisticAdd={(r) => addResenaLocally(r)}
             />

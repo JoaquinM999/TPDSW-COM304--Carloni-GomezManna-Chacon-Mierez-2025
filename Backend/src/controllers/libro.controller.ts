@@ -143,11 +143,7 @@ export const getLibrosByEstrellasMinimasQB = async (req: Request, res: Response)
 export const getReviewsByBookIdController = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const bookId = +req.params.id;
-
-    if (isNaN(bookId)) {
-      return res.status(400).json({ error: 'ID de libro inválido' });
-    }
+    const bookId = req.params.id;
 
     const reviews = await getReviewsByBookId(orm, bookId);
     res.json(reviews);

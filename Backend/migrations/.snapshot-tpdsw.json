@@ -387,6 +387,16 @@
           "length": null,
           "mappedType": "integer"
         },
+        "external_id": {
+          "name": "external_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
         "nombre": {
           "name": "nombre",
           "type": "varchar(255)",

@@ -14,6 +14,9 @@ export class Libro {
   id!: number;
 
   @Property({ nullable: true })
+  externalId?: string;
+
+  @Property({ nullable: true })
   @Index() // permite búsquedas rápidas por nombre de libro
   nombre?: string;
 

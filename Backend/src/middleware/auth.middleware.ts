@@ -7,14 +7,17 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
+  console.log('🔐 Verificando JWT para ruta:', req.path);
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
+    console.log('❌ Authorization header missing');
     return res.status(401).json({ error: 'Authorization header missing' });
   }
 
   const token = authHeader.split(' ')[1];
   if (!token) {
+    console.log('❌ Token missing');
     return res.status(401).json({ error: 'Token missing' });
   }
 
@@ -23,14 +26,17 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
     const decoded = jwt.verify(token, secret);
 
     if (typeof decoded !== 'object' || decoded === null) {
+      console.log('❌ Invalid token payload');
       return res.status(401).json({ error: 'Invalid token payload' });
     }
 
     // Si en tu payload JWT el usuario tiene un campo id numérico, acá lo aseguramos
     req.user = decoded as JwtPayload & { id?: number };
+    console.log('✅ JWT válido para usuario ID:', req.user.id);
 
     next();
   } catch (err) {
+    console.log('❌ Invalid or expired token:', (err as Error).message);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };

@@ -19,12 +19,12 @@ export const getRatingLibroById = async (req: Request, res: Response) => {
 
 export const getRatingLibroByLibroId = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const libroId = +req.params.libroId;
+  const externalId = req.params.libroId;
 
-  const libro = await orm.em.findOne(Libro, { id: libroId });
+  const libro = await orm.em.findOne(Libro, { externalId });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-  const rating = await orm.em.findOne(RatingLibro, { libro: libroId });
+  const rating = await orm.em.findOne(RatingLibro, { libro: libro.id });
   if (!rating) return res.status(404).json({ error: 'Rating no encontrado para este libro' });
 
   res.json(rating);

@@ -6,35 +6,57 @@ import { Libro } from '../entities/libro.entity';
 import { Usuario, RolUsuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
 import { ActividadService } from '../services/actividad.service';
+import redis from '../redis';
 
-// Tipado extendido para req.user
 interface AuthRequest extends Request {
   user?: { id: number; [key: string]: any };
 }
 
+// =======================
 // Obtener todas las reseñas
+// =======================
 export const getResenas = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const em = orm.em.fork(); // fork para evitar conflictos
+    const em = orm.em.fork();
     const { libroId, usuarioId, estado } = req.query;
 
-    if (estado === 'PENDING') {
-      const usuarioPayload = (req as AuthRequest).user;
-      if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+    const where: any = {};
 
-      const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
-      if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
-        return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
-      }
+    // Filtrado por libroId (siempre externalId, ya que libroId viene del frontend como external)
+    if (libroId) {
+      where.libro = { externalId: libroId.toString() };
     }
 
-    const where: any = {};
-    if (libroId) where.libro = { externalId: libroId.toString() };
     if (usuarioId) where.usuario = +usuarioId;
     if (estado) where.estado = estado;
 
-    const resenas = await em.find(Resena, where, { populate: ['usuario', 'libro', 'reacciones'] });
+    // 🔹 Lógica de visibilidad
+    if (!estado) {
+      const usuarioPayload = (req as AuthRequest).user;
+
+      if (libroId) {
+        // ➤ Mostrar todas las reseñas del libro excepto las rechazadas
+        where.estado = { $nin: [EstadoResena.FLAGGED] };
+      } else {
+        // ➤ Para listas generales, mantener solo aprobadas para no-admin
+        if (!usuarioPayload) {
+          where.estado = EstadoResena.APPROVED;
+        } else {
+          const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
+          if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
+            where.estado = EstadoResena.APPROVED;
+          }
+        }
+      }
+    }
+
+    const resenas = await em.find(Resena, where, {
+      populate: ['usuario', 'libro', 'reacciones'],
+      orderBy: { createdAt: 'DESC' },
+    });
+
+    console.log('🔍 getResenas => where:', where, '| total:', resenas.length);
     res.json(resenas);
   } catch (error) {
     console.error('Error en getResenas:', error);
@@ -42,13 +64,14 @@ export const getResenas = async (req: Request, res: Response) => {
   }
 };
 
+// =======================
 // Obtener una reseña por ID
+// =======================
 export const getResenaById = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario', 'libro'] });
-
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
     res.json(resena);
   } catch (error) {
@@ -57,15 +80,15 @@ export const getResenaById = async (req: Request, res: Response) => {
   }
 };
 
+// =======================
 // Crear una nueva reseña
+// =======================
 export const createResena = async (req: Request, res: Response) => {
   try {
-    console.log('🔍 Iniciando creación de reseña');
+    console.log('📝 Creando reseña...');
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const { comentario, estrellas, libroId } = req.body;
-
-    console.log('📝 Datos recibidos:', { comentario, estrellas, libroId });
+    const { comentario, estrellas, libroId, libro: libroData } = req.body;
 
     if (!comentario || typeof comentario !== 'string')
       return res.status(400).json({ error: 'Comentario inválido o faltante' });
@@ -77,25 +100,18 @@ export const createResena = async (req: Request, res: Response) => {
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
 
-    console.log('👤 Buscando usuario con ID:', usuarioPayload.id);
     const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-    console.log('✅ Usuario encontrado:', usuario.id);
 
-    // Obtener datos del libro del body
-    const libroData = req.body.libro;
-    if (!libroData || !libroData.titulo) {
+    if (!libroData || !libroData.titulo)
       return res.status(400).json({ error: 'Datos del libro faltantes' });
-    }
 
-    console.log('📋 Datos del libro:', libroData);
-
-    // Buscar libro existente por externalId para asegurar unicidad
-    const externalId = libroData.id || libroData.slug || req.body.libroId || '';
+    // Buscar libro por externalId o id
+    const externalId = libroData.id || libroData.slug || libroId?.toString() || '';
     let libro = await em.findOne(Libro, { externalId });
+
     if (!libro) {
-      console.log('📖 Libro no encontrado, creando nuevo');
-      const nuevoLibro = em.create(Libro, {
+      libro = em.create(Libro, {
         externalId,
         nombre: libroData.titulo,
         sinopsis: libroData.descripcion || null,
@@ -104,43 +120,11 @@ export const createResena = async (req: Request, res: Response) => {
         source: libroData.source || null,
         createdAt: new Date(),
       });
-      await em.persistAndFlush(nuevoLibro);
-      libro = nuevoLibro;
-      console.log('✅ Libro creado con ID:', libro.id);
-    } else {
-      console.log('✅ Libro existente encontrado con ID:', libro.id);
-      // Actualizar campos si han cambiado o están vacíos
-      if (libroData.titulo && libro.nombre !== libroData.titulo) {
-        libro.nombre = libroData.titulo;
-      }
-      if (libroData.descripcion && (!libro.sinopsis || libro.sinopsis !== libroData.descripcion)) {
-        libro.sinopsis = libroData.descripcion;
-      }
-      if (libroData.imagen && (!libro.imagen || libro.imagen !== libroData.imagen)) {
-        libro.imagen = libroData.imagen || libroData.coverUrl || null;
-      }
-      if (libroData.enlace && libro.enlace !== libroData.enlace) {
-        libro.enlace = libroData.enlace;
-      }
-      if (libroData.source && libro.source !== libroData.source) {
-        libro.source = libroData.source;
-      }
-      em.persist(libro);
-      await em.flush();
+      await em.persistAndFlush(libro);
+      console.log('📚 Nuevo libro creado:', libro.nombre);
     }
 
-    console.log('🔍 Verificando malas palabras');
-    try {
-      const esOfensivo = await contieneMalasPalabras(comentario);
-      if (esOfensivo)
-        return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
-    } catch (error) {
-      console.error('Error en verificación de malas palabras:', error);
-      // Si falla la verificación, asumir que no es ofensivo para permitir guardar la reseña
-      console.log('⚠️ No se pudo verificar malas palabras, procediendo con la creación de la reseña');
-    }
-
-    console.log('📝 Creando reseña');
+    // Crear la reseña
     const nuevaResena = em.create(Resena, {
       comentario,
       estrellas: estrellasNum,
@@ -151,57 +135,51 @@ export const createResena = async (req: Request, res: Response) => {
       createdAt: new Date(),
     });
 
-    console.log('💾 Persistiendo reseña');
     await em.persistAndFlush(nuevaResena);
-
     console.log('✅ Reseña guardada con ID:', nuevaResena.id);
 
-    // Crear actividad (no bloquear si falla)
+    // Invalidar cache si existe
+    if (redis) {
+      try {
+        await redis.del(`reviews:book:${libro.externalId}`);
+        console.log('🗑️ Caché invalidado para libro:', libro.externalId);
+      } catch (err) {
+        console.error('Error al invalidar caché:', err);
+      }
+    }
+
+    // Crear registro de actividad
     try {
       const actividadService = new ActividadService(orm);
       await actividadService.crearActividadResena(usuarioPayload.id, nuevaResena.id);
-    } catch (actividadError) {
-      console.error('Error al crear registro de actividad:', actividadError);
+    } catch (err) {
+      console.error('⚠️ No se pudo registrar actividad:', err);
     }
 
     res.status(201).json({ message: 'Reseña creada', resena: nuevaResena });
   } catch (error) {
     console.error('❌ Error en createResena:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al crear la reseña',
-    });
+    res.status(500).json({ error: 'Error al crear la reseña' });
   }
 };
 
-// Actualizar una reseña
+// =======================
+// Actualizar reseña
+// =======================
 export const updateResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario'] });
-
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
-
     if (resena.usuario.id !== usuarioPayload.id)
       return res.status(403).json({ error: 'No autorizado para modificar esta reseña' });
 
-    if (req.body.comentario) {
-      if (typeof req.body.comentario !== 'string')
-        return res.status(400).json({ error: 'Comentario inválido' });
-
-      try {
-        const esOfensivo = await contieneMalasPalabras(req.body.comentario);
-        if (esOfensivo)
-          return res.status(400).json({ error: 'El comentario contiene lenguaje inapropiado' });
-      } catch (error) {
-        console.error('Error en verificación de malas palabras:', error);
-        // Si falla la verificación, asumir que no es ofensivo para permitir actualizar la reseña
-        console.log('⚠️ No se pudo verificar malas palabras, procediendo con la actualización de la reseña');
-      }
-    }
+    if (req.body.comentario && typeof req.body.comentario !== 'string')
+      return res.status(400).json({ error: 'Comentario inválido' });
 
     if (req.body.estrellas !== undefined) {
       const estrellas = Number(req.body.estrellas);
@@ -215,24 +193,22 @@ export const updateResena = async (req: Request, res: Response) => {
     res.json({ message: 'Reseña actualizada', resena });
   } catch (error) {
     console.error('Error en updateResena:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al actualizar la reseña',
-    });
+    res.status(500).json({ error: 'Error al actualizar la reseña' });
   }
 };
 
+// =======================
 // Eliminar reseña
+// =======================
 export const deleteResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario'] });
-
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
-
     if (resena.usuario.id !== usuarioPayload.id)
       return res.status(403).json({ error: 'No autorizado para eliminar esta reseña' });
 
@@ -240,13 +216,13 @@ export const deleteResena = async (req: Request, res: Response) => {
     res.json({ message: 'Reseña eliminada' });
   } catch (error) {
     console.error('Error en deleteResena:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al eliminar la reseña',
-    });
+    res.status(500).json({ error: 'Error al eliminar la reseña' });
   }
 };
 
-// Aprobar reseña (ADMIN)
+// =======================
+// Aprobar / Rechazar reseñas (Admin)
+// =======================
 export const approveResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
@@ -270,13 +246,10 @@ export const approveResena = async (req: Request, res: Response) => {
     res.json({ message: 'Reseña aprobada', resena });
   } catch (error) {
     console.error('Error en approveResena:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al aprobar la reseña',
-    });
+    res.status(500).json({ error: 'Error al aprobar la reseña' });
   }
 };
 
-// Rechazar reseña (ADMIN)
 export const rejectResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
@@ -300,8 +273,6 @@ export const rejectResena = async (req: Request, res: Response) => {
     res.json({ message: 'Reseña rechazada', resena });
   } catch (error) {
     console.error('Error en rejectResena:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al rechazar la reseña',
-    });
+    res.status(500).json({ error: 'Error al rechazar la reseña' });
   }
 };

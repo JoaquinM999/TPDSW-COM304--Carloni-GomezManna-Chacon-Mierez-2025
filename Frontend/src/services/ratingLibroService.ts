@@ -17,8 +17,8 @@ export const getRatingLibroById = async (id: number) => {
   return await response.json();
 };
 
-export const getRatingLibroByLibroId = async (libroId: number) => {
-  const response = await fetch(`${API_URL}/libro/${libroId}`);
+export const getRatingLibroByLibroId = async (libroId: string) => {
+  const response = await fetch(`${API_URL}/libro/${encodeURIComponent(libroId)}`);
   if (!response.ok) {
     throw new Error('No se pudo obtener el rating del libro');
   }

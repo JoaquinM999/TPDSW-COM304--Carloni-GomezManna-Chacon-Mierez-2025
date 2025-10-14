@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
@@ -129,25 +129,41 @@ const DetalleLibro: React.FC = () => {
         }
 
         // ahora que tenemos data (si existe id/string), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
-        try {
-          const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
-          if (libroIdCandidate) {
-            setReviewsLoading(true);
-            const [reviewsData, ratingData] = await Promise.all([
-              getResenasByLibro(libroIdCandidate),
-              getRatingLibroByLibroId(parseInt(libroIdCandidate) || 0), // assuming rating service still takes number
-            ]);
-            setReseñas(reviewsData || []);
-            setAverageRating(ratingData?.promedio ?? null);
-            // Nota: si tu API devuelve info sobre si el usuario actual reaccionó,
-            // aquí podrías inicializar likedByUser.
+        const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
+        if (libroIdCandidate) {
+          setReviewsLoading(true);
+          try {
+            const reviewsData = await getResenasByLibro(libroIdCandidate);
+
+            // Filtrar: mostrar todo excepto FLAGGED (rechazadas)
+            const filtered = (reviewsData || []).filter((r: Reseña) => r.estado !== "FLAGGED");
+
+            setReseñas(filtered);
+
+            // Inicializar likedByUser si hay token
+            const token = getToken();
+            const userId = token ? getUserIdFromToken(token) : 0;
+            const likedMap: Record<number, boolean> = {};
+            filtered.forEach((r: Reseña) => {
+              if (r.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+                likedMap[r.id] = true;
+              }
+            });
+            setLikedByUser(likedMap);
+          } catch (reviewError) {
+            console.warn("Error fetching reviews:", reviewError);
+            setReseñas([]);
           }
-        } catch (reviewError) {
-          console.warn("Error fetching reviews:", reviewError);
-          setReseñas([]);
-          setAverageRating(null);
-        } finally {
-          setReviewsLoading(false);
+
+          try {
+            const ratingData = await getRatingLibroByLibroId(libroIdCandidate);
+            setAverageRating(ratingData?.promedio ?? null);
+          } catch (ratingError) {
+            console.warn("Error fetching rating:", ratingError);
+            setAverageRating(null);
+          } finally {
+            setReviewsLoading(false);
+          }
         }
       } catch (err: any) {
         setError(err.message || "Error al cargar el libro");
@@ -167,7 +183,19 @@ const DetalleLibro: React.FC = () => {
     try {
       setReviewsLoading(true);
       const reviewsData = await getResenasByLibro(libro.id);
-      setReseñas(reviewsData || []);
+      const filtered = (reviewsData || []).filter((r: Reseña) => r.estado !== "FLAGGED");
+      setReseñas(filtered);
+
+      // actualizar likedByUser tras refresh
+      const token = getToken();
+      const userId = token ? getUserIdFromToken(token) : 0;
+      const likedMap: Record<number, boolean> = {};
+      filtered.forEach((r: Reseña) => {
+        if (r.reacciones?.some(rec => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+          likedMap[r.id] = true;
+        }
+      });
+      setLikedByUser(likedMap);
     } catch (error) {
       console.warn("Error refreshing reviews:", error);
     } finally {
@@ -331,7 +359,7 @@ const DetalleLibro: React.FC = () => {
         id: Date.now(),
         comentario,
         estrellas,
-        estado: "pending", // optimista
+        estado: "PENDING", // optimista (coincide con backend)
         fechaResena: new Date().toISOString(),
         usuario: { id: 0, username: "Tú", nombre: undefined },
         reacciones: [],
@@ -341,7 +369,8 @@ const DetalleLibro: React.FC = () => {
         // mostrar inmediatamente
         onOptimisticAdd?.(tempReview);
 
-        const res = await agregarReseña(libro.id, comentario, estrellas, {
+        // agregarReseña retorna body JSON { message, resena }
+        const result = await agregarReseña(libro.id, comentario, estrellas, {
           id: libro.id,
           titulo: libro.titulo,
           autores: libro.autores,
@@ -351,17 +380,19 @@ const DetalleLibro: React.FC = () => {
           source: libro.source,
         });
 
-        if (!res.ok) {
-          throw new Error("Error creando reseña");
+        if (!result || !result.resena) {
+          throw new Error("Respuesta inesperada del servidor al crear la reseña");
         }
 
-        // si todo ok, refrescar reseñas reales desde servidor
+        // opcional: podrías insertar result.resena directamente en la lista en lugar de refrescar
+        // pero para mantener consistencia con lo guardado en DB, hacemos refresh desde el servidor
         onAdded?.();
         setComentario("");
         setEstrellas(5);
       } catch (err: any) {
         console.error("Error creando reseña:", err);
         setErrorLocal(err.message || "No se pudo crear la reseña");
+        // quitar el temporal pidiendo al padre refrescar (onAdded)
         onAdded?.();
       } finally {
         setSubmitting(false);
@@ -599,7 +630,7 @@ const DetalleLibro: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="font-semibold text-lg">{r.usuario.nombre || r.usuario.username}</h4>
-                          {r.estado === "pending" && (
+                          {r.estado === "PENDING" && (
                             <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
                               Pendiente de moderación
                             </span>

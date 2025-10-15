@@ -46,6 +46,7 @@ interface Reseña {
     id: number;
     username: string;
     nombre?: string;
+    avatar?: string;
   };
   reacciones?: { id: number; tipo: string; usuarioId?: number }[];
 }
@@ -621,9 +622,21 @@ const DetalleLibro: React.FC = () => {
             sortedResenas().map((r) => (
               <article key={r.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition">
                 <div className="flex gap-4">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg">
-                    {((r.usuario.nombre || r.usuario.username) || "?").split(" ").map(s => s[0]).slice(0,2).join("")}
-                  </div>
+                  {r.usuario.avatar ? (
+                    <img
+                      src={`/assets/${r.usuario.avatar}.svg`}
+                      alt={`Avatar de ${r.usuario.username || r.usuario.nombre}`}
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg">
+                      {((r.usuario.nombre || r.usuario.username) || "?")
+                        .split(" ")
+                        .map(s => s[0].toUpperCase())
+                        .slice(0, 2)
+                        .join("")}
+                    </div>
+                  )}
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start">

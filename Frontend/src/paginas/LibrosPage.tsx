@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import LibroCard from "../componentes/LibroCard";
+import { getResenasByLibro } from "../services/resenaService";
 
 interface Libro {
   id: string;
@@ -10,6 +11,7 @@ interface Libro {
   descripcion?: string;
   imagen: string | null;
   enlace: string | null;
+  averageRating?: number;
 }
 
 export default function TodosLosLibros() {
@@ -37,6 +39,9 @@ export default function TodosLosLibros() {
   const [lastCount, setLastCount] = useState<number | null>(null);
   const [lastStartIndex, setLastStartIndex] = useState<number | null>(null);
 
+  // Ordenamiento
+  const [sortOrder, setSortOrder] = useState<'relevance' | 'rating_high_to_low'>('relevance');
+
   // Debounce simple para searchTerm -> debouncedSearchTerm
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -58,6 +63,13 @@ export default function TodosLosLibros() {
     setLibros([]);
     setHasMore(true);
   }, [searchFilter]);
+
+  // cuando cambia el sortOrder, resetear página a 1 y libros
+  useEffect(() => {
+    setPagina(1);
+    setLibros([]);
+    setHasMore(true);
+  }, [sortOrder]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -152,10 +164,38 @@ export default function TodosLosLibros() {
           };
         });
 
+        // Always fetch ratings for all libros in parallel for hover display
+        const ratingPromises = mapped.map(async (libro) => {
+          try {
+            const reviewsData = await getResenasByLibro(libro.id);
+            const reviews = reviewsData?.reviews || [];
+            const avgRating = reviews.length > 0
+              ? reviews.reduce((sum: number, r: any) => sum + r.estrellas, 0) / reviews.length
+              : 0;
+            return { ...libro, averageRating: avgRating };
+          } catch (err) {
+            console.warn(`Error fetching ratings for ${libro.id}:`, err);
+            return { ...libro, averageRating: 0 };
+          }
+        });
+        const librosWithRatings = await Promise.all(ratingPromises);
+
+        let finalLibros = librosWithRatings;
+        if (sortOrder === 'rating_high_to_low') {
+          // Sort: rated books first (descending), then unrated
+          finalLibros = librosWithRatings.sort((a, b) => {
+            const aRated = a.averageRating > 0;
+            const bRated = b.averageRating > 0;
+            if (aRated && !bRated) return -1;
+            if (!aRated && bRated) return 1;
+            return b.averageRating - a.averageRating;
+          });
+        }
+
         if (isInitialLoad) {
-          setLibros(mapped);
+          setLibros(finalLibros);
         } else {
-          setLibros((prev) => [...prev, ...mapped]);
+          setLibros((prev) => [...prev, ...finalLibros]);
         }
         setTotalItems(total);
         setLastCount(mapped.length);
@@ -196,7 +236,7 @@ export default function TodosLosLibros() {
 
     fetchLibros();
     return () => controller.abort();
-  }, [debouncedSearchTerm, pagina, searchFilter]);
+  }, [debouncedSearchTerm, pagina, searchFilter, sortOrder]);
 
   // helper imagen válida
   const imagenValida = (img: string | null | undefined) =>
@@ -232,6 +272,17 @@ export default function TodosLosLibros() {
               <option value="autor">Autor</option>
               <option value="isbn">ISBN</option>
               <option value="tema">Tema</option>
+            </select>
+          </div>
+
+          <div className="flex-shrink-0">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'relevance' | 'rating_high_to_low')}
+              className="px-4 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 font-medium min-w-[140px]"
+            >
+              <option value="relevance">Relevancia</option>
+              <option value="rating_high_to_low">Mejor Calificado</option>
             </select>
           </div>
 
@@ -305,6 +356,7 @@ export default function TodosLosLibros() {
                     authors={libro.autores}
                     image={libro.imagen}
                     description={libro.descripcion}
+                    rating={libro.averageRating}
                   />
                 </Link>
               ))}

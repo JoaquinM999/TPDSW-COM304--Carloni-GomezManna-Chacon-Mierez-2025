@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
@@ -270,6 +270,17 @@ const DetalleLibro: React.FC = () => {
     return [...filtered].sort((a, b) => b.estrellas - a.estrellas);
   };
 
+  // Calculate rating distribution
+  const ratingDistribution = useMemo(() => {
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reseñas.forEach(review => {
+      if (review.estrellas >= 1 && review.estrellas <= 5) {
+        distribution[review.estrellas as keyof typeof distribution]++;
+      }
+    });
+    return distribution;
+  }, [reseñas]);
+
   const toggleExpand = (id: number) =>
     setExpandedReviewIds((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -521,67 +532,83 @@ const DetalleLibro: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-3 gap-10 items-center">
-        <div className="flex justify-center">
-          <img
-            src={libro.coverUrl || libro.imagen || "https://via.placeholder.com/400x600"}
-            alt={libro.titulo}
-            onLoad={() => setImageLoaded(true)}
-            className={`w-64 h-96 object-cover rounded-2xl shadow-xl transition-all duration-700 ${
-              imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            }`}
-          />
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+        <button
+          onClick={() => navigate(from)}
+          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors duration-200 group mb-6"
+          aria-label="Volver a la página anterior"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" /> Volver
+        </button>
 
-        <div className="lg:col-span-2 space-y-6">
-          <button
-            onClick={() => navigate(from)}
-            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
-          >
-            <ArrowLeft className="w-4 h-4" /> Volver
-          </button>
-
-          <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">{libro.titulo}</h1>
-
-          <div className="flex flex-wrap gap-3">
-            {libro.autores.map((a, i) => (
-              <Link
-                key={i}
-                to={`/autores/${encodeURIComponent(a)}`}
-                className="px-3 py-1 bg-white rounded-full shadow hover:shadow-md text-sm font-medium text-gray-700"
-              >
-                <User className="w-4 h-4 inline mr-1" />
-                {a}
-              </Link>
-            ))}
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 justify-center">
+          {/* Cover Section */}
+          <div className="flex justify-center">
+            <div className="relative group">
+              <img
+                src={libro.coverUrl || libro.imagen || "https://via.placeholder.com/400x600"}
+                alt={`Portada del libro ${libro.titulo}`}
+                onLoad={() => setImageLoaded(true)}
+                className={`w-48 h-72 sm:w-56 sm:h-80 lg:w-64 lg:h-96 object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:shadow-3xl group-hover:scale-105 ${
+                  imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
           </div>
 
-          {libro.source && (
-            <span className="inline-block text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
-            </span>
-          )}
+          {/* Info Section */}
+          <div className="space-y-6 text-center">
+            <div className="space-y-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">{libro.titulo}</h1>
 
-          <div className="flex flex-wrap gap-4 mt-3">
-            <button
-              onClick={toggleFavorito}
-              className={`px-5 py-2 rounded-lg flex items-center gap-2 shadow hover:scale-105 transition ${
-                esFavorito ? "bg-red-500 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <Heart className={esFavorito ? "fill-current" : ""} /> {esFavorito ? "Favorito" : "Agregar a Favoritos"}
-            </button>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {libro.autores.map((a, i) => (
+                  <Link
+                    key={i}
+                    to={`/autores/${encodeURIComponent(a)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md text-sm font-medium text-gray-700 hover:text-indigo-700 transition-all duration-200 border border-gray-100"
+                  >
+                    <User className="w-4 h-4" />
+                    {a}
+                  </Link>
+                ))}
+              </div>
 
-            {libro.enlace && (
-              <a
-                href={libro.enlace}
-                target="_blank"
-                className="px-5 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 shadow hover:bg-indigo-700 transition"
-                rel="noreferrer"
+              {libro.source && (
+                <span className="inline-block text-sm text-gray-600 bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200">
+                  Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
+              <button
+                onClick={toggleFavorito}
+                className={`inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md ${
+                  esFavorito
+                    ? "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
+                    : "bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 border border-gray-200"
+                }`}
+                aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
               >
-                <ExternalLink className="w-4 h-4" /> Ver en Google Books
-              </a>
-            )}
+                <Heart className={`w-5 h-5 ${esFavorito ? "fill-current" : ""}`} />
+                {esFavorito ? "Favorito" : "Agregar a Favoritos"}
+              </button>
+
+              {libro.enlace && (
+                <a
+                  href={libro.enlace}
+                  target="_blank"
+                  className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium shadow-sm hover:shadow-md hover:bg-indigo-700 hover:scale-105 transition-all duration-200"
+                  rel="noreferrer"
+                  aria-label="Ver libro en Google Books"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Ver en Google Books
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -634,6 +661,34 @@ const DetalleLibro: React.FC = () => {
               <div className="mt-2 font-semibold">{reseñas.length} reseñas</div>
             </div>
           </div>
+
+          {/* Rating Distribution */}
+          {reseñas.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Resumen de calificaciones</h3>
+              <div className="space-y-2">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = ratingDistribution[star as keyof typeof ratingDistribution];
+                  const percentage = reseñas.length > 0 ? (count / reseñas.length) * 100 : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 w-12">
+                        <span className="text-sm font-medium">{star}</span>
+                        <Star className="w-4 h-4 text-amber-400 fill-current" />
+                      </div>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-amber-400 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600 w-8 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -757,13 +812,13 @@ const DetalleLibro: React.FC = () => {
                         Responder
                       </button>
 
-                      {r.respuestas?.length > 1 && (
+                      {(r.respuestas && r.respuestas.length > 1) && (
                         <button
                           onClick={() => setExpandedReplies((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
                           className="text-gray-600 hover:text-indigo-600 flex items-center gap-1"
                         >
                           {expandedReplies[r.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          {expandedReplies[r.id] ? "Ver menos" : `Ver más respuestas (${r.respuestas!.length - 1})`}
+                          {expandedReplies[r.id] ? "Ver menos" : `Ver más respuestas (${(r.respuestas ? r.respuestas.length - 1 : 0)})`}
                         </button>
                       )}
 
@@ -866,11 +921,12 @@ const DetalleLibro: React.FC = () => {
 
                               <div className="flex gap-4 mt-3 text-sm items-center">
                                 <button
-                                  onClick={() => handleToggleLike(r.respuestas[0].id)}
-                                  className={`flex items-center gap-1 ${likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                  onClick={() => r.respuestas && r.respuestas[0] && handleToggleLike(r.respuestas[0].id)}
+                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                  disabled={!r.respuestas || !r.respuestas[0]}
                                 >
                                   <ThumbsUp className="w-3 h-3" />
-                                  <span>{r.respuestas[0].reacciones?.length || 0}</span>
+                                  <span>{r.respuestas && r.respuestas[0]?.reacciones?.length || 0}</span>
                                 </button>
 
                                 <span className="ml-auto text-xs text-gray-400">ID: {r.respuestas[0].id}</span>

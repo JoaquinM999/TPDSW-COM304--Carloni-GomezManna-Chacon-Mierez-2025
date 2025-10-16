@@ -44,6 +44,13 @@ export class Resena {
   @OneToMany(() => Reaccion, (reaccion) => reaccion.resena)
   reacciones = new Collection<Reaccion>(this);
 
+  // Self-referencing for nested replies
+  @ManyToOne(() => Resena, { nullable: true, deleteRule: 'cascade' })
+  resenaPadre?: Resena;
+
+  @OneToMany(() => Resena, (child) => child.resenaPadre)
+  respuestas = new Collection<Resena>(this);
+
   @Property({ type: 'date', onCreate: () => new Date() })
   createdAt!: Date;
 

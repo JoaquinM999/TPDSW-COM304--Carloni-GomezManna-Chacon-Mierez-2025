@@ -52,12 +52,54 @@ export const getResenas = async (req: Request, res: Response) => {
     }
 
     const resenas = await em.find(Resena, where, {
-      populate: ['usuario', 'libro', 'reacciones'],
+      populate: [
+        'usuario',
+        'libro',
+        'reacciones',
+        'resenaPadre.usuario',
+        'respuestas.usuario',
+        'respuestas.resenaPadre.usuario',
+        'respuestas.respuestas.usuario'
+      ],
       orderBy: { createdAt: 'DESC' },
     });
 
-    console.log('🔍 getResenas => where:', where, '| total:', resenas.length);
-    res.json(resenas);
+    // Special handling for pending reviews (admin moderation): return flat array without pagination or top-level filtering
+    if (estado === 'PENDING') {
+      console.log('🔍 getResenas => pending reviews, returning flat array:', resenas.length);
+      res.json(resenas);
+      return;
+    }
+
+    // Filter top-level reviews (no parent)
+    let topLevel = resenas.filter(r => !r.resenaPadre);
+
+    // Recursive function to sort replies by fechaResena ASC
+    const sortReplies = (resena: Resena) => {
+      if (resena.respuestas && resena.respuestas.isInitialized()) {
+        const sortedReplies = resena.respuestas.getItems().sort((a, b) => new Date(a.fechaResena).getTime() - new Date(b.fechaResena).getTime());
+        resena.respuestas.set(sortedReplies);
+        sortedReplies.forEach(sortReplies); // Recurse for deeper levels
+      }
+    };
+
+    // Sort top-level by createdAt DESC, and sort their replies
+    topLevel = topLevel.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    topLevel.forEach(sortReplies);
+
+    // Paginate top-level reviews (10 per page)
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    const paginatedTopLevel = topLevel.slice(offset, offset + limit);
+
+    console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
+    res.json({
+      reviews: paginatedTopLevel,
+      total: topLevel.length,
+      page,
+      pages: Math.ceil(topLevel.length / limit)
+    });
   } catch (error) {
     console.error('Error en getResenas:', error);
     res.status(500).json({ error: 'Error al obtener las reseñas' });
@@ -139,7 +181,7 @@ export const createResena = async (req: Request, res: Response) => {
     console.log('✅ Reseña guardada con ID:', nuevaResena.id);
 
     // Invalidar cache si existe
-    if (redis) {
+    if (redis && redis.del) {
       try {
         await redis.del(`reviews:book:${libro.externalId}`);
         console.log('🗑️ Caché invalidado para libro:', libro.externalId);
@@ -274,5 +316,79 @@ export const rejectResena = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error en rejectResena:', error);
     res.status(500).json({ error: 'Error al rechazar la reseña' });
+  }
+};
+
+// =======================
+// Crear una respuesta a una reseña (reply)
+// =======================
+export const createRespuesta = async (req: Request, res: Response) => {
+  try {
+    console.log('📝 Creando respuesta...');
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const { comentario, estrellas = 0 } = req.body;
+    const parentId = +req.params.id;
+
+    if (!comentario || typeof comentario !== 'string' || comentario.length > 2000) {
+      return res.status(400).json({ error: 'Comentario inválido o demasiado largo (máx. 2000 caracteres)' });
+    }
+
+    const estrellasNum = Number(estrellas);
+    if (isNaN(estrellasNum) || estrellasNum < 0 || estrellasNum > 5) {
+      return res.status(400).json({ error: 'Estrellas debe ser un número entre 0 y 5' });
+    }
+
+    const usuarioPayload = (req as AuthRequest).user;
+    if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const parent = await em.findOne(Resena, { id: parentId }, { populate: ['libro'] });
+    if (!parent) return res.status(404).json({ error: 'Reseña padre no encontrada' });
+
+
+
+    // Heredar libro del padre
+    const libro = parent.libro;
+
+    // Crear la respuesta
+    const nuevaResena = em.create(Resena, {
+      comentario,
+      estrellas: estrellasNum,
+      resenaPadre: parent,
+      libro,
+      usuario,
+      estado: EstadoResena.APPROVED, // Replies are approved automatically
+      fechaResena: new Date(),
+      createdAt: new Date(),
+    });
+
+    await em.persistAndFlush(nuevaResena);
+    console.log('✅ Respuesta guardada con ID:', nuevaResena.id);
+
+    // Invalidar cache si existe
+    if (redis) {
+      try {
+        await redis.del(`reviews:book:${libro.externalId}`);
+        console.log('🗑️ Caché invalidado para libro:', libro.externalId);
+      } catch (err) {
+        console.error('Error al invalidar caché:', err);
+      }
+    }
+
+    // Crear registro de actividad (extend ActividadService to handle 'reply' type if needed)
+    try {
+      const actividadService = new ActividadService(orm);
+      await actividadService.crearActividadResena(usuarioPayload.id, nuevaResena.id);
+    } catch (err) {
+      console.error('⚠️ No se pudo registrar actividad:', err);
+    }
+
+    res.status(201).json({ message: 'Respuesta creada', resena: nuevaResena });
+  } catch (error) {
+    console.error('❌ Error en createRespuesta:', error);
+    res.status(500).json({ error: 'Error al crear la respuesta' });
   }
 };

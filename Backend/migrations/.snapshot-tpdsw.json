@@ -1122,6 +1122,16 @@
           "length": null,
           "mappedType": "integer"
         },
+        "resena_padre_id": {
+          "name": "resena_padre_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "integer"
+        },
         "created_at": {
           "name": "created_at",
           "type": "date",
@@ -1166,6 +1176,16 @@
           "unique": false
         },
         {
+          "columnNames": [
+            "resena_padre_id"
+          ],
+          "composite": false,
+          "keyName": "resena_resena_padre_id_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -1202,6 +1222,20 @@
           ],
           "referencedTableName": "libro",
           "createForeignKeyConstraint": true,
+          "updateRule": "cascade"
+        },
+        "resena_resena_padre_id_foreign": {
+          "constraintName": "resena_resena_padre_id_foreign",
+          "columnNames": [
+            "resena_padre_id"
+          ],
+          "localTableName": "resena",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "resena",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "cascade",
           "updateRule": "cascade"
         }
       },

@@ -17,8 +17,7 @@ import {
   Loader2,
   MoreHorizontal,
 } from "lucide-react";
-import { getResenasByLibro, agregarReseña } from "../services/resenaService";
-import { getRatingLibroByLibroId } from "../services/ratingLibroService";
+import { getResenasByLibro, agregarReseña, crearRespuesta } from "../services/resenaService";
 import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService";
 import { isAuthenticated, getToken } from "../services/authService";
 
@@ -49,6 +48,8 @@ interface Reseña {
     avatar?: string;
   };
   reacciones?: { id: number; tipo: string; usuarioId?: number }[];
+  respuestas?: Reseña[];
+  resenaPadre?: { usuario: { nombre?: string; username: string } };
 }
 
 const DetalleLibro: React.FC = () => {
@@ -68,7 +69,9 @@ const DetalleLibro: React.FC = () => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState<'mas_recientes' | 'mejor_valoradas'>('mas_recientes');
   const [expandedReviewIds, setExpandedReviewIds] = useState<Record<number, boolean>>({});
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
   const [likedByUser, setLikedByUser] = useState<Record<number, boolean>>({}); // reviewId -> liked?
+  const [replyForms, setReplyForms] = useState<Record<number, { comentario: string; submitting: boolean; error: string | null } | null>>({});
 
   useEffect(() => {
     const fetchLibro = async () => {
@@ -137,7 +140,8 @@ const DetalleLibro: React.FC = () => {
             const reviewsData = await getResenasByLibro(libroIdCandidate);
 
             // Filtrar: mostrar todo excepto FLAGGED (rechazadas)
-            const filtered = (reviewsData || []).filter((r: Reseña) => r.estado !== "FLAGGED");
+            const reviews = reviewsData?.reviews || [];
+            const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
 
             setReseñas(filtered);
 
@@ -151,17 +155,16 @@ const DetalleLibro: React.FC = () => {
               }
             });
             setLikedByUser(likedMap);
+
+            // Calculate average rating from parent reviews only
+            const calculatedAvg = filtered.length > 0
+              ? filtered.reduce((sum: number, r: Reseña) => sum + r.estrellas, 0) / filtered.length
+              : 0;
+            setAverageRating(calculatedAvg);
           } catch (reviewError) {
             console.warn("Error fetching reviews:", reviewError);
             setReseñas([]);
-          }
-
-          try {
-            const ratingData = await getRatingLibroByLibroId(libroIdCandidate);
-            setAverageRating(ratingData?.promedio ?? null);
-          } catch (ratingError) {
-            console.warn("Error fetching rating:", ratingError);
-            setAverageRating(null);
+            setAverageRating(0);
           } finally {
             setReviewsLoading(false);
           }
@@ -184,7 +187,8 @@ const DetalleLibro: React.FC = () => {
     try {
       setReviewsLoading(true);
       const reviewsData = await getResenasByLibro(libro.id);
-      const filtered = (reviewsData || []).filter((r: Reseña) => r.estado !== "FLAGGED");
+      const reviews = reviewsData?.reviews || [];
+      const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
       setReseñas(filtered);
 
       // actualizar likedByUser tras refresh
@@ -197,6 +201,12 @@ const DetalleLibro: React.FC = () => {
         }
       });
       setLikedByUser(likedMap);
+
+      // Recalculate average rating from parent reviews only
+      const calculatedAvg = filtered.length > 0
+        ? filtered.reduce((sum: number, r: Reseña) => sum + r.estrellas, 0) / filtered.length
+        : 0;
+      setAverageRating(calculatedAvg);
     } catch (error) {
       console.warn("Error refreshing reviews:", error);
     } finally {
@@ -262,6 +272,53 @@ const DetalleLibro: React.FC = () => {
 
   const toggleExpand = (id: number) =>
     setExpandedReviewIds((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const toggleReplyForm = (reviewId: number) => {
+    setReplyForms((prev) => ({
+      ...prev,
+      [reviewId]: prev[reviewId] ? null : { comentario: "", submitting: false, error: null },
+    }));
+  };
+
+  const handleReplySubmit = async (reviewId: number, comentario: string) => {
+    if (!libro) return;
+    if (!isAuthenticated()) {
+      alert("Debes iniciar sesión para responder a una reseña.");
+      return;
+    }
+    if (!comentario.trim()) {
+      setReplyForms((prev) => ({
+        ...prev,
+        [reviewId]: { ...prev[reviewId]!, error: "El comentario no puede estar vacío." },
+      }));
+      return;
+    }
+
+    setReplyForms((prev) => ({
+      ...prev,
+      [reviewId]: { ...prev[reviewId]!, submitting: true, error: null },
+    }));
+
+    try {
+      const result = await crearRespuesta(reviewId, comentario);
+
+      if (!result || !result.resena) {
+        throw new Error("Respuesta inesperada del servidor al crear la respuesta");
+      }
+
+      // Refresh reviews to show the new reply
+      await refreshResenas();
+
+      // Close the form and reset
+      setReplyForms((prev) => ({ ...prev, [reviewId]: null }));
+    } catch (err: any) {
+      console.error("Error creando respuesta:", err);
+      setReplyForms((prev) => ({
+        ...prev,
+        [reviewId]: { ...prev[reviewId]!, submitting: false, error: err.message || "No se pudo crear la respuesta" },
+      }));
+    }
+  };
 
   // Helper: extraer userId desde un token JWT (si es que hay uno)
   const getUserIdFromToken = (token?: string): number => {
@@ -558,26 +615,38 @@ const DetalleLibro: React.FC = () => {
         </div>
       </div>
 
+      {/* Rating */}
+      <div className="max-w-4xl mx-auto px-6 py-10">
+        <div className="bg-white/90 rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Award className="w-5 h-5 text-indigo-600" />
+            Rating
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="text-lg text-gray-600">
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1">{renderStars(averageRating || 0, "w-6 h-6")}</div>
+                <span className="ml-2 font-medium text-xl">{(averageRating || 0).toFixed(1)}/5</span>
+                {reseñas.length === 0 && (
+                  <span className="ml-2 text-gray-400 text-sm">Libro sin reseñas</span>
+                )}
+              </div>
+              <div className="mt-2 font-semibold">{reseñas.length} reseñas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Reseñas mejoradas */}
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Award className="w-6 h-6 text-purple-600" /> Reseñas
+            <MessageCircle className="w-6 h-6 text-purple-600" /> Reseñas
           </h2>
 
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-600 text-right">
               <div className="font-semibold">{reseñas.length} reseñas</div>
-              <div className="flex items-center gap-1">
-                {averageRating ? (
-                  <>
-                    <div className="flex items-center gap-1">{renderStars(averageRating, "w-4 h-4")}</div>
-                    <span className="ml-2 font-medium">{averageRating.toFixed(1)}/5</span>
-                  </>
-                ) : (
-                  <span className="text-gray-400">Sin calificaciones</span>
-                )}
-              </div>
             </div>
 
             <div className="flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2">
@@ -681,10 +750,195 @@ const DetalleLibro: React.FC = () => {
                         <span>{r.reacciones?.length || 0}</span>
                       </button>
 
-                      <button className="text-gray-600 hover:text-indigo-600">Responder</button>
+                      <button
+                        onClick={() => toggleReplyForm(r.id)}
+                        className="text-gray-600 hover:text-indigo-600"
+                      >
+                        Responder
+                      </button>
+
+                      {r.respuestas?.length > 1 && (
+                        <button
+                          onClick={() => setExpandedReplies((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
+                          className="text-gray-600 hover:text-indigo-600 flex items-center gap-1"
+                        >
+                          {expandedReplies[r.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          {expandedReplies[r.id] ? "Ver menos" : `Ver más respuestas (${r.respuestas!.length - 1})`}
+                        </button>
+                      )}
 
                       <span className="ml-auto text-xs text-gray-400">ID: {r.id}</span>
                     </div>
+
+                    {replyForms[r.id] && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tu respuesta</label>
+                            <textarea
+                              value={replyForms[r.id]!.comentario}
+                              onChange={(e) =>
+                                setReplyForms((prev) => ({
+                                  ...prev,
+                                  [r.id]: { ...prev[r.id]!, comentario: e.target.value },
+                                }))
+                              }
+                              rows={3}
+                              className="w-full resize-y rounded border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              placeholder="Escribe tu respuesta..."
+                            />
+                          </div>
+
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setReplyForms((prev) => ({ ...prev, [r.id]: null }))}
+                              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleReplySubmit(
+                                  r.id,
+                                  replyForms[r.id]!.comentario
+                                )
+                              }
+                              disabled={replyForms[r.id]!.submitting || !replyForms[r.id]!.comentario.trim()}
+                              className="px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {replyForms[r.id]!.submitting ? "Enviando..." : "Responder"}
+                            </button>
+                          </div>
+
+                          {replyForms[r.id]!.error && (
+                            <p className="text-sm text-red-600">{replyForms[r.id]!.error}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Display replies */}
+                    {r.respuestas && r.respuestas.length > 0 && (
+                      <div className="mt-6 space-y-4 border-l-2 border-gray-200 pl-6">
+                        {/* Always show the first reply */}
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex gap-3">
+                            {r.respuestas[0].usuario.avatar ? (
+                              <img
+                                src={`/assets/${r.respuestas[0].usuario.avatar}.svg`}
+                                alt={`Avatar de ${r.respuestas[0].usuario.username || r.respuestas[0].usuario.nombre}`}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
+                                {((r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username) || "?")
+                                  .split(" ")
+                                  .map(s => s[0].toUpperCase())
+                                  .slice(0, 2)
+                                  .join("")}
+                              </div>
+                            )}
+
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="font-semibold text-base">{r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}</h5>
+                                    {r.respuestas[0].resenaPadre && (
+                                      <span className="text-sm text-gray-500">
+                                        respondiendo a {r.respuestas[0].resenaPadre.usuario.nombre || r.respuestas[0].resenaPadre.usuario.username}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                </div>
+
+                                <div className="text-xs text-gray-400 flex items-center gap-2">
+                                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(r.respuestas[0].fechaResena)}</span>
+                                </div>
+                              </div>
+
+                              <div className="mt-2 text-gray-700">
+                                <p className="text-base leading-relaxed">{r.respuestas[0].comentario}</p>
+                              </div>
+
+                              <div className="flex gap-4 mt-3 text-sm items-center">
+                                <button
+                                  onClick={() => handleToggleLike(r.respuestas[0].id)}
+                                  className={`flex items-center gap-1 ${likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                >
+                                  <ThumbsUp className="w-3 h-3" />
+                                  <span>{r.respuestas[0].reacciones?.length || 0}</span>
+                                </button>
+
+                                <span className="ml-auto text-xs text-gray-400">ID: {r.respuestas[0].id}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Show additional replies only if expanded */}
+                        {expandedReplies[r.id] && r.respuestas.slice(1).map((reply) => (
+                          <div key={reply.id} className="bg-gray-50 rounded-lg p-4">
+                            <div className="flex gap-3">
+                              {reply.usuario.avatar ? (
+                                <img
+                                  src={`/assets/${reply.usuario.avatar}.svg`}
+                                  alt={`Avatar de ${reply.usuario.username || reply.usuario.nombre}`}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
+                                  {((reply.usuario.nombre || reply.usuario.username) || "?")
+                                    .split(" ")
+                                    .map(s => s[0].toUpperCase())
+                                    .slice(0, 2)
+                                    .join("")}
+                                </div>
+                              )}
+
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="font-semibold text-base">{reply.usuario.nombre || reply.usuario.username}</h5>
+                                      {reply.resenaPadre && (
+                                        <span className="text-sm text-gray-500">
+                                          respondiendo a {reply.resenaPadre.usuario.nombre || reply.resenaPadre.usuario.username}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                  </div>
+
+                                  <div className="text-xs text-gray-400 flex items-center gap-2">
+                                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(reply.fechaResena)}</span>
+                                  </div>
+                                </div>
+
+                                <div className="mt-2 text-gray-700">
+                                  <p className="text-base leading-relaxed">{reply.comentario}</p>
+                                </div>
+
+                                <div className="flex gap-4 mt-3 text-sm items-center">
+                                  <button
+                                    onClick={() => handleToggleLike(reply.id)}
+                                    className={`flex items-center gap-1 ${likedByUser[reply.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                  >
+                                    <ThumbsUp className="w-3 h-3" />
+                                    <span>{reply.reacciones?.length || 0}</span>
+                                  </button>
+
+                                  <span className="ml-auto text-xs text-gray-400">ID: {reply.id}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>

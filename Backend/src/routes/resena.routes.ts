@@ -15,4 +15,7 @@ router.delete('/:id', authenticateJWT, resenaController.deleteResena);
 router.put('/:id/approve', authenticateJWT, requireAdmin, resenaController.approveResena);
 router.put('/:id/reject', authenticateJWT, requireAdmin, resenaController.rejectResena);
 
+// Reply to a review
+router.post('/:id/responder', authenticateJWT, resenaController.createRespuesta);
+
 export { router as resenaRoutes };

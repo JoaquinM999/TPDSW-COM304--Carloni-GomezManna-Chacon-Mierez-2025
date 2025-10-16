@@ -134,3 +134,26 @@ export const getResenasByLibro = async (libroId: string) => {
   if (!response.ok) throw new Error('Error al obtener reseñas del libro');
   return response.json();
 };
+
+/**
+ * 🔹 Crea una respuesta a una reseña.
+ */
+export const crearRespuesta = async (
+  parentId: number,
+  comentario: string
+) => {
+  const response = await fetchWithRefresh(`${API_URL}/${parentId}/responder`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ comentario }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Error al crear respuesta');
+  }
+
+  return response.json();
+};

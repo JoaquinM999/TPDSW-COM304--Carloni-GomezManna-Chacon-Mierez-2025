@@ -17,10 +17,19 @@ export const getContenidoLista = async (req: Request, res: Response): Promise<vo
   const contenidos = await orm.em.find(
     ContenidoLista,
     { lista: { id: listaId } },
-    { populate: ['libro'] }
+    { populate: ['libro.autor', 'libro.categoria', 'lista'] }
   );
 
-  res.json(contenidos);
+  // Map to include externalId
+  const mappedContenidos = contenidos.map(contenido => ({
+    ...contenido,
+    libro: {
+      ...contenido.libro,
+      externalId: contenido.libro.externalId
+    }
+  }));
+
+  res.json(mappedContenidos);
 };
 
 export const addLibroALista = async (req: Request, res: Response): Promise<void> => {
@@ -40,14 +49,14 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
     return;
   }
 
-  const libro = await orm.em.findOne(Libro, { externalId: libroId.toString() });
+  const libro = await orm.em.findOne(Libro, { externalId: libroId });
   if (!libro) {
     res.status(404).json({ error: 'Libro no encontrado' });
     return;
   }
   // --- FIN DE LOS CAMBIOS ---
 
-  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libroId.toString() } });
+  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libroId } });
   if (existente) {
     res.status(400).json({ error: 'El libro ya está en la lista' });
     return;
@@ -80,4 +89,31 @@ export const removeLibroDeLista = async (req: Request, res: Response): Promise<v
   await orm.em.flush();
 
   res.json({ mensaje: 'Eliminado' });
+};
+
+export const getAllUserContenido = async (req: Request, res: Response): Promise<void> => {
+  const orm = req.app.get('orm') as MikroORM;
+  const usuarioId = (req as any).user?.id;
+
+  if (!usuarioId) {
+    res.status(401).json({ error: 'Usuario no autenticado' });
+    return;
+  }
+
+  const contenidos = await orm.em.find(
+    ContenidoLista,
+    { lista: { usuario: { id: usuarioId } } },
+    { populate: ['libro.autor', 'libro.categoria', 'lista'] }
+  );
+
+  // Map to include externalId
+  const mappedContenidos = contenidos.map(contenido => ({
+    ...contenido,
+    libro: {
+      ...contenido.libro,
+      externalId: contenido.libro.externalId
+    }
+  }));
+
+  res.json(mappedContenidos);
 };

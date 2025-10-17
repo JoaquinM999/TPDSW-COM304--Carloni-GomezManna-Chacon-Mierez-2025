@@ -1,10 +1,33 @@
 // src/services/favoritosService.ts
 import axios from 'axios';
+import { getToken } from './authService';
 
-export const obtenerFavoritos = async (): Promise<{ id: number; externalId: string; source: string }[]> => {
-  const response = await axios.get('http://localhost:3000/api/favoritos/mis-favoritos');
+const api = axios.create({
+  baseURL: 'http://localhost:3000',
+});
 
-  return response.data; // Ya viene como array de objetos { id, externalId, source }
+export const obtenerFavoritos = async (): Promise<{
+  id: number;
+  titulo: string;
+  autor: string;
+  categoria: string;
+  rating: number;
+  imagen: string;
+  libroId: number;
+  fechaAgregado: string;
+}[]> => {
+  const token = getToken();
+
+  if (!token) {
+    console.error("No se encontró token de autenticación.");
+    return []; // Devuelve un array vacío si no hay token
+  }
+
+  const response = await api.get('/api/favoritos/mis-favoritos', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  return response.data; // Array con datos completos del libro
 };
 
 export const agregarFavorito = async (libroData: {
@@ -15,7 +38,13 @@ export const agregarFavorito = async (libroData: {
   enlace: string | null;
   source: "hardcover" | "google";
 }): Promise<number> => {
-  const response = await axios.post('http://localhost:3000/api/favoritos', {
+  const token = getToken();
+
+  if (!token) {
+    throw new Error("No se encontró token de autenticación.");
+  }
+
+  const response = await api.post('/api/favoritos', {
     libroData: {
       externalId: libroData.id,
       source: libroData.source,
@@ -24,11 +53,21 @@ export const agregarFavorito = async (libroData: {
       imagen: libroData.imagen,
       enlace: libroData.enlace,
     }
+  }, {
+    headers: { Authorization: `Bearer ${token}` }
   });
 
   return response.data.id; // Return the favorite id
 };
 
-export const quitarFavorito = async (libroId: number) => {
-  await axios.delete(`http://localhost:3000/api/favoritos/${libroId}`);
+export const quitarFavorito = async (favoritoId: number) => {
+  const token = getToken();
+
+  if (!token) {
+    throw new Error("No se encontró token de autenticación.");
+  }
+
+  await api.delete(`/api/favoritos/${favoritoId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
 };

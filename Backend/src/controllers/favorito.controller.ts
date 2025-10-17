@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Favorito } from '../entities/favorito.entity';
 import { Libro } from '../entities/libro.entity';
+import { RatingLibro } from '../entities/ratingLibro.entity';
 import { ActividadService } from '../services/actividad.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
@@ -17,14 +18,26 @@ export const getFavoritos = async (req: AuthRequest, res: Response): Promise<voi
   const favoritos = await orm.em.find(Favorito, {
     usuario: { id: usuarioId }
   }, {
-    populate: ['libro']
+    populate: ['libro.autor', 'libro.categoria']
   });
 
-  // Devolver array de objetos con id interno, externalId y source
+  // Get ratings for all libros
+  const libroIds = favoritos.map(fav => fav.libro.id);
+  const ratings = await orm.em.find(RatingLibro, { libro: { $in: libroIds } });
+  const ratingMap = new Map(ratings.map(r => [r.libro.id, r.avgRating]));
+
+  // Devolver array con datos completos del libro
   const result = favoritos.map(fav => ({
-    id: fav.libro.id,
+    id: fav.id, // ID del favorito
+    libroId: fav.libro.id, // ID interno numérico del libro
+    titulo: fav.libro.nombre,
+    autor: fav.libro.autor?.nombre || 'Autor desconocido',
+    categoria: fav.libro.categoria?.nombre || 'Sin categoría',
+    rating: ratingMap.get(fav.libro.id) || 0,
+    imagen: fav.libro.imagen,
     externalId: fav.libro.externalId,
-    source: fav.libro.source
+    source: fav.libro.source,
+    fechaAgregado: fav.fechaAgregado
   }));
 
   res.json(result);
@@ -91,7 +104,7 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
       // No fallar la creación de favorito si falla el registro de actividad
     }
 
-    res.status(201).json({ id: libroId });
+    res.status(201).json({ id: nuevoFavorito.id });
 
   } catch (error) {
     console.error("Error al agregar favorito:", error);
@@ -110,18 +123,18 @@ export const deleteFavorito = async (req: AuthRequest, res: Response): Promise<v
     return;
   }
 
-  // 2. OBTENER ID DEL LIBRO DE LOS PARÁMETROS DE LA URL
-  const libroId = +req.params.libroId;
+  // 2. OBTENER ID DEL FAVORITO DE LOS PARÁMETROS DE LA URL
+  const favoritoId = +req.params.favoritoId;
 
-  if (!libroId) {
-    res.status(400).json({ error: 'El libroId es requerido en la URL' });
+  if (!favoritoId) {
+    res.status(400).json({ error: 'El favoritoId es requerido en la URL' });
     return;
   }
 
   // 3. BUSCAR Y ELIMINAR
   const favorito = await orm.em.findOne(Favorito, {
-    usuario: { id: usuarioId },
-    libro: { id: libroId }
+    id: favoritoId,
+    usuario: { id: usuarioId }
   });
 
   if (!favorito) {

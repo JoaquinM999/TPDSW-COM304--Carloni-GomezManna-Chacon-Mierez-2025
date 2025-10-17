@@ -156,8 +156,9 @@ const DetalleLibro: React.FC = () => {
   const [listas, setListas] = useState<Lista[]>([]);
   const [listasConLibro, setListasConLibro] = useState<Set<number>>(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const nombresDeListasFijas = ["Ver más tarde", "Pendiente", "Leído"];
+  const nombresDeListasFijas = ["Ver más tarde", "Pendiente", "Leídos"];
 
   // Filtra las listas del usuario para mostrar solo las que NO son fijas
   const listasPersonalizadas = listas.filter(l => !nombresDeListasFijas.includes(l.nombre));
@@ -167,6 +168,9 @@ const DetalleLibro: React.FC = () => {
 
     const yaEstaEnLista = listasConLibro.has(lista.id);
     const libroId = libro.id; // Ya sabemos que es un string
+
+    // Snapshot for revert
+    const prevListasConLibro = new Set(listasConLibro);
 
     try {
       if (yaEstaEnLista) {
@@ -191,6 +195,8 @@ const DetalleLibro: React.FC = () => {
     } catch (error) {
       console.error("Error al actualizar la lista:", error);
       alert("No se pudo actualizar la lista. Inténtalo de nuevo.");
+      // Revert on error
+      setListasConLibro(prevListasConLibro);
     }
   };
 
@@ -321,9 +327,23 @@ const DetalleLibro: React.FC = () => {
       if (!isAuthenticated() || !libro) return;
       try {
         const favoritos = await obtenerFavoritos();
-        // Ahora favoritos es un array de objetos { id, externalId, source }
-        // Encontrar el favorito correspondiente al libro actual
-        const fav = favoritos.find(fav => fav.externalId === libro.id && fav.source === libro.source);
+        // favoritos puede venir con distintas formas (p.ej. { externalId, source } o { libroId, ... })
+        // Encontrar el favorito correspondiente al libro actual comprobando varios campos posibles
+        const fav = favoritos.find((f: any) => {
+          // Si tiene externalId, comparar con libro.id y opcionalmente source si existe
+          if (f && typeof f === "object" && "externalId" in f && f.externalId != null) {
+            if ("source" in f && f.source != null && libro.source != null) {
+              return String(f.externalId) === String(libro.id) && String(f.source) === String(libro.source);
+            }
+            return String(f.externalId) === String(libro.id);
+          }
+          // Si tiene libroId, comparar con libro.id
+          if (f && typeof f === "object" && "libroId" in f && f.libroId != null) {
+            return String(f.libroId) === String(libro.id);
+          }
+          // Fallback: comparar por id (no ideal pero útil como último recurso)
+          return f && String(f.id) === String(libro.id);
+        });
         setEsFavorito(fav ? fav.id : null);
       } catch (error) {
         console.error("Error fetching favorito status:", error);
@@ -346,6 +366,23 @@ const DetalleLibro: React.FC = () => {
 
     fetchListasDelLibro();
   }, [libro]); // Se ejecuta cada vez que el libro cambie
+
+  // useEffect para cerrar el dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowListaDropdown(false);
+      }
+    };
+
+    if (showListaDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showListaDropdown]);
 
   const toggleFavorito = async () => {
     if (!isAuthenticated()) {
@@ -810,7 +847,7 @@ const DetalleLibro: React.FC = () => {
               </button>
 
               {isAuthenticated() && (
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowListaDropdown(!showListaDropdown)}
                     className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 border border-gray-200"
@@ -830,7 +867,7 @@ const DetalleLibro: React.FC = () => {
                           "Leído": 'read',
                         };
                         const tipo = tipoMap[nombre];
-                        const listaExistente = listas.find(l => l.nombre === nombre && l.tipo === tipo);
+                        const listaExistente = listas.find(l => l.nombre === nombre);
                         const estaEnLista = listaExistente ? listasConLibro.has(listaExistente.id) : false;
                         return (
                           <button

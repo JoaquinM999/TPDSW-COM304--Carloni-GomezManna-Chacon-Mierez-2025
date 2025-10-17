@@ -12,14 +12,15 @@ export interface Lista {
 export interface ContenidoLista {
   id: number;
   createdAt: string;
-  lista: { id: number };
+  lista: { id: number; tipo: string };
   libro: {
     id: number;
-    titulo: string;
+    nombre: string;
+    autor?: { nombre: string };
     autores: string[];
-    imagenPortada: string;
+    imagen: string;
     categoria: { nombre: string };
-    ratingPromedio: number;
+    ratingLibro?: { avgRating: number };
   };
 }
 
@@ -104,5 +105,16 @@ export const listaService = {
       throw new Error('Error al obtener las listas del libro');
     }
     return response.json(); // Devuelve el array de IDs
+  },
+
+  async getAllUserContenido(): Promise<ContenidoLista[]> {
+    const response = await fetchWithRefresh('/api/contenido-lista/user/all', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Error al obtener todo el contenido del usuario');
+    return response.json();
   },
 };

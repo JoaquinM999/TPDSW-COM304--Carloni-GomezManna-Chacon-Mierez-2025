@@ -5,15 +5,16 @@ import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye, Plus, 
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
 import { getAutores } from '../services/autorService';
 import { getCategorias } from '../services/categoriaService';
+import { obtenerFavoritos } from '../services/favoritosService';
 
 interface LibroFavorito {
-  id: number;
+  id: number; // ✅ Volvemos a usar 'number' como el tipo del ID.
   titulo: string;
   autor: string;
   categoria: string;
   rating: number;
   imagen: string;
-  estado: 'leido' | 'ver-mas-tarde' | 'pendiente';
+  estados: ('leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito')[]; // ✅ CAMBIO CLAVE: de 'estado' a 'estados'
   fechaAgregado: string;
 }
 
@@ -33,73 +34,7 @@ interface CategoriaFavorita {
   fechaAgregado: string;
 }
 
-// Mock data - replace with your database
-const mockLibrosFavoritos: LibroFavorito[] = [
-  {
-    id: 1,
-    titulo: 'Cien años de soledad',
-    autor: 'Gabriel García Márquez',
-    categoria: 'Ficción',
-    rating: 4.8,
-    imagen: 'https://images.pexels.com/photos/1741230/pexels-photo-1741230.jpeg',
-    estado: 'leido',
-    fechaAgregado: '2024-01-15'
-  },
-  {
-    id: 2,
-    titulo: 'Dune',
-    autor: 'Frank Herbert',
-    categoria: 'Ciencia Ficción',
-    rating: 4.7,
-    imagen: 'https://images.pexels.com/photos/1029141/pexels-photo-1029141.jpeg',
-    estado: 'ver-mas-tarde',
-    fechaAgregado: '2024-01-10'
-  },
-  {
-    id: 3,
-    titulo: 'El Código Da Vinci',
-    autor: 'Dan Brown',
-    categoria: 'Misterio',
-    rating: 4.2,
-    imagen: 'https://images.pexels.com/photos/1130980/pexels-photo-1130980.jpeg',
-    estado: 'pendiente',
-    fechaAgregado: '2024-01-08'
-  }
-];
 
-const mockAutoresFavoritos: AutorFavorito[] = [
-  {
-    id: 1,
-    nombre: 'Gabriel García Márquez',
-    libros: 15,
-    imagen: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg',
-    fechaAgregado: '2024-01-12'
-  },
-  {
-    id: 2,
-    nombre: 'Isabel Allende',
-    libros: 23,
-    imagen: 'https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg',
-    fechaAgregado: '2024-01-05'
-  }
-];
-
-const mockCategoriasFavoritas: CategoriaFavorita[] = [
-  {
-    id: 1,
-    nombre: 'Ficción',
-    librosCount: 1250,
-    color: 'bg-blue-500',
-    fechaAgregado: '2024-01-20'
-  },
-  {
-    id: 2,
-    nombre: 'Ciencia Ficción',
-    librosCount: 890,
-    color: 'bg-purple-500',
-    fechaAgregado: '2024-01-18'
-  }
-];
 
 export const FavoritosPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'libros' | 'autores' | 'categorias'>('libros');
@@ -110,85 +45,148 @@ export const FavoritosPage: React.FC = () => {
   const [categoriasFavoritas, setCategoriasFavoritas] = useState<CategoriaFavorita[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userListas = await listaService.getUserListas();
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+        const [favoritos, allContenidos, userListas] = await Promise.all([
+            obtenerFavoritos(),
+            listaService.getAllUserContenido(),
+            listaService.getUserListas(),
+        ]);
+
+        // ======================= DEBUGGING =======================
+        console.log("DATOS DE LISTAS (allContenidos):", allContenidos);
+        console.log("DATOS DE FAVORITOS (favoritos):", favoritos);
+        // =========================================================
+
         setListas(userListas);
 
-        // Fetch contents of all lists
-        const allContenidos: ContenidoLista[] = [];
-        for (const lista of userListas) {
-          const contenidos = await listaService.getContenidoLista(lista.id);
-          allContenidos.push(...contenidos);
-        }
+        const getPriority = (estado: string) => {
+            switch (estado) {
+                case 'favorito': return 4;
+                case 'leido': return 3;
+                case 'ver-mas-tarde': return 2;
+                case 'pendiente': return 1;
+                default: return 0;
+            }
+        };
 
-        // Map to LibroFavorito format
-        const libros: LibroFavorito[] = allContenidos.map(contenido => {
-          const lista = userListas.find(l => l.id === contenido.lista.id);
-          const estado = lista?.tipo === 'read' ? 'leido' :
-                         lista?.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
-          return {
-            id: contenido.libro.id,
-            titulo: contenido.libro.titulo,
-            autor: contenido.libro.autores.join(', '),
-            categoria: contenido.libro.categoria.nombre,
-            rating: contenido.libro.ratingPromedio,
-            imagen: contenido.libro.imagenPortada,
-            estado,
-            fechaAgregado: contenido.createdAt
-          };
+        // ✅ El mapa ahora guardará un array de estados
+        const librosMap = new Map<number, { libroData: any, estados: Set<string>, fecha: string }>();
+
+        // 1. PROCESAR LIBROS DE LISTAS (Acumulando estados)
+        allContenidos.forEach(contenido => {
+            const libroId = contenido.libro.id;
+            const estado = contenido.lista.tipo === 'read' ? 'leido' :
+                           contenido.lista.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
+
+            const existing = librosMap.get(libroId);
+            if (existing) {
+                // Si el libro ya está en el mapa, solo añade el nuevo estado
+                existing.estados.add(estado);
+            } else {
+                // Si es la primera vez que vemos el libro, lo agregamos al mapa
+                librosMap.set(libroId, {
+                    libroData: contenido.libro,
+                    estados: new Set([estado]), // Usamos un Set para evitar estados duplicados
+                    fecha: contenido.createdAt,
+                });
+            }
         });
 
-        setLibrosFavoritos(libros);
+        // 2. PROCESAR FAVORITOS (Añadiendo el estado 'favorito')
+        favoritos.forEach(fav => {
+            const libroId = fav.libroId;
+            const existing = librosMap.get(libroId);
 
-        // Derive favorite authors from user's books
-        const autorMap = new Map<string, { id: number; nombre: string; libros: number; imagen: string; fechaAgregado: string }>();
-        const categoriaMap = new Map<string, { id: number; nombre: string; librosCount: number; color: string; fechaAgregado: string }>();
-
-        libros.forEach(libro => {
-          // Process authors
-          const autoresArray = libro.autor.split(', ');
-          autoresArray.forEach((autorNombre, index) => {
-            if (!autorMap.has(autorNombre)) {
-              autorMap.set(autorNombre, {
-                id: Date.now() + index, // Temporary ID since we don't have author IDs from this data
-                nombre: autorNombre,
-                libros: 1,
-                imagen: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg', // Default image
-                fechaAgregado: libro.fechaAgregado
-              });
+            if (existing) {
+                // Si el libro ya existe (viene de una lista), añade el estado 'favorito'
+                existing.estados.add('favorito');
             } else {
-              const existing = autorMap.get(autorNombre)!;
-              existing.libros += 1;
+                // Si es un favorito que no está en ninguna lista, lo agregamos al mapa
+                librosMap.set(libroId, {
+                    libroData: {
+                        id: libroId,
+                        nombre: fav.titulo,
+                        autores: fav.autor ? fav.autor.split(', ') : ['Autor desconocido'],
+                        categoria: { nombre: fav.categoria },
+                        ratingLibro: { avgRating: fav.rating },
+                        imagen: fav.imagen,
+                    },
+                    estados: new Set(['favorito']),
+                    fecha: fav.fechaAgregado,
+                });
             }
-          });
+        });
 
-          // Process categories
-          if (!categoriaMap.has(libro.categoria)) {
-            categoriaMap.set(libro.categoria, {
-              id: Date.now() + Math.random(), // Temporary ID
-              nombre: libro.categoria,
-              librosCount: 1,
-              color: getRandomColor(),
-              fechaAgregado: libro.fechaAgregado
+        // 3. CONSTRUIR EL ARRAY FINAL
+        const allLibros: LibroFavorito[] = Array.from(librosMap.values()).map(item => ({
+            id: item.libroData.id,
+            titulo: item.libroData.nombre,
+            autor: (Array.isArray(item.libroData.autores) && item.libroData.autores.length > 0)
+                ? (typeof item.libroData.autores[0] === 'string'
+                    ? (item.libroData.autores as string[]).join(', ')
+                    : (item.libroData.autores as any[]).map(a => a?.nombre ?? a).join(', '))
+                : 'Autor desconocido',
+            categoria: typeof item.libroData.categoria === 'string' ? item.libroData.categoria : item.libroData.categoria?.nombre || 'Sin categoría',
+            rating: item.libroData.ratingLibro?.avgRating || 0,
+            imagen: item.libroData.imagen,
+            // ✅ Convertimos el Set de estados a un array
+            estados: Array.from(item.estados) as ('leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito')[],
+            fechaAgregado: item.fecha,
+        }));
+        
+        setLibrosFavoritos(allLibros);
+
+        // --- El resto de la función para autores y categorías no cambia ---
+        const autorMap = new Map<string, AutorFavorito>();
+        const categoriaMap = new Map<string, CategoriaFavorita>();
+
+        allLibros.forEach(libro => {
+            const autoresArray = libro.autor.split(', ').filter(a => a);
+            autoresArray.forEach((autorNombre, index) => {
+                if (autorNombre === 'Autor desconocido') return;
+                if (!autorMap.has(autorNombre)) {
+                    autorMap.set(autorNombre, {
+                        id: Date.now() + Math.random(),
+                        nombre: autorNombre,
+                        libros: 1,
+                        imagen: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg',
+                        fechaAgregado: libro.fechaAgregado
+                    });
+                } else {
+                    const existing = autorMap.get(autorNombre)!;
+                    existing.libros += 1;
+                }
             });
-          } else {
-            const existing = categoriaMap.get(libro.categoria)!;
-            existing.librosCount += 1;
-          }
+
+            if (libro.categoria && libro.categoria !== 'Sin categoría') {
+                if (!categoriaMap.has(libro.categoria)) {
+                    categoriaMap.set(libro.categoria, {
+                        id: Date.now() + Math.random(),
+                        nombre: libro.categoria,
+                        librosCount: 1,
+                        color: getRandomColor(),
+                        fechaAgregado: libro.fechaAgregado
+                    });
+                } else {
+                    const existing = categoriaMap.get(libro.categoria)!;
+                    existing.librosCount += 1;
+                }
+            }
         });
 
         setAutoresFavoritos(Array.from(autorMap.values()));
         setCategoriasFavoritas(Array.from(categoriaMap.values()));
 
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching data:', error);
-      } finally {
+    } finally {
         setLoading(false);
-      }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -229,8 +227,15 @@ export const FavoritosPage: React.FC = () => {
       const listaExistente = listas.find(l => l.tipo === tipoLista);
 
       if (listaExistente) {
-        // Add book to existing list
-        await listaService.addLibroALista(listaExistente.id, libroId);
+        // Check if book is already in this list
+        const libroEnLista = librosFavoritos.find(l => l.id === libroId && l.estados.includes(nuevoEstado));
+        if (libroEnLista) {
+          // Remove from list if already there
+          await listaService.removeLibroDeLista(listaExistente.id, libroId.toString());
+        } else {
+          // Add to existing list
+          await listaService.addLibroALista(listaExistente.id, libroId.toString());
+        }
       } else {
         // Create new list and add book
         const nuevaLista = await listaService.createLista(
@@ -238,36 +243,16 @@ export const FavoritosPage: React.FC = () => {
           tipoLista === 'to_read' ? 'Para Leer' : 'Pendientes',
           tipoLista
         );
-        await listaService.addLibroALista(nuevaLista.id, libroId);
-        // Refresh lists
-        const userListas = await listaService.getUserListas();
-        setListas(userListas);
+
+        // Update listas state synchronously for immediate use
+        const updatedListas = [...listas, nuevaLista];
+        setListas(updatedListas);
+
+        await listaService.addLibroALista(nuevaLista.id, libroId.toString());
       }
 
-      // Refresh librosFavoritos
-      const allContenidos: ContenidoLista[] = [];
-      for (const lista of listas) {
-        const contenidos = await listaService.getContenidoLista(lista.id);
-        allContenidos.push(...contenidos);
-      }
-
-      const libros: LibroFavorito[] = allContenidos.map(contenido => {
-        const lista = listas.find(l => l.id === contenido.lista.id);
-        const estado = lista?.tipo === 'read' ? 'leido' :
-                       lista?.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
-        return {
-          id: contenido.libro.id,
-          titulo: contenido.libro.titulo,
-          autor: contenido.libro.autores.join(', '),
-          categoria: contenido.libro.categoria.nombre,
-          rating: contenido.libro.ratingPromedio,
-          imagen: contenido.libro.imagenPortada,
-          estado,
-          fechaAgregado: contenido.createdAt
-        };
-      });
-
-      setLibrosFavoritos(libros);
+      // Refresh data after state change
+      await fetchData();
     } catch (error) {
       console.error('Error cambiando estado del libro:', error);
     }
@@ -287,24 +272,36 @@ export const FavoritosPage: React.FC = () => {
   const getEstadoIcon = (estado: string) => {
     switch (estado) {
       case 'leido':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-emerald-600" />;
       case 'ver-mas-tarde':
-        return <Eye className="w-5 h-5 text-blue-600" />;
+        return <Eye className="w-5 h-5 text-sky-600" />;
       case 'pendiente':
-        return <Clock className="w-5 h-5 text-orange-600" />;
+        return <Clock className="w-5 h-5 text-amber-600" />;
+      case 'favorito':
+        return <Heart className="w-5 h-5 text-rose-600" />;
       default:
         return null;
     }
   };
 
+  const getPrimaryEstado = (estados: string[]) => {
+    const priority = ['favorito', 'leido', 'ver-mas-tarde', 'pendiente'];
+    for (const p of priority) {
+      if (estados.includes(p)) return p;
+    }
+    return estados[0] || 'pendiente';
+  };
+
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'leido':
-        return 'bg-green-100 text-green-800';
+        return 'bg-slate-200 text-slate-800';
       case 'ver-mas-tarde':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-slate-300 text-slate-900';
       case 'pendiente':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-slate-400 text-slate-900';
+      case 'favorito':
+        return 'bg-slate-100 text-slate-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -312,12 +309,12 @@ export const FavoritosPage: React.FC = () => {
 
   const librosFiltrados = filtroEstado === 'todos'
     ? librosFavoritos
-    : librosFavoritos.filter(libro => libro.estado === filtroEstado);
+    : librosFavoritos.filter(libro => libro.estados.includes(filtroEstado as 'leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito'));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-white/20">
+      <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -325,7 +322,7 @@ export const FavoritosPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              <h1 className="text-5xl font-bold text-slate-800 mb-4">
                 Mis Favoritos
               </h1>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -348,8 +345,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('libros')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'libros'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
+                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -361,8 +358,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('autores')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'autores'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
+                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -374,8 +371,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('categorias')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'categorias'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
+                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -399,7 +396,7 @@ export const FavoritosPage: React.FC = () => {
                 onClick={() => setFiltroEstado('todos')}
                 className={`px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'todos'
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-blue-500/25'
+                    ? 'bg-slate-600 text-white shadow-slate-600/25'
                     : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
                 whileHover={{ scale: 1.05, y: -2 }}
@@ -411,40 +408,53 @@ export const FavoritosPage: React.FC = () => {
                 onClick={() => setFiltroEstado('leido')}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'leido'
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-500/25'
+                    ? 'bg-green-600 text-white shadow-green-600/25'
                     : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <CheckCircle className="w-4 h-4" />
-                <span>Leídos ({librosFavoritos.filter(l => l.estado === 'leido').length})</span>
+                <span>Leídos ({librosFavoritos.filter(l => l.estados.includes('leido')).length})</span>
               </motion.button>
               <motion.button
                 onClick={() => setFiltroEstado('ver-mas-tarde')}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'ver-mas-tarde'
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-blue-500/25'
+                    ? 'bg-blue-600 text-white shadow-blue-600/25'
                     : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Eye className="w-4 h-4" />
-                <span>Ver más tarde ({librosFavoritos.filter(l => l.estado === 'ver-mas-tarde').length})</span>
+                <span>Ver más tarde ({librosFavoritos.filter(l => l.estados.includes('ver-mas-tarde')).length})</span>
               </motion.button>
               <motion.button
                 onClick={() => setFiltroEstado('pendiente')}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
                   filtroEstado === 'pendiente'
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-orange-500/25'
+                    ? 'bg-orange-600 text-white shadow-orange-600/25'
                     : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
                 }`}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Clock className="w-4 h-4" />
-                <span>Pendientes ({librosFavoritos.filter(l => l.estado === 'pendiente').length})</span>
+                <span>Pendientes ({librosFavoritos.filter(l => l.estados.includes('pendiente')).length})</span>
+              </motion.button>
+              <motion.button
+                onClick={() => setFiltroEstado('favorito')}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 shadow-lg ${
+                  filtroEstado === 'favorito'
+                    ? 'bg-red-600 text-white shadow-red-600/25'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-white/20'
+                }`}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Heart className="w-4 h-4" />
+                <span>Favoritos ({librosFavoritos.filter(l => l.estados.includes('favorito')).length})</span>
               </motion.button>
             </motion.div>
 
@@ -481,20 +491,20 @@ export const FavoritosPage: React.FC = () => {
                     >
                       <Heart className="w-7 h-7 text-red-500 drop-shadow-lg" fill="currentColor" />
                     </motion.div>
-                    <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/20 ${getEstadoColor(libro.estado)} shadow-lg`}>
+                    <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/20 ${getEstadoColor(getPrimaryEstado(libro.estados))} shadow-lg`}>
                       <div className="flex items-center space-x-1.5">
-                        {getEstadoIcon(libro.estado)}
-                        <span className="capitalize">{libro.estado.replace('-', ' ')}</span>
+                        {getEstadoIcon(getPrimaryEstado(libro.estados))}
+                        <span className="capitalize">{getPrimaryEstado(libro.estados).replace('-', ' ')}</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-6">
                     <Link to={`/libro/${libro.id}`} className="block group">
-                      <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight">
+                      <h3 className="font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight">
                         {libro.titulo}
                       </h3>
                     </Link>
-                    <p className="text-gray-600 text-sm mb-4 font-medium">por {libro.autor}</p>
+                    {/* <p className="text-gray-600 text-sm mb-4 font-medium">por {libro.autor}</p>
                     <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center space-x-1">
                         {renderStars(libro.rating)}
@@ -503,28 +513,28 @@ export const FavoritosPage: React.FC = () => {
                       <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                         {libro.categoria}
                       </span>
-                    </div>
+                    </div> */}
 
                     {/* Estado Buttons */}
                     <div className="flex space-x-2">
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'leido')}
                         className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
-                          libro.estado === 'leido'
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:shadow-md'
+                          libro.estados.includes('leido')
+                            ? 'bg-indigo-900 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        Leído
+                        Leídos
                       </motion.button>
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'ver-mas-tarde')}
                         className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
-                          libro.estado === 'ver-mas-tarde'
-                            ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md'
+                          libro.estados.includes('ver-mas-tarde')
+                            ? 'bg-indigo-800 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -534,9 +544,9 @@ export const FavoritosPage: React.FC = () => {
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'pendiente')}
                         className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
-                          libro.estado === 'pendiente'
-                            ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md'
+                          libro.estados.includes('pendiente')
+                            ? 'bg-indigo-700 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}

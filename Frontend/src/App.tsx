@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
+import LoginModal from './componentes/LoginModal';
 import axios from 'axios';
 import { setupAxiosInterceptors } from './services/authService';
 
@@ -48,7 +49,12 @@ interface FooterCategory {
   links: FooterLink[];
 }
 
-function Layout() {
+interface LayoutProps {
+  showLoginModal: boolean;
+  setShowLoginModal: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
   const location = useLocation();
 
   const customFooterLinks: FooterCategory[] = [
@@ -89,6 +95,11 @@ function Layout() {
 
   // Hide newsletter and features section on /perfil and /configuracion
   const hideNewsletterAndFeatures = location.pathname === '/perfil' || location.pathname === '/configuracion';
+
+  const handleLoginSuccess = () => {
+    // Aquí puedes agregar lógica adicional si es necesario después del login
+    console.log('Usuario ha iniciado sesión exitosamente');
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -159,19 +170,36 @@ function Layout() {
           customLinks={customFooterLinks}
         />
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </div>
   );
 }
 
 function App() {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   // Setup axios interceptors for automatic token refresh
   React.useEffect(() => {
-    setupAxiosInterceptors(axios);
+    setupAxiosInterceptors(axios, () => setShowLoginModal(true));
+
+    // Listen for session expired events from fetchWithRefresh
+    const handleSessionExpired = () => setShowLoginModal(true);
+    window.addEventListener('sessionExpired', handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('sessionExpired', handleSessionExpired);
+    };
   }, []);
 
   return (
     <Router>
-      <Layout />
+      <Layout showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
     </Router>
   );
 }

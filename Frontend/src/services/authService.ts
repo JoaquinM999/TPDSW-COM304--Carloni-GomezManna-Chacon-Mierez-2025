@@ -126,7 +126,7 @@ export const checkUserExists = async (username?: string, email?: string): Promis
 };
 
 // Axios interceptor for automatic token refresh
-export const setupAxiosInterceptors = (axiosInstance: any) => {
+export const setupAxiosInterceptors = (axiosInstance: any, onSessionExpired?: () => void) => {
   axiosInstance.interceptors.request.use(
     (config: any) => {
       const token = getToken();
@@ -155,9 +155,13 @@ export const setupAxiosInterceptors = (axiosInstance: any) => {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return axiosInstance(originalRequest);
         } catch (refreshError) {
-          // If refresh fails, logout user
+          // If refresh fails, logout user and show modal
           logoutUser();
-          window.location.href = '/LoginPage';
+          if (onSessionExpired) {
+            onSessionExpired();
+          } else {
+            window.location.href = '/LoginPage';
+          }
           return Promise.reject(refreshError);
         }
       }

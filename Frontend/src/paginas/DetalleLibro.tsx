@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useReducer } from "react";
+import React, { useState, useEffect, useMemo, useReducer, useRef } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
@@ -154,7 +154,45 @@ const DetalleLibro: React.FC = () => {
   const [mostrarSinopsis, setMostrarSinopsis] = useState(false);
   const [showListaDropdown, setShowListaDropdown] = useState(false);
   const [listas, setListas] = useState<Lista[]>([]);
+  const [listasConLibro, setListasConLibro] = useState<Set<number>>(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  const nombresDeListasFijas = ["Ver más tarde", "Pendiente", "Leído"];
+
+  // Filtra las listas del usuario para mostrar solo las que NO son fijas
+  const listasPersonalizadas = listas.filter(l => !nombresDeListasFijas.includes(l.nombre));
+
+  const handleToggleInList = async (lista: Lista) => {
+    if (!libro) return;
+
+    const yaEstaEnLista = listasConLibro.has(lista.id);
+    const libroId = libro.id; // Ya sabemos que es un string
+
+    try {
+      if (yaEstaEnLista) {
+        // Si ya está, lo quitamos
+        await listaService.removeLibroDeLista(lista.id, libroId);
+        // Actualizamos el estado local para desmarcar el checkbox
+        setListasConLibro(prevSet => {
+          const newSet = new Set(prevSet);
+          newSet.delete(lista.id);
+          return newSet;
+        });
+      } else {
+        // Si no está, lo agregamos
+        await listaService.addLibroALista(lista.id, libroId);
+        // Actualizamos el estado local para marcar el checkbox
+        setListasConLibro(prevSet => {
+          const newSet = new Set(prevSet);
+          newSet.add(lista.id);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error("Error al actualizar la lista:", error);
+      alert("No se pudo actualizar la lista. Inténtalo de nuevo.");
+    }
+  };
 
   const [reviewState, dispatch] = useReducer(reviewReducer, initialReviewState);
 
@@ -294,6 +332,21 @@ const DetalleLibro: React.FC = () => {
     fetchFavoritoStatus();
   }, [libro]);
 
+  useEffect(() => {
+    const fetchListasDelLibro = async () => {
+      if (!libro?.id) return; // Si no hay libro, no hagas nada
+
+      try {
+        const ids = await listaService.getListasContainingBook(libro.id);
+        setListasConLibro(new Set(ids)); // Guarda los IDs en el estado
+      } catch (error) {
+        console.error("Error al verificar las listas del libro:", error);
+      }
+    };
+
+    fetchListasDelLibro();
+  }, [libro]); // Se ejecuta cada vez que el libro cambie
+
   const toggleFavorito = async () => {
     if (!isAuthenticated()) {
       alert("Debes iniciar sesión para gestionar favoritos.");
@@ -325,7 +378,7 @@ const DetalleLibro: React.FC = () => {
   const handleAddToList = async (listaId: number) => {
     if (!libro) return;
     try {
-      const libroId = parseInt(libro.id);
+      const libroId = libro.id;
       await listaService.addLibroALista(listaId, libroId);
       alert("Libro agregado a la lista exitosamente");
       setShowListaDropdown(false);
@@ -359,7 +412,7 @@ const DetalleLibro: React.FC = () => {
       }
 
       // Agregar el libro a la lista
-      const libroId = parseInt(libro.id);
+      const libroId = libro.id;
       await listaService.addLibroALista(lista.id, libroId);
       alert(`Libro agregado a "${nombre}" exitosamente`);
       setShowListaDropdown(false);
@@ -770,40 +823,56 @@ const DetalleLibro: React.FC = () => {
                   {showListaDropdown && (
                     <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48 text-left">
                       {/* Opciones predefinidas (siempre se muestran si estás logueado) */}
-                      <button
-                        onClick={() => handleAddToListByName("Ver más tarde")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        Ver más tarde
-                      </button>
-                      <button
-                        onClick={() => handleAddToListByName("Pendiente")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        Pendiente
-                      </button>
-                      <button
-                        onClick={() => handleAddToListByName("Leído")}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        Leído
-                      </button>
+                      {nombresDeListasFijas.map((nombre) => {
+                        const tipoMap: { [key: string]: 'read' | 'to_read' | 'pending' | 'custom' } = {
+                          "Ver más tarde": 'to_read',
+                          "Pendiente": 'pending',
+                          "Leído": 'read',
+                        };
+                        const tipo = tipoMap[nombre];
+                        const listaExistente = listas.find(l => l.nombre === nombre && l.tipo === tipo);
+                        const estaEnLista = listaExistente ? listasConLibro.has(listaExistente.id) : false;
+                        return (
+                          <button
+                            key={nombre}
+                            onClick={() => {
+                              if (listaExistente) {
+                                handleToggleInList(listaExistente);
+                              } else {
+                                handleAddToListByName(nombre);
+                              }
+                            }}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
+                          >
+                            <span>{nombre}</span>
+                            {estaEnLista && <span className="text-green-500">✓</span>}
+                          </button>
+                        );
+                      })}
 
-                      {/* El separador y las listas personalizadas solo aparecen si existen */}
-                      {listas.length > 0 && (
-                        <>
-                          <hr className="my-1" />
-                          {listas.map((lista) => (
-                            <button
-                              key={lista.id}
-                              onClick={() => handleAddToList(lista.id)}
-                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                              {lista.nombre}
-                            </button>
-                          ))}
-                        </>
-                      )}
+                      {/* El separador y las listas personalizadas solo aparecen si existen y no duplican las fijas */}
+                      {(() => {
+                        const listasFiltradas = listas.filter(l => !nombresDeListasFijas.includes(l.nombre));
+                        return listasFiltradas.length > 0 ? (
+                          <>
+                            <hr className="my-1" />
+                            {listasFiltradas.map((lista) => {
+                              const estaEnLista = listasConLibro.has(lista.id);
+                              return (
+                                <button
+                                  key={lista.id}
+                                  onClick={() => estaEnLista ? null : handleAddToList(lista.id)}
+                                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${estaEnLista ? 'text-gray-500' : ''}`}
+                                  disabled={estaEnLista}
+                                >
+                                  <span>{lista.nombre}</span>
+                                  {estaEnLista && <span className="text-green-500">✓</span>}
+                                </button>
+                              );
+                            })}
+                          </>
+                        ) : null;
+                      })()}
                     </div>
                   )}
                 </div>

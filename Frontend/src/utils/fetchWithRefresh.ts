@@ -17,8 +17,10 @@ export async function fetchWithRefresh(input: RequestInfo, init?: RequestInit): 
 
       response = await fetch(input, { ...init, headers });
     } catch (error) {
-      // No se pudo refrescar, forzar logout
+      // No se pudo refrescar, forzar logout y mostrar modal
       logoutUser();
+      // Dispatch custom event to show login modal
+      window.dispatchEvent(new CustomEvent('sessionExpired'));
       throw new Error('Sesión expirada, por favor inicia sesión nuevamente');
     }
   }

@@ -2,8 +2,10 @@
 import { Router } from 'express';
 import {
   getLibros, getLibroById, createLibro, updateLibro, deleteLibro,
-  getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController, searchLibros
+  getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController, searchLibros,
+  getListasForLibro // 💡 1. Importa la nueva función del controlador
 } from '../controllers/libro.controller';
+import { authenticateJWT } from '../middleware/auth.middleware'; // 💡 2. Importa el middleware de autenticación
 
 const router = Router();
 
@@ -11,6 +13,10 @@ router.get('/', getLibros);
 router.get('/search', searchLibros);
 router.get('/categoria/:categoriaId', getLibrosByCategoria);
 router.get('/estrellas', getLibrosByEstrellasMinimas);
+
+// ✅ 3. AÑADE ESTA LÍNEA AQUÍ
+router.get('/:externalId/listas', authenticateJWT, getListasForLibro);
+
 router.get('/:id/reviews', getReviewsByBookIdController);
 router.get('/:id', getLibroById);
 router.post('/', createLibro);

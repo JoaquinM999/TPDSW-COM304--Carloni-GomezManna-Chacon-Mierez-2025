@@ -58,7 +58,7 @@ export const listaService = {
     return response.json();
   },
 
-  async addLibroALista(listaId: number, libroId: number): Promise<void> {
+  async addLibroALista(listaId: number, libroId: string): Promise<void> {
     const response = await fetchWithRefresh('/api/contenido-lista', {
       method: 'POST',
       headers: {
@@ -66,10 +66,18 @@ export const listaService = {
       },
       body: JSON.stringify({ listaId, libroId }),
     });
-    if (!response.ok) throw new Error('Error al agregar libro a lista');
+
+    if (!response.ok) {
+      // Lee el cuerpo del error desde el servidor
+      const errorData = await response.json();
+      // Muestra el mensaje de error real en la consola
+      console.error("Error del servidor:", errorData);
+      // Lanza un error más descriptivo
+      throw new Error(errorData.error || 'Error al agregar libro a lista');
+    }
   },
 
-  async removeLibroDeLista(listaId: number, libroId: number): Promise<void> {
+  async removeLibroDeLista(listaId: number, libroId: string): Promise<void> {
     const response = await fetchWithRefresh(`/api/contenido-lista/${listaId}/${libroId}`, {
       method: 'DELETE',
       headers: {
@@ -88,5 +96,13 @@ export const listaService = {
     });
     if (!response.ok) throw new Error('Error al obtener listas del usuario');
     return response.json();
+  },
+
+  async getListasContainingBook(libroId: string): Promise<number[]> {
+    const response = await fetchWithRefresh(`/api/libro/${libroId}/listas`);
+    if (!response.ok) {
+      throw new Error('Error al obtener las listas del libro');
+    }
+    return response.json(); // Devuelve el array de IDs
   },
 };

@@ -6,6 +6,7 @@ import { Categoria } from '../entities/categoria.entity';
 import { Autor } from '../entities/autor.entity';
 import { Editorial } from '../entities/editorial.entity';
 import { Saga } from '../entities/saga.entity';
+import { ContenidoLista } from '../entities/contenidoLista.entity';
 import { getReviewsByBookId } from '../services/reviewService';
 
 export const getLibros = async (req: Request, res: Response) => {
@@ -185,5 +186,32 @@ export const searchLibros = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error en searchLibros:', error);
     res.status(500).json({ error: 'Error al buscar libros' });
+  }
+};
+
+export const getListasForLibro = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = (req as any).user.id;
+    const { externalId } = req.params;
+
+    if (!userId || !externalId) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    // Busca todas las relaciones ContenidoLista para este libro y usuario
+    const contenidos = await orm.em.find(ContenidoLista, {
+      libro: { externalId },
+      lista: { usuario: { id: userId } },
+    }, { populate: ['lista'] });
+
+    // Extrae solo los IDs de las listas
+    const listaIds = contenidos.map(c => c.lista.id);
+
+    res.json(listaIds); // Devuelve un array de números, ej: [1, 5, 12]
+
+  } catch (error) {
+    console.error("Error al obtener listas para el libro:", error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

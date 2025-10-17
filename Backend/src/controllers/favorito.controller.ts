@@ -1,14 +1,16 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Favorito } from '../entities/favorito.entity';
+import { Libro } from '../entities/libro.entity';
 import { ActividadService } from '../services/actividad.service';
+import { AuthRequest } from '../middleware/auth.middleware';
 
-export const getFavoritos = async (req: Request, res: Response): Promise<void> => {
+export const getFavoritos = async (req: AuthRequest, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
-  const usuarioId = +req.params.usuarioId;
+  const usuarioId = req.user?.id;
 
   if (!usuarioId) {
-    res.status(400).json({ error: 'UsuarioId es requerido' });
+    res.status(401).json({ error: 'Usuario no autenticado' });
     return;
   }
 
@@ -18,72 +20,116 @@ export const getFavoritos = async (req: Request, res: Response): Promise<void> =
     populate: ['libro']
   });
 
-  res.json(favoritos);
+  // Devolver array de objetos con id interno, externalId y source
+  const result = favoritos.map(fav => ({
+    id: fav.libro.id,
+    externalId: fav.libro.externalId,
+    source: fav.libro.source
+  }));
+
+  res.json(result);
 };
 
-export const addFavorito = async (req: Request, res: Response): Promise<void> => {
+export const addFavorito = async (req: AuthRequest, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
-  const { usuario, libro } = req.body;
 
-  if (!usuario || !libro) {
-    res.status(400).json({ error: 'usuario y libro son requeridos' });
+  // 1. OBTENER ID DE USUARIO DEL TOKEN (SEGURO)
+  const usuarioId = req.user?.id;
+
+  if (!usuarioId) {
+    res.status(401).json({ error: 'Usuario no autenticado' });
     return;
   }
 
-  // Validar que no exista ya el favorito
-  const existente = await orm.em.findOne(Favorito, {
-    usuario: { id: typeof usuario === 'object' ? usuario.id : usuario },
-    libro: { id: typeof libro === 'object' ? libro.id : libro }
-  });
+  // 2. OBTENER DATOS DEL LIBRO DEL BODY
+  const { libroData } = req.body;
 
-  if (existente) {
-    res.status(409).json({ error: 'Favorito ya existe' });
+  if (!libroData || !libroData.externalId || !libroData.source || !libroData.nombre) {
+    res.status(400).json({ error: 'Faltan datos esenciales del libro (externalId, source, nombre).' });
     return;
   }
 
-  const favorito = orm.em.create(Favorito, {
-    usuario,
-    libro,
-    fechaAgregado: new Date(),
-  });
-
-  await orm.em.persistAndFlush(favorito);
-
-  // Crear registro de actividad
   try {
-    const actividadService = new ActividadService(orm);
-    const usuarioId = typeof usuario === 'object' ? usuario.id : usuario;
-    const libroId = typeof libro === 'object' ? libro.id : libro;
-    await actividadService.crearActividadFavorito(usuarioId, libroId);
-  } catch (actividadError) {
-    console.error('Error al crear registro de actividad:', actividadError);
-    // No fallar la creación de favorito si falla el registro de actividad
-  }
+    // 3. BUSCAR O CREAR EL LIBRO (Tu lógica aquí ya es correcta)
+    let libro = await orm.em.findOne(Libro, {
+      externalId: libroData.externalId,
+      source: libroData.source
+    });
 
-  res.status(201).json(favorito);
+    if (!libro) {
+      libro = orm.em.create(Libro, {
+        externalId: libroData.externalId,
+        source: libroData.source,
+        nombre: libroData.nombre,
+        sinopsis: libroData.sinopsis || null,
+        imagen: libroData.imagen || null,
+        enlace: libroData.enlace || null,
+        createdAt: new Date(),
+      });
+      await orm.em.persistAndFlush(libro);
+    }
+
+    const libroId = libro.id; // Obtenemos el ID correcto, ya sea existente o nuevo.
+
+    // 4. CREAR EL FAVORITO (usando el usuarioId del token)
+    const favoritoExistente = await orm.em.findOne(Favorito, { usuario: usuarioId, libro: libroId });
+
+    if (favoritoExistente) {
+      res.status(409).json({ error: 'Este libro ya está en tus favoritos.' });
+      return;
+    }
+
+    const nuevoFavorito = orm.em.create(Favorito, { usuario: usuarioId, libro: libroId, fechaAgregado: new Date() });
+    await orm.em.persistAndFlush(nuevoFavorito);
+
+    // Crear registro de actividad
+    try {
+      const actividadService = new ActividadService(orm);
+      await actividadService.crearActividadFavorito(usuarioId, libroId);
+    } catch (actividadError) {
+      console.error('Error al crear registro de actividad:', actividadError);
+      // No fallar la creación de favorito si falla el registro de actividad
+    }
+
+    res.status(201).json({ id: libroId });
+
+  } catch (error) {
+    console.error("Error al agregar favorito:", error);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
 };
 
-export const deleteFavorito = async (req: Request, res: Response): Promise<void> => {
+export const deleteFavorito = async (req: AuthRequest, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
 
-  const usuarioId = +req.params.usuarioId;
+  // 1. OBTENER ID DE USUARIO DEL TOKEN (SEGURO)
+  const usuarioId = req.user?.id;
+
+  if (!usuarioId) {
+    res.status(401).json({ error: 'Usuario no autenticado' });
+    return;
+  }
+
+  // 2. OBTENER ID DEL LIBRO DE LOS PARÁMETROS DE LA URL
   const libroId = +req.params.libroId;
 
-  if (!usuarioId || !libroId) {
-    res.status(400).json({ error: 'usuarioId y libroId son requeridos' });
+  if (!libroId) {
+    res.status(400).json({ error: 'El libroId es requerido en la URL' });
     return;
   }
 
+  // 3. BUSCAR Y ELIMINAR
   const favorito = await orm.em.findOne(Favorito, {
     usuario: { id: usuarioId },
     libro: { id: libroId }
   });
 
   if (!favorito) {
-    res.status(404).json({ error: 'No encontrado' });
+    res.status(404).json({ error: 'Favorito no encontrado' });
     return;
   }
 
   await orm.em.removeAndFlush(favorito);
-  res.json({ mensaje: 'Eliminado' });
+  res.status(200).json({ mensaje: 'Favorito eliminado' });
+  return;
 };

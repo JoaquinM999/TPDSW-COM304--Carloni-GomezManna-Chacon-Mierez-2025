@@ -1,5 +1,5 @@
 // src/entities/libro.entity.ts
-import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, Collection, Index } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, ManyToMany, Collection, Index } from '@mikro-orm/core';
 import { Categoria } from './categoria.entity';
 import { Editorial } from './editorial.entity';
 import { Autor } from './autor.entity';
@@ -7,6 +7,7 @@ import { Saga } from './saga.entity';
 import { Resena } from './resena.entity';
 import { ContenidoLista } from './contenidoLista.entity';
 import { Favorito } from './favorito.entity';
+import { Lista } from './lista.entity';
 
 @Entity()
 export class Libro {

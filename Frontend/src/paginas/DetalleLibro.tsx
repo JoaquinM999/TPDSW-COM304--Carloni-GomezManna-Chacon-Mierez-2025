@@ -1,25 +1,27 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useReducer } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Star,
   Heart,
-  BookOpen,
-  User,
-  ThumbsUp,
+  Plus,
   ArrowLeft,
-  Calendar,
-  ExternalLink,
+  BookOpen,
   MessageCircle,
   Award,
   ChevronDown,
   ChevronUp,
-  Loader2,
+  ThumbsUp,
+  Calendar,
   MoreHorizontal,
+  Loader2,
+  User,
 } from "lucide-react";
 import { getResenasByLibro, agregarReseña, crearRespuesta } from "../services/resenaService";
 import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService";
 import { isAuthenticated, getToken } from "../services/authService";
+import { listaService, Lista } from "../services/listaService";
+import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 
 interface Libro {
   id: string;
@@ -52,6 +54,93 @@ interface Reseña {
   resenaPadre?: { usuario: { nombre?: string; username: string } };
 }
 
+// Estado para useReducer
+interface ReviewState {
+  reseñas: Reseña[];
+  averageRating: number | null;
+  likedByUser: Record<number, boolean>;
+  expandedReviewIds: Record<number, boolean>;
+  expandedReplies: Record<string, boolean>;
+  replyForms: Record<number, { comentario: string; submitting: boolean; error: string | null } | null>;
+  sortOrder: 'mas_recientes' | 'mejor_valoradas';
+  reviewsLoading: boolean;
+}
+
+type ReviewAction =
+  | { type: 'SET_REVIEWS'; payload: Reseña[] }
+  | { type: 'SET_AVERAGE_RATING'; payload: number | null }
+  | { type: 'SET_LIKED_BY_USER'; payload: Record<number, boolean> }
+  | { type: 'TOGGLE_EXPAND_REVIEW'; payload: number }
+  | { type: 'TOGGLE_EXPAND_REPLIES'; payload: string }
+  | { type: 'SET_REPLY_FORM'; payload: { reviewId: number; form: { comentario: string; submitting: boolean; error: string | null } | null } }
+  | { type: 'SET_SORT_ORDER'; payload: 'mas_recientes' | 'mejor_valoradas' }
+  | { type: 'SET_REVIEWS_LOADING'; payload: boolean }
+  | { type: 'UPDATE_REVIEW_REACTIONS'; payload: { reviewId: number; reacciones: { id: number; tipo: string; usuarioId?: number }[] } };
+
+const reviewReducer = (state: ReviewState, action: ReviewAction): ReviewState => {
+  switch (action.type) {
+    case 'SET_REVIEWS':
+      return { ...state, reseñas: action.payload };
+    case 'SET_AVERAGE_RATING':
+      return { ...state, averageRating: action.payload };
+    case 'SET_LIKED_BY_USER':
+      return { ...state, likedByUser: action.payload };
+    case 'TOGGLE_EXPAND_REVIEW':
+      return { ...state, expandedReviewIds: { ...state.expandedReviewIds, [action.payload]: !state.expandedReviewIds[action.payload] } };
+    case 'TOGGLE_EXPAND_REPLIES':
+      return { ...state, expandedReplies: { ...state.expandedReplies, [action.payload]: !state.expandedReplies[action.payload] } };
+    case 'SET_REPLY_FORM':
+      return { ...state, replyForms: { ...state.replyForms, [action.payload.reviewId]: action.payload.form } };
+    case 'SET_SORT_ORDER':
+      return { ...state, sortOrder: action.payload };
+    case 'SET_REVIEWS_LOADING':
+      return { ...state, reviewsLoading: action.payload };
+    case 'UPDATE_REVIEW_REACTIONS':
+      return {
+        ...state,
+        reseñas: state.reseñas.map(r =>
+          r.id === action.payload.reviewId ? { ...r, reacciones: action.payload.reacciones } : r
+        )
+      };
+    default:
+      return state;
+  }
+};
+
+// Componente para renderizar avatar
+const UserAvatar: React.FC<{ usuario: { nombre?: string; username: string; avatar?: string }; size?: string }> = ({ usuario, size = "w-14 h-14" }) => {
+  if (usuario.avatar) {
+    return (
+      <img
+        src={`/assets/${usuario.avatar}.svg`}
+        alt={`Avatar de ${usuario.username || usuario.nombre}`}
+        className={`${size} rounded-full object-cover`}
+      />
+    );
+  }
+  return (
+    <div className={`${size} rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg`}>
+      {((usuario.nombre || usuario.username) || "?")
+        .split(" ")
+        .map(s => s[0].toUpperCase())
+        .slice(0, 2)
+        .join("")}
+    </div>
+  );
+};
+
+// Estado inicial para useReducer
+const initialReviewState: ReviewState = {
+  reseñas: [],
+  averageRating: null,
+  likedByUser: {},
+  expandedReviewIds: {},
+  expandedReplies: {},
+  replyForms: {},
+  sortOrder: 'mas_recientes',
+  reviewsLoading: false,
+};
+
 const DetalleLibro: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
@@ -61,17 +150,13 @@ const DetalleLibro: React.FC = () => {
   const [libro, setLibro] = useState<Libro | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reseñas, setReseñas] = useState<Reseña[]>([]);
-  const [averageRating, setAverageRating] = useState<number | null>(null);
-  const [esFavorito, setEsFavorito] = useState(false);
+  const [esFavorito, setEsFavorito] = useState<number | null>(null);
   const [mostrarSinopsis, setMostrarSinopsis] = useState(false);
+  const [showListaDropdown, setShowListaDropdown] = useState(false);
+  const [listas, setListas] = useState<Lista[]>([]);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'mas_recientes' | 'mejor_valoradas'>('mas_recientes');
-  const [expandedReviewIds, setExpandedReviewIds] = useState<Record<number, boolean>>({});
-  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
-  const [likedByUser, setLikedByUser] = useState<Record<number, boolean>>({}); // reviewId -> liked?
-  const [replyForms, setReplyForms] = useState<Record<number, { comentario: string; submitting: boolean; error: string | null } | null>>({});
+
+  const [reviewState, dispatch] = useReducer(reviewReducer, initialReviewState);
 
   useEffect(() => {
     const fetchLibro = async () => {
@@ -135,7 +220,7 @@ const DetalleLibro: React.FC = () => {
         // ahora que tenemos data (si existe id/string), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
         const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
         if (libroIdCandidate) {
-          setReviewsLoading(true);
+          dispatch({ type: 'SET_REVIEWS_LOADING', payload: true });
           try {
             const reviewsData = await getResenasByLibro(libroIdCandidate);
 
@@ -143,7 +228,7 @@ const DetalleLibro: React.FC = () => {
             const reviews = reviewsData?.reviews || [];
             const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
 
-            setReseñas(filtered);
+            dispatch({ type: 'SET_REVIEWS', payload: filtered });
 
             // Inicializar likedByUser si hay token
             const token = getToken();
@@ -154,19 +239,19 @@ const DetalleLibro: React.FC = () => {
                 likedMap[r.id] = true;
               }
             });
-            setLikedByUser(likedMap);
+            dispatch({ type: 'SET_LIKED_BY_USER', payload: likedMap });
 
             // Calculate average rating from parent reviews only
             const calculatedAvg = filtered.length > 0
               ? filtered.reduce((sum: number, r: Reseña) => sum + r.estrellas, 0) / filtered.length
               : 0;
-            setAverageRating(calculatedAvg);
+            dispatch({ type: 'SET_AVERAGE_RATING', payload: calculatedAvg });
           } catch (reviewError) {
             console.warn("Error fetching reviews:", reviewError);
-            setReseñas([]);
-            setAverageRating(0);
+            dispatch({ type: 'SET_REVIEWS', payload: [] });
+            dispatch({ type: 'SET_AVERAGE_RATING', payload: 0 });
           } finally {
-            setReviewsLoading(false);
+            dispatch({ type: 'SET_REVIEWS_LOADING', payload: false });
           }
         }
       } catch (err: any) {
@@ -180,17 +265,118 @@ const DetalleLibro: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  const toggleFavorito = () => setEsFavorito(!esFavorito);
+  useEffect(() => {
+    const fetchListas = async () => {
+      if (!isAuthenticated()) return;
+      try {
+        const listasData = await listaService.getUserListas();
+        setListas(listasData);
+      } catch (error) {
+        console.error("Error fetching listas:", error);
+      }
+    };
+    fetchListas();
+  }, []);
+
+  useEffect(() => {
+    const fetchFavoritoStatus = async () => {
+      if (!isAuthenticated() || !libro) return;
+      try {
+        const favoritos = await obtenerFavoritos();
+        // Ahora favoritos es un array de objetos { id, externalId, source }
+        // Encontrar el favorito correspondiente al libro actual
+        const fav = favoritos.find(fav => fav.externalId === libro.id && fav.source === libro.source);
+        setEsFavorito(fav ? fav.id : null);
+      } catch (error) {
+        console.error("Error fetching favorito status:", error);
+      }
+    };
+    fetchFavoritoStatus();
+  }, [libro]);
+
+  const toggleFavorito = async () => {
+    if (!isAuthenticated()) {
+      alert("Debes iniciar sesión para gestionar favoritos.");
+      return;
+    }
+    if (!libro) return;
+
+    try {
+      if (esFavorito) {
+        await quitarFavorito(esFavorito);
+        setEsFavorito(null);
+      } else {
+        const favoriteId = await agregarFavorito({
+          id: libro.id,
+          titulo: libro.titulo,
+          descripcion: libro.descripcion,
+          imagen: libro.imagen,
+          enlace: libro.enlace,
+          source: libro.source!,
+        });
+        setEsFavorito(favoriteId);
+      }
+    } catch (error) {
+      console.error("Error toggling favorito:", error);
+      alert("Error al actualizar favorito. Inténtalo de nuevo.");
+    }
+  };
+
+  const handleAddToList = async (listaId: number) => {
+    if (!libro) return;
+    try {
+      const libroId = parseInt(libro.id);
+      await listaService.addLibroALista(listaId, libroId);
+      alert("Libro agregado a la lista exitosamente");
+      setShowListaDropdown(false);
+    } catch (error) {
+      console.error("Error adding book to list:", error);
+      alert("Error al agregar el libro a la lista");
+    }
+  };
+
+  const handleAddToListByName = async (nombre: string) => {
+    if (!libro || !isAuthenticated()) return;
+
+    const tipoMap: { [key: string]: 'read' | 'to_read' | 'pending' | 'custom' } = {
+      "Ver más tarde": 'to_read',
+      "Pendiente": 'pending',
+      "Leído": 'read',
+    };
+
+    const tipo = tipoMap[nombre] || 'custom';
+
+    try {
+      // Buscar si la lista ya existe
+      const listasUsuario = await listaService.getUserListas();
+      let lista = listasUsuario.find(l => l.nombre === nombre);
+
+      if (!lista) {
+        // Crear la lista si no existe
+        lista = await listaService.createLista(nombre, tipo);
+        // Actualizar el estado de listas para incluir la nueva
+        setListas(prev => [...prev, lista!]);
+      }
+
+      // Agregar el libro a la lista
+      const libroId = parseInt(libro.id);
+      await listaService.addLibroALista(lista.id, libroId);
+      alert(`Libro agregado a "${nombre}" exitosamente`);
+      setShowListaDropdown(false);
+    } catch (error) {
+      console.error("Error adding book to list by name:", error);
+      alert("Error al agregar el libro a la lista");
+    }
+  };
 
   const refreshResenas = async () => {
     if (!libro) return;
     try {
-      setReviewsLoading(true);
+      dispatch({ type: 'SET_REVIEWS_LOADING', payload: true });
       const reviewsData = await getResenasByLibro(libro.id);
       const reviews = reviewsData?.reviews || [];
       const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
-      setReseñas(filtered);
-
+      dispatch({ type: 'SET_REVIEWS', payload: filtered });
       // actualizar likedByUser tras refresh
       const token = getToken();
       const userId = token ? getUserIdFromToken(token) : 0;
@@ -200,22 +386,21 @@ const DetalleLibro: React.FC = () => {
           likedMap[r.id] = true;
         }
       });
-      setLikedByUser(likedMap);
-
+      dispatch({ type: 'SET_LIKED_BY_USER', payload: likedMap });
       // Recalculate average rating from parent reviews only
       const calculatedAvg = filtered.length > 0
         ? filtered.reduce((sum: number, r: Reseña) => sum + r.estrellas, 0) / filtered.length
         : 0;
-      setAverageRating(calculatedAvg);
+      dispatch({ type: 'SET_AVERAGE_RATING', payload: calculatedAvg });
     } catch (error) {
       console.warn("Error refreshing reviews:", error);
     } finally {
-      setReviewsLoading(false);
+      dispatch({ type: 'SET_REVIEWS_LOADING', payload: false });
     }
   };
 
   const addResenaLocally = (r: Reseña) => {
-    setReseñas(prev => [r, ...prev]);
+    dispatch({ type: 'SET_REVIEWS', payload: [r, ...reviewState.reseñas] });
   };
 
   const renderStars = (rating: number, sizeClass = "w-4 h-4") =>
@@ -264,8 +449,8 @@ const DetalleLibro: React.FC = () => {
     });
 
   const sortedResenas = () => {
-    const filtered = reseñas;
-    if (sortOrder === "mas_recientes")
+    const filtered = reviewState.reseñas;
+    if (reviewState.sortOrder === "mas_recientes")
       return [...filtered].sort((a, b) => Number(new Date(b.fechaResena)) - Number(new Date(a.fechaResena)));
     return [...filtered].sort((a, b) => b.estrellas - a.estrellas);
   };
@@ -273,22 +458,19 @@ const DetalleLibro: React.FC = () => {
   // Calculate rating distribution
   const ratingDistribution = useMemo(() => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reseñas.forEach(review => {
+    reviewState.reseñas.forEach(review => {
       if (review.estrellas >= 1 && review.estrellas <= 5) {
         distribution[review.estrellas as keyof typeof distribution]++;
       }
     });
     return distribution;
-  }, [reseñas]);
+  }, [reviewState.reseñas]);
 
   const toggleExpand = (id: number) =>
-    setExpandedReviewIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    dispatch({ type: 'TOGGLE_EXPAND_REVIEW', payload: id });
 
   const toggleReplyForm = (reviewId: number) => {
-    setReplyForms((prev) => ({
-      ...prev,
-      [reviewId]: prev[reviewId] ? null : { comentario: "", submitting: false, error: null },
-    }));
+    dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: reviewState.replyForms[reviewId] ? null : { comentario: "", submitting: false, error: null } } });
   };
 
   const handleReplySubmit = async (reviewId: number, comentario: string) => {
@@ -298,17 +480,11 @@ const DetalleLibro: React.FC = () => {
       return;
     }
     if (!comentario.trim()) {
-      setReplyForms((prev) => ({
-        ...prev,
-        [reviewId]: { ...prev[reviewId]!, error: "El comentario no puede estar vacío." },
-      }));
+      dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, error: "El comentario no puede estar vacío." } } });
       return;
     }
 
-    setReplyForms((prev) => ({
-      ...prev,
-      [reviewId]: { ...prev[reviewId]!, submitting: true, error: null },
-    }));
+    dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: true, error: null } } });
 
     try {
       const result = await crearRespuesta(reviewId, comentario);
@@ -321,13 +497,10 @@ const DetalleLibro: React.FC = () => {
       await refreshResenas();
 
       // Close the form and reset
-      setReplyForms((prev) => ({ ...prev, [reviewId]: null }));
+      dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: null } });
     } catch (err: any) {
       console.error("Error creando respuesta:", err);
-      setReplyForms((prev) => ({
-        ...prev,
-        [reviewId]: { ...prev[reviewId]!, submitting: false, error: err.message || "No se pudo crear la respuesta" },
-      }));
+      dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: false, error: err.message || "No se pudo crear la respuesta" } } });
     }
   };
 
@@ -361,29 +534,17 @@ const DetalleLibro: React.FC = () => {
       alert("Debes iniciar sesión para dar like a una reseña.");
       return;
     }
-
     const usuarioId = getUserIdFromToken(token);
-    const currentlyLiked = !!likedByUser[reviewId];
-
+    const currentlyLiked = !!reviewState.likedByUser[reviewId];
     // snapshots para revertir en caso de error
-    const prevResenas = reseñas;
-    const prevLiked = likedByUser;
-
+    const prevResenas = reviewState.reseñas;
+    const prevLiked = reviewState.likedByUser;
     // optimista: actualizar contador y estado liked
-    setLikedByUser(prev => ({ ...prev, [reviewId]: !currentlyLiked }));
-    setReseñas(prev =>
-      prev.map(r =>
-        r.id === reviewId
-          ? {
-              ...r,
-              reacciones: !currentlyLiked
-                ? [...(r.reacciones || []), { id: Date.now(), tipo: "like", usuarioId }]
-                : (r.reacciones?.filter(rec => !(rec.tipo === "like" && (rec.usuarioId ?? 0) === usuarioId)) ?? []),
-            }
-          : r
-      )
-    );
-
+    dispatch({ type: 'SET_LIKED_BY_USER', payload: { ...reviewState.likedByUser, [reviewId]: !currentlyLiked } });
+    const newReacciones = !currentlyLiked
+      ? [...(prevResenas.find(r => r.id === reviewId)?.reacciones || []), { id: Date.now(), tipo: "like", usuarioId }]
+      : (prevResenas.find(r => r.id === reviewId)?.reacciones?.filter(rec => !(rec.tipo === "like" && (rec.usuarioId ?? 0) === usuarioId)) ?? []);
+    dispatch({ type: 'UPDATE_REVIEW_REACTIONS', payload: { reviewId, reacciones: newReacciones } });
     try {
       if (!currentlyLiked) {
         // dar like: usamos resenaId y pasamos usuarioId también si el servicio lo espera
@@ -395,8 +556,8 @@ const DetalleLibro: React.FC = () => {
     } catch (err) {
       console.warn("Error guardando reaccion:", err);
       // revertir a los snapshots previos
-      setLikedByUser(prevLiked);
-      setReseñas(prevResenas);
+      dispatch({ type: 'SET_LIKED_BY_USER', payload: prevLiked });
+      dispatch({ type: 'SET_REVIEWS', payload: prevResenas });
       alert("No se pudo actualizar la reacción. Intentá de nuevo.");
     }
   };
@@ -585,28 +746,67 @@ const DetalleLibro: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
               <button
                 onClick={toggleFavorito}
-                className={`inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md ${
+                className={`p-3 rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${
                   esFavorito
-                    ? "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
-                    : "bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 border border-gray-200"
+                    ? "bg-red-100 text-red-500 hover:bg-red-200"
+                    : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
                 }`}
                 aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
               >
-                <Heart className={`w-5 h-5 ${esFavorito ? "fill-current" : ""}`} />
-                {esFavorito ? "Favorito" : "Agregar a Favoritos"}
+                <Heart className={`w-6 h-6 ${esFavorito ? "fill-current" : ""}`} />
               </button>
 
-              {libro.enlace && (
-                <a
-                  href={libro.enlace}
-                  target="_blank"
-                  className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium shadow-sm hover:shadow-md hover:bg-indigo-700 hover:scale-105 transition-all duration-200"
-                  rel="noreferrer"
-                  aria-label="Ver libro en Google Books"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  Ver en Google Books
-                </a>
+              {isAuthenticated() && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowListaDropdown(!showListaDropdown)}
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 border border-gray-200"
+                    aria-label="Agregar a una lista"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Agregar a Lista
+                  </button>
+
+                  {showListaDropdown && (
+                    <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48 text-left">
+                      {/* Opciones predefinidas (siempre se muestran si estás logueado) */}
+                      <button
+                        onClick={() => handleAddToListByName("Ver más tarde")}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Ver más tarde
+                      </button>
+                      <button
+                        onClick={() => handleAddToListByName("Pendiente")}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Pendiente
+                      </button>
+                      <button
+                        onClick={() => handleAddToListByName("Leído")}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Leído
+                      </button>
+
+                      {/* El separador y las listas personalizadas solo aparecen si existen */}
+                      {listas.length > 0 && (
+                        <>
+                          <hr className="my-1" />
+                          {listas.map((lista) => (
+                            <button
+                              key={lista.id}
+                              onClick={() => handleAddToList(lista.id)}
+                              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                            >
+                              {lista.nombre}
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -652,24 +852,24 @@ const DetalleLibro: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="text-lg text-gray-600">
               <div className="flex items-center gap-1">
-                <div className="flex items-center gap-1">{renderStars(averageRating || 0, "w-6 h-6")}</div>
-                <span className="ml-2 font-medium text-xl">{(averageRating || 0).toFixed(1)}/5</span>
-                {reseñas.length === 0 && (
+                <div className="flex items-center gap-1">{renderStars(reviewState.averageRating || 0, "w-6 h-6")}</div>
+                <span className="ml-2 font-medium text-xl">{(reviewState.averageRating || 0).toFixed(1)}/5</span>
+                {reviewState.reseñas.length === 0 && (
                   <span className="ml-2 text-gray-400 text-sm">Libro sin reseñas</span>
                 )}
               </div>
-              <div className="mt-2 font-semibold">{reseñas.length} reseñas</div>
+              <div className="mt-2 font-semibold">{reviewState.reseñas.length} reseñas</div>
             </div>
           </div>
 
           {/* Rating Distribution */}
-          {reseñas.length > 0 && (
+          {reviewState.reseñas.length > 0 && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-4">Resumen de calificaciones</h3>
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = ratingDistribution[star as keyof typeof ratingDistribution];
-                  const percentage = reseñas.length > 0 ? (count / reseñas.length) * 100 : 0;
+                  const percentage = reviewState.reseñas.length > 0 ? (count / reviewState.reseñas.length) * 100 : 0;
                   return (
                     <div key={star} className="flex items-center gap-3">
                       <div className="flex items-center gap-1 w-12">
@@ -701,19 +901,19 @@ const DetalleLibro: React.FC = () => {
 
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-600 text-right">
-              <div className="font-semibold">{reseñas.length} reseñas</div>
+              <div className="font-semibold">{reviewState.reseñas.length} reseñas</div>
             </div>
 
             <div className="flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2">
               <button
-                onClick={() => setSortOrder('mas_recientes')}
-                className={`text-sm px-2 py-1 rounded ${sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+                onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_recientes' })}
+                className={`text-sm px-2 py-1 rounded ${reviewState.sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
               >
                 Más recientes
               </button>
               <button
-                onClick={() => setSortOrder('mejor_valoradas')}
-                className={`text-sm px-2 py-1 rounded ${sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
+                onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mejor_valoradas' })}
+                className={`text-sm px-2 py-1 rounded ${reviewState.sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600'}`}
               >
                 Mejor valoradas
               </button>
@@ -733,7 +933,7 @@ const DetalleLibro: React.FC = () => {
         )}
 
         <div className="space-y-6">
-          {reviewsLoading ? (
+          {reviewState.reviewsLoading ? (
             <div className="flex items-center justify-center p-8 bg-white rounded-xl shadow">
               <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600" /> Cargando reseñas...
             </div>
@@ -746,21 +946,7 @@ const DetalleLibro: React.FC = () => {
             sortedResenas().map((r) => (
               <article key={r.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition">
                 <div className="flex gap-4">
-                  {r.usuario.avatar ? (
-                    <img
-                      src={`/assets/${r.usuario.avatar}.svg`}
-                      alt={`Avatar de ${r.usuario.username || r.usuario.nombre}`}
-                      className="w-14 h-14 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg">
-                      {((r.usuario.nombre || r.usuario.username) || "?")
-                        .split(" ")
-                        .map(s => s[0].toUpperCase())
-                        .slice(0, 2)
-                        .join("")}
-                    </div>
-                  )}
+                  <UserAvatar usuario={r.usuario} />
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
@@ -788,10 +974,10 @@ const DetalleLibro: React.FC = () => {
 
                     <div className="mt-3 text-gray-700">
                       {/* bloque de comentario más grande: text-lg y mayor line-height */}
-                      <p className={`${expandedReviewIds[r.id] ? '' : 'line-clamp-5'} text-lg leading-relaxed`}>{r.comentario}</p>
+                      <p className={`${reviewState.expandedReviewIds[r.id] ? '' : 'line-clamp-5'} text-lg leading-relaxed`}>{r.comentario}</p>
                       {r.comentario && r.comentario.length > 300 && (
                         <button onClick={() => toggleExpand(r.id)} className="mt-2 text-sm text-indigo-600 hover:underline flex items-center gap-1">
-                          {expandedReviewIds[r.id] ? <><ChevronUp className="w-4 h-4"/> Ver menos</> : <><ChevronDown className="w-4 h-4"/> Ver más</>}
+                          {reviewState.expandedReviewIds[r.id] ? <><ChevronUp className="w-4 h-4"/> Ver menos</> : <><ChevronDown className="w-4 h-4"/> Ver más</>}
                         </button>
                       )}
                     </div>
@@ -799,7 +985,7 @@ const DetalleLibro: React.FC = () => {
                     <div className="flex gap-6 mt-4 text-sm items-center">
                       <button
                         onClick={() => handleToggleLike(r.id)}
-                        className={`flex items-center gap-2 ${likedByUser[r.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                        className={`flex items-center gap-2 ${reviewState.likedByUser[r.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
                       >
                         <ThumbsUp className="w-4 h-4" />
                         <span>{r.reacciones?.length || 0}</span>
@@ -814,29 +1000,26 @@ const DetalleLibro: React.FC = () => {
 
                       {(r.respuestas && r.respuestas.length > 1) && (
                         <button
-                          onClick={() => setExpandedReplies((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
+                          onClick={() => dispatch({ type: 'TOGGLE_EXPAND_REPLIES', payload: r.id.toString() })}
                           className="text-gray-600 hover:text-indigo-600 flex items-center gap-1"
                         >
-                          {expandedReplies[r.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          {expandedReplies[r.id] ? "Ver menos" : `Ver más respuestas (${(r.respuestas ? r.respuestas.length - 1 : 0)})`}
+                          {reviewState.expandedReplies[r.id.toString()] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          {reviewState.expandedReplies[r.id.toString()] ? "Ver menos" : `Ver más respuestas (${(r.respuestas ? r.respuestas.length - 1 : 0)})`}
                         </button>
                       )}
 
                       <span className="ml-auto text-xs text-gray-400">ID: {r.id}</span>
                     </div>
 
-                    {replyForms[r.id] && (
+                    {reviewState.replyForms[r.id] && (
                       <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                         <div className="space-y-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Tu respuesta</label>
                             <textarea
-                              value={replyForms[r.id]!.comentario}
+                              value={reviewState.replyForms[r.id]!.comentario}
                               onChange={(e) =>
-                                setReplyForms((prev) => ({
-                                  ...prev,
-                                  [r.id]: { ...prev[r.id]!, comentario: e.target.value },
-                                }))
+                                dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: { ...reviewState.replyForms[r.id]!, comentario: e.target.value } } })
                               }
                               rows={3}
                               className="w-full resize-y rounded border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -847,7 +1030,7 @@ const DetalleLibro: React.FC = () => {
                           <div className="flex gap-2 justify-end">
                             <button
                               type="button"
-                              onClick={() => setReplyForms((prev) => ({ ...prev, [r.id]: null }))}
+                              onClick={() => dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: null } })}
                               className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                             >
                               Cancelar
@@ -857,18 +1040,18 @@ const DetalleLibro: React.FC = () => {
                               onClick={() =>
                                 handleReplySubmit(
                                   r.id,
-                                  replyForms[r.id]!.comentario
+                                  reviewState.replyForms[r.id]!.comentario
                                 )
                               }
-                              disabled={replyForms[r.id]!.submitting || !replyForms[r.id]!.comentario.trim()}
+                              disabled={reviewState.replyForms[r.id]!.submitting || !reviewState.replyForms[r.id]!.comentario.trim()}
                               className="px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {replyForms[r.id]!.submitting ? "Enviando..." : "Responder"}
+                              {reviewState.replyForms[r.id]!.submitting ? "Enviando..." : "Responder"}
                             </button>
                           </div>
 
-                          {replyForms[r.id]!.error && (
-                            <p className="text-sm text-red-600">{replyForms[r.id]!.error}</p>
+                          {reviewState.replyForms[r.id]!.error && (
+                            <p className="text-sm text-red-600">{reviewState.replyForms[r.id]!.error}</p>
                           )}
                         </div>
                       </div>
@@ -922,7 +1105,7 @@ const DetalleLibro: React.FC = () => {
                               <div className="flex gap-4 mt-3 text-sm items-center">
                                 <button
                                   onClick={() => r.respuestas && r.respuestas[0] && handleToggleLike(r.respuestas[0].id)}
-                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
                                   disabled={!r.respuestas || !r.respuestas[0]}
                                 >
                                   <ThumbsUp className="w-3 h-3" />
@@ -936,7 +1119,7 @@ const DetalleLibro: React.FC = () => {
                         </div>
 
                         {/* Show additional replies only if expanded */}
-                        {expandedReplies[r.id] && r.respuestas.slice(1).map((reply) => (
+                        {reviewState.expandedReplies[r.id.toString()] && r.respuestas.slice(1).map((reply) => (
                           <div key={reply.id} className="bg-gray-50 rounded-lg p-4">
                             <div className="flex gap-3">
                               {reply.usuario.avatar ? (
@@ -981,7 +1164,7 @@ const DetalleLibro: React.FC = () => {
                                 <div className="flex gap-4 mt-3 text-sm items-center">
                                   <button
                                     onClick={() => handleToggleLike(reply.id)}
-                                    className={`flex items-center gap-1 ${likedByUser[reply.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
+                                    className={`flex items-center gap-1 ${reviewState.likedByUser[reply.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600`}
                                   >
                                     <ThumbsUp className="w-3 h-3" />
                                     <span>{reply.reacciones?.length || 0}</span>

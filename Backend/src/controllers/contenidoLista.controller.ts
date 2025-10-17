@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { ContenidoLista } from '../entities/contenidoLista.entity';
 import { Libro } from '../entities/libro.entity';
+import { Lista } from '../entities/lista.entity'; // Asegúrate de importar la entidad Lista
 
 export const getContenidoLista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
@@ -24,21 +25,29 @@ export const getContenidoLista = async (req: Request, res: Response): Promise<vo
 
 export const addLibroALista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
-  const lista = (req as any).lista;
-  const { libroId } = req.body;
+  // --- CAMBIOS AQUÍ ---
+  const { libroId, listaId } = req.body; // 1. Lee ambos IDs del body
 
-  if (!libroId) {
-    res.status(400).json({ error: 'Falta libroId' });
+  if (!libroId || !listaId) {
+    res.status(400).json({ error: 'Faltan libroId o listaId' });
     return;
   }
 
-  const libro = await orm.em.findOne(Libro, { id: libroId });
+  // 2. Busca la lista y el libro tú mismo, en lugar de depender de un middleware
+  const lista = await orm.em.findOne(Lista, { id: listaId });
+  if (!lista) {
+    res.status(404).json({ error: 'Lista no encontrada' });
+    return;
+  }
+
+  const libro = await orm.em.findOne(Libro, { externalId: libroId.toString() });
   if (!libro) {
     res.status(404).json({ error: 'Libro no encontrado' });
     return;
   }
+  // --- FIN DE LOS CAMBIOS ---
 
-  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { id: libroId } });
+  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libroId.toString() } });
   if (existente) {
     res.status(400).json({ error: 'El libro ya está en la lista' });
     return;
@@ -48,7 +57,8 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
   lista.ultimaModificacion = new Date();
 
   await orm.em.persistAndFlush(contenido);
-  await orm.em.flush();
+  // La segunda llamada a flush no es necesaria si usas persistAndFlush
+  // await orm.em.flush();
 
   res.status(201).json(contenido);
 };
@@ -56,9 +66,9 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
 export const removeLibroDeLista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
   const lista = (req as any).lista;
-  const libroId = Number(req.params.libroId);
+  const libroId = req.params.libroId;
 
-  const contenido = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { id: libroId } });
+  const contenido = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libroId } });
   if (!contenido) {
     res.status(404).json({ error: 'No encontrado' });
     return;

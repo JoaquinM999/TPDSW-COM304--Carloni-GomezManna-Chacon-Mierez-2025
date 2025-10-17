@@ -48,7 +48,7 @@ export const listaService = {
   },
 
   async getContenidoLista(listaId: number): Promise<ContenidoLista[]> {
-    const response = await fetchWithRefresh(`/api/contenidoLista/${listaId}`, {
+    const response = await fetchWithRefresh(`/api/contenido-lista/${listaId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export const listaService = {
   },
 
   async addLibroALista(listaId: number, libroId: number): Promise<void> {
-    const response = await fetchWithRefresh('/api/contenidoLista', {
+    const response = await fetchWithRefresh('/api/contenido-lista', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export const listaService = {
   },
 
   async removeLibroDeLista(listaId: number, libroId: number): Promise<void> {
-    const response = await fetchWithRefresh(`/api/contenidoLista/${listaId}/${libroId}`, {
+    const response = await fetchWithRefresh(`/api/contenido-lista/${listaId}/${libroId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

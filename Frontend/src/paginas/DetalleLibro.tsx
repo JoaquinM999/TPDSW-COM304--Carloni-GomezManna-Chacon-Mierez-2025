@@ -34,7 +34,7 @@ interface Libro {
   enlace: string | null;
   slug?: string;
   activities_count?: number;
-  source?: "hardcover" | "google";
+  source: "hardcover" | "google";
 }
 
 interface Reseña {
@@ -184,7 +184,7 @@ const DetalleLibro: React.FC = () => {
         });
       } else {
         // Si no está, lo agregamos
-        await listaService.addLibroALista(lista.id, libroId);
+        await listaService.addLibroALista(lista.id, libro);
         // Actualizamos el estado local para marcar el checkbox
         setListasConLibro(prevSet => {
           const newSet = new Set(prevSet);
@@ -327,23 +327,9 @@ const DetalleLibro: React.FC = () => {
       if (!isAuthenticated() || !libro) return;
       try {
         const favoritos = await obtenerFavoritos();
-        // favoritos puede venir con distintas formas (p.ej. { externalId, source } o { libroId, ... })
-        // Encontrar el favorito correspondiente al libro actual comprobando varios campos posibles
-        const fav = favoritos.find((f: any) => {
-          // Si tiene externalId, comparar con libro.id y opcionalmente source si existe
-          if (f && typeof f === "object" && "externalId" in f && f.externalId != null) {
-            if ("source" in f && f.source != null && libro.source != null) {
-              return String(f.externalId) === String(libro.id) && String(f.source) === String(libro.source);
-            }
-            return String(f.externalId) === String(libro.id);
-          }
-          // Si tiene libroId, comparar con libro.id
-          if (f && typeof f === "object" && "libroId" in f && f.libroId != null) {
-            return String(f.libroId) === String(libro.id);
-          }
-          // Fallback: comparar por id (no ideal pero útil como último recurso)
-          return f && String(f.id) === String(libro.id);
-        });
+        // Ahora favoritos es un array de objetos { id, externalId, source }
+        // Encontrar el favorito correspondiente al libro actual
+        const fav = favoritos.find(fav => fav.externalId === libro.id && fav.source === libro.source);
         setEsFavorito(fav ? fav.id : null);
       } catch (error) {
         console.error("Error fetching favorito status:", error);
@@ -415,8 +401,7 @@ const DetalleLibro: React.FC = () => {
   const handleAddToList = async (listaId: number) => {
     if (!libro) return;
     try {
-      const libroId = libro.id;
-      await listaService.addLibroALista(listaId, libroId);
+      await listaService.addLibroALista(listaId, libro);
       alert("Libro agregado a la lista exitosamente");
       setShowListaDropdown(false);
     } catch (error) {
@@ -449,8 +434,7 @@ const DetalleLibro: React.FC = () => {
       }
 
       // Agregar el libro a la lista
-      const libroId = libro.id;
-      await listaService.addLibroALista(lista.id, libroId);
+      await listaService.addLibroALista(lista.id, libro);
       alert(`Libro agregado a "${nombre}" exitosamente`);
       setShowListaDropdown(false);
     } catch (error) {

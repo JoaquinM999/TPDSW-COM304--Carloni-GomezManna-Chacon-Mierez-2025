@@ -59,13 +59,13 @@ export const listaService = {
     return response.json();
   },
 
-  async addLibroALista(listaId: number, libroId: string): Promise<void> {
+  async addLibroALista(listaId: number, libro: { id: string; titulo: string; autores: string[]; descripcion: string | null; imagen: string | null; enlace: string | null; source: 'hardcover' | 'google' }): Promise<void> {
     const response = await fetchWithRefresh('/api/contenido-lista', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ listaId, libroId }),
+      body: JSON.stringify({ listaId, libro }),
     });
 
     if (!response.ok) {

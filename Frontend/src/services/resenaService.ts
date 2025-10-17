@@ -3,6 +3,16 @@ import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
 const API_URL = 'http://localhost:3000/api/resena';
 
+interface LibroData {
+  id: string;
+  titulo: string;
+  autores: string[];
+  descripcion: string | null;
+  imagen: string | null;
+  enlace: string | null;
+  source: "hardcover" | "google";
+}
+
 /**
  * 🔹 Obtiene reseñas de un libro.
  * Acepta tanto el ID interno como el externalId (Google Books, por ejemplo).
@@ -35,7 +45,7 @@ export const agregarReseña = async (
   libroId: string,
   comentario: string,
   estrellas: number,
-  libro: any
+  libro: LibroData
 ) => {
   const response = await fetchWithRefresh(API_URL, {
     method: 'POST',

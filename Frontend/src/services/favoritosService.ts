@@ -15,6 +15,8 @@ export const obtenerFavoritos = async (): Promise<{
   imagen: string;
   libroId: number;
   fechaAgregado: string;
+  externalId: string;
+  source: "hardcover" | "google";
 }[]> => {
   const token = getToken();
 

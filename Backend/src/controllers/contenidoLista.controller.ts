@@ -4,6 +4,7 @@ import { MikroORM } from '@mikro-orm/mysql';
 import { ContenidoLista } from '../entities/contenidoLista.entity';
 import { Libro } from '../entities/libro.entity';
 import { Lista } from '../entities/lista.entity'; // Asegúrate de importar la entidad Lista
+import { Categoria } from '../entities/categoria.entity';
 
 export const getContenidoLista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
@@ -35,34 +36,51 @@ export const getContenidoLista = async (req: Request, res: Response): Promise<vo
 export const addLibroALista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
   // --- CAMBIOS AQUÍ ---
-  const { libroId, listaId } = req.body; // 1. Lee ambos IDs del body
+  const { libro, listaId } = req.body; // 1. Lee el libro completo y listaId del body
 
-  if (!libroId || !listaId) {
-    res.status(400).json({ error: 'Faltan libroId o listaId' });
+  if (!libro || !listaId) {
+    res.status(400).json({ error: 'Faltan libro o listaId' });
     return;
   }
 
-  // 2. Busca la lista y el libro tú mismo, en lugar de depender de un middleware
+  // 2. Busca la lista
   const lista = await orm.em.findOne(Lista, { id: listaId });
   if (!lista) {
     res.status(404).json({ error: 'Lista no encontrada' });
     return;
   }
 
-  const libro = await orm.em.findOne(Libro, { externalId: libroId });
-  if (!libro) {
-    res.status(404).json({ error: 'Libro no encontrado' });
-    return;
+  // 3. Busca el libro por externalId, si no existe, créalo
+  let libroEntity = await orm.em.findOne(Libro, { externalId: libro.id });
+  if (!libroEntity) {
+    // Buscar o crear categoría por defecto
+    let categoria = await orm.em.findOne(Categoria, { nombre: 'Sin categoría' });
+    if (!categoria) {
+      categoria = orm.em.create(Categoria, { nombre: 'Sin categoría', createdAt: new Date() });
+      await orm.em.persistAndFlush(categoria);
+    }
+    // Crear el libro si no existe
+    libroEntity = orm.em.create(Libro, {
+      externalId: libro.id,
+      nombre: libro.titulo,
+      sinopsis: libro.descripcion,
+      imagen: libro.imagen,
+      enlace: libro.enlace,
+      source: libro.source,
+      categoria,
+      createdAt: new Date(),
+    });
+    await orm.em.persistAndFlush(libroEntity);
   }
   // --- FIN DE LOS CAMBIOS ---
 
-  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libroId } });
+  const existente = await orm.em.findOne(ContenidoLista, { lista: { id: lista.id }, libro: { externalId: libro.id } });
   if (existente) {
     res.status(400).json({ error: 'El libro ya está en la lista' });
     return;
   }
 
-  const contenido = orm.em.create(ContenidoLista, { lista, libro, createdAt: new Date() });
+  const contenido = orm.em.create(ContenidoLista, { lista, libro: libroEntity, createdAt: new Date() });
   lista.ultimaModificacion = new Date();
 
   await orm.em.persistAndFlush(contenido);

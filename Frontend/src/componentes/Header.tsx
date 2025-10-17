@@ -55,10 +55,6 @@ const dropdownItems = {
     { name: "Nuevos autores", href: "/autores/nuevos" },
     { name: "Autores por género", href: "/autores/generos" },
   ],
-  Categorías: categorias.map((cat) => ({
-    name: cat,
-    href: `/categorias/${cat.toLowerCase().replace(/\s+/g, "-")}`,
-  })),
   Sagas: [
     { name: "Todas las sagas", href: "/sagas" },
     { name: "Sagas populares", href: "/sagas/populares" },

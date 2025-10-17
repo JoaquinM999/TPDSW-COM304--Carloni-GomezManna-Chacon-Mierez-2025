@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Tag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tag } from 'lucide-react';
 import { getCategorias } from '../services/categoriaService';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
@@ -15,17 +16,14 @@ const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-gray-700', 'b
 
 export const CategoriasPage: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [filteredCategorias, setFilteredCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
         const data = await getCategorias();
         setCategorias(data);
-        setFilteredCategorias(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
@@ -34,17 +32,6 @@ export const CategoriasPage: React.FC = () => {
     };
     fetchCategorias();
   }, []);
-
-  useEffect(() => {
-    if (searchQuery.length > 1) {
-      const filtered = categorias.filter(cat =>
-        cat.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredCategorias(filtered);
-    } else {
-      setFilteredCategorias(categorias);
-    }
-  }, [searchQuery, categorias]);
 
   if (loading) {
     return (
@@ -63,56 +50,89 @@ export const CategoriasPage: React.FC = () => {
     return <p className="text-center text-red-500 text-lg">{error}</p>;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Explorar por Categorías</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Descubre libros organizados por categorías
-            </p>
-          </div>
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar categorías..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-              />
-            </div>
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+      {/* Header */}
+      <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+                  Categorías
+                </span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                Descubre libros organizados por categorías
+              </p>
+            </motion.div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Todas las Categorías</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredCategorias.map((categoria, index) => (
-            <Link
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {categorias.map((categoria, index) => (
+            <motion.div
               key={categoria.id}
-              to={`/categoria/${categoria.id}`}
-              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden block"
+              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+              variants={cardVariants}
+              whileHover={{
+                scale: 1.03,
+                y: -8,
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+              }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className={`h-32 ${colors[index % colors.length]} flex items-center justify-center`}>
+              <div className={`h-32 ${colors[index % colors.length]} flex items-center justify-center relative`}>
                 <Tag className="w-12 h-12 text-white" />
               </div>
               <div className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-2">{categoria.nombre}</h3>
-                {categoria.descripcion && <p className="text-gray-600 text-sm mb-3">{categoria.descripcion}</p>}
-                <div className="text-blue-600 font-medium text-sm">
-                  {categoria.librosCount.toLocaleString()} libros
+                <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
+                <p className="text-gray-600 text-sm mb-4 font-medium">{categoria.librosCount.toLocaleString()} libros</p>
+                <div className="flex items-center justify-between">
+                  <Link
+                    to={`/categoria/${categoria.id}`}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    Explorar
+                  </Link>
                 </div>
               </div>
-            </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

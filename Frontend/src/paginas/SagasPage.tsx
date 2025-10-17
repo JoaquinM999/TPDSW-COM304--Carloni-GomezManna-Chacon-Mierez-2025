@@ -46,25 +46,37 @@ const SagasPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold mb-6 text-green-700">Sagas</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sagas.map((saga) => (
-          <div
-            key={saga.id}
-            className="bg-white shadow-lg rounded-xl p-4 border hover:shadow-xl transition-shadow duration-200"
-          >
-            <h2 className="text-xl font-semibold">{saga.nombre}</h2>
-            <p className="text-gray-600">Cantidad de libros: {saga.cantidadLibros}</p>
-            <Link
-              to={`/sagas/${saga.id}`}
-              className="mt-3 inline-block text-green-600 hover:text-green-800"
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+      <header className="max-w-5xl mx-auto mb-6">
+        <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+            Sagas
+          </span>
+        </h2>
+        <p className="text-center text-sm text-gray-600">
+          Descubre series completas de libros
+        </p>
+      </header>
+
+      <main className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {sagas.map((saga) => (
+            <div
+              key={saga.id}
+              className="bg-white shadow-lg rounded-xl p-4 border hover:shadow-xl transition-shadow duration-200"
             >
-              Ver detalles →
-            </Link>
-          </div>
-        ))}
-      </div>
+              <h2 className="text-xl font-semibold">{saga.nombre}</h2>
+              <p className="text-gray-600">Cantidad de libros: {saga.cantidadLibros}</p>
+              <Link
+                to={`/sagas/${saga.id}`}
+                className="mt-3 inline-block text-green-600 hover:text-green-800"
+              >
+                Ver detalles →
+              </Link>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 };

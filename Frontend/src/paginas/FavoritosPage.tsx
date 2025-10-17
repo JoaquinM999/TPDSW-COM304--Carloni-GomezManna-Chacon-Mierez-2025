@@ -219,6 +219,13 @@ export const FavoritosPage: React.FC = () => {
 
   const cambiarEstadoLibro = async (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
     try {
+      // Find the libro object
+      const libro = librosFavoritos.find(l => l.id === libroId);
+      if (!libro) {
+        console.error('Libro not found');
+        return;
+      }
+
       // Map estado to lista tipo
       const tipoLista = nuevoEstado === 'leido' ? 'read' :
                        nuevoEstado === 'ver-mas-tarde' ? 'to_read' : 'pending';
@@ -234,7 +241,15 @@ export const FavoritosPage: React.FC = () => {
           await listaService.removeLibroDeLista(listaExistente.id, libroId.toString());
         } else {
           // Add to existing list
-          await listaService.addLibroALista(listaExistente.id, libroId.toString());
+          await listaService.addLibroALista(listaExistente.id, {
+            id: libroId.toString(),
+            titulo: libro.titulo,
+            autores: libro.autor.split(', '),
+            descripcion: null,
+            imagen: libro.imagen,
+            enlace: null,
+            source: 'google' // default, since we don't have source info here
+          });
         }
       } else {
         // Create new list and add book
@@ -248,7 +263,15 @@ export const FavoritosPage: React.FC = () => {
         const updatedListas = [...listas, nuevaLista];
         setListas(updatedListas);
 
-        await listaService.addLibroALista(nuevaLista.id, libroId.toString());
+        await listaService.addLibroALista(nuevaLista.id, {
+          id: libroId.toString(),
+          titulo: libro.titulo,
+          autores: libro.autor.split(', '),
+          descripcion: null,
+          imagen: libro.imagen,
+          enlace: null,
+          source: 'google' // default, since we don't have source info here
+        });
       }
 
       // Refresh data after state change
@@ -322,9 +345,11 @@ export const FavoritosPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-5xl font-bold text-slate-800 mb-4">
-                Mis Favoritos
-              </h1>
+              <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+                  Mis Favoritos
+                </span>
+              </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
                 Gestiona tus libros, autores y categorías favoritas con estilo
               </p>
@@ -484,19 +509,15 @@ export const FavoritosPage: React.FC = () => {
                       className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <motion.div
-                      className="absolute top-4 right-4"
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Heart className="w-7 h-7 text-red-500 drop-shadow-lg" fill="currentColor" />
-                    </motion.div>
-                    <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/20 ${getEstadoColor(getPrimaryEstado(libro.estados))} shadow-lg`}>
-                      <div className="flex items-center space-x-1.5">
-                        {getEstadoIcon(getPrimaryEstado(libro.estados))}
-                        <span className="capitalize">{getPrimaryEstado(libro.estados).replace('-', ' ')}</span>
-                      </div>
-                    </div>
+                    {libro.estados.includes('favorito') && (
+                      <motion.div
+                        className="absolute top-4 right-4 bg-red-600 rounded-full p-1"
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <Heart className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" />
+                      </motion.div>
+                    )}
                   </div>
                   <div className="p-6">
                     <Link to={`/libro/${libro.id}`} className="block group">

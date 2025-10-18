@@ -16,6 +16,7 @@ interface LibroFavorito {
   imagen: string;
   estados: ('leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito')[]; // ✅ CAMBIO CLAVE: de 'estado' a 'estados'
   fechaAgregado: string;
+  externalId?: string;
 }
 
 interface AutorFavorito {
@@ -134,6 +135,7 @@ export const FavoritosPage: React.FC = () => {
             // ✅ Convertimos el Set de estados a un array
             estados: Array.from(item.estados) as ('leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito')[],
             fechaAgregado: item.fecha,
+            externalId: item.libroData.externalId || null,
         }));
         
         setLibrosFavoritos(allLibros);
@@ -520,7 +522,7 @@ export const FavoritosPage: React.FC = () => {
                     )}
                   </div>
                   <div className="p-6">
-                    <Link to={`/libro/${libro.id}`} className="block group">
+                    <Link to={`/libro/${libro.externalId || libro.id}`} className="block group">
                       <h3 className="font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight">
                         {libro.titulo}
                       </h3>

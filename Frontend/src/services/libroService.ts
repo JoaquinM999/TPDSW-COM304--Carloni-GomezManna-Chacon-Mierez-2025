@@ -1,5 +1,14 @@
 // src/services/libroService.ts
 
+// ✅ Obtener todos los libros
+export const getLibros = async () => {
+  const response = await fetch('http://localhost:3000/api/libro');
+  if (!response.ok) {
+    throw new Error('No se pudieron obtener los libros');
+  }
+  return await response.json();
+};
+
 // 👉 Obtener libros por IDs (para favoritos, listas, etc.)
 export const getLibrosPorIds = async (ids: number[]) => {
   const promesas = ids.map(id =>

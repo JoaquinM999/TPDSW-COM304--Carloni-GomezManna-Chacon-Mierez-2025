@@ -317,9 +317,14 @@ export const Header: React.FC<HeaderProps> = ({
                           Configuración
                         </Link>
                         {isAdmin() && (
-                          <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100">
-                            Admin
-                          </Link>
+                          <>
+                            <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100">
+                              Moderación
+                            </Link>
+                            <Link to="/admin/crear-saga" className="block px-4 py-2 hover:bg-green-100">
+                              Crear Saga
+                            </Link>
+                          </>
                         )}
                         <button
                           onClick={() => {

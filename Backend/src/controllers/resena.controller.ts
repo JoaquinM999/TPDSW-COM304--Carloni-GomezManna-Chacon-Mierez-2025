@@ -5,6 +5,7 @@ import { Resena, EstadoResena } from '../entities/resena.entity';
 import { Libro } from '../entities/libro.entity';
 import { Usuario, RolUsuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
+import { Autor } from '../entities/autor.entity';
 import { ActividadService } from '../services/actividad.service';
 import redis from '../redis';
 
@@ -153,12 +154,32 @@ export const createResena = async (req: Request, res: Response) => {
     let libro = await em.findOne(Libro, { externalId });
 
     if (!libro) {
+      let autor: Autor | undefined;
+      if (libroData.autores && libroData.autores.length > 0) {
+        const autorNombreCompleto = libroData.autores[0];
+        // Split name into first and last name (simple split by space)
+        const partesNombre = autorNombreCompleto.split(' ');
+        const nombre = partesNombre[0] || autorNombreCompleto;
+        const apellido = partesNombre.slice(1).join(' ') || '';
+
+        autor = await em.findOne(Autor, { nombre, apellido }) || undefined;
+        if (!autor) {
+          autor = em.create(Autor, {
+            nombre,
+            apellido,
+            createdAt: new Date()
+          });
+          await em.persist(autor);
+        }
+      }
+
       libro = em.create(Libro, {
         externalId,
         nombre: libroData.titulo,
         sinopsis: libroData.descripcion || null,
         imagen: libroData.imagen || libroData.coverUrl || null,
         enlace: libroData.enlace || null,
+        autor,
         source: libroData.source || null,
         createdAt: new Date(),
       });

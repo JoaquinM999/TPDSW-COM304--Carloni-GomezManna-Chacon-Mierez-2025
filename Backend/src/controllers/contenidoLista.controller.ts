@@ -5,6 +5,7 @@ import { ContenidoLista } from '../entities/contenidoLista.entity';
 import { Libro } from '../entities/libro.entity';
 import { Lista } from '../entities/lista.entity'; // Asegúrate de importar la entidad Lista
 import { Categoria } from '../entities/categoria.entity';
+import { Autor } from '../entities/autor.entity';
 
 export const getContenidoLista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
@@ -54,6 +55,26 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
   let libroEntity = await orm.em.findOne(Libro, { externalId: libro.id });
   if (!libroEntity) {
     // Buscar o crear categoría por defecto
+    let autor: Autor | undefined;
+    if (libro.autores && libro.autores.length > 0) {
+      const autorNombreCompleto = libro.autores[0];
+      // Split name into first and last name (simple split by space)
+      const partesNombre = autorNombreCompleto.split(' ');
+      const nombre = partesNombre[0] || autorNombreCompleto;
+      const apellido = partesNombre.slice(1).join(' ') || '';
+
+      autor = await orm.em.findOne(Autor, { nombre, apellido }) || undefined;
+      if (!autor) {
+        autor = orm.em.create(Autor, {
+          nombre,
+          apellido,
+          createdAt: new Date()
+        });
+        await orm.em.persist(autor);
+      }
+    }
+
+
     let categoria = await orm.em.findOne(Categoria, { nombre: 'Sin categoría' });
     if (!categoria) {
       categoria = orm.em.create(Categoria, { nombre: 'Sin categoría', createdAt: new Date() });
@@ -67,6 +88,7 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
       imagen: libro.imagen,
       enlace: libro.enlace,
       source: libro.source,
+      autor,
       categoria,
       createdAt: new Date(),
     });

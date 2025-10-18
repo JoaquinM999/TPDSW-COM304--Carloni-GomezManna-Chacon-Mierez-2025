@@ -17,6 +17,7 @@ interface SearchBarProps {
   onSearch?: (query: string) => void;
   database?: SearchItem[];
   className?: string;
+  disableSuggestions?: boolean;
 }
 
 const mockDatabase: SearchItem[] = [
@@ -38,6 +39,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
   database = mockDatabase,
   className = '',
+  disableSuggestions = false,
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchItem[]>([]);
@@ -51,8 +53,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       const filtered = database
         .filter(
           (item) =>
-            item.title.toLowerCase().includes(query.toLowerCase()) ||
-            (item.author && item.author.toLowerCase().includes(query.toLowerCase()))
+            (item.title?.toLowerCase() || '').includes(query.toLowerCase()) ||
+            (item.author?.toLowerCase() || '').includes(query.toLowerCase())
         )
         .slice(0, 8);
       setSuggestions(filtered);
@@ -149,7 +151,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </div>
 
       <AnimatePresence>
-        {isOpen && suggestions.length > 0 && (
+        {!disableSuggestions && isOpen && suggestions.length > 0 && (
           <motion.div
             id="search-results"
             role="listbox"

@@ -28,28 +28,56 @@ export const createLibro = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
 
-  const { autorId, categoriaId, editorialId, sagaId, ...libroData } = req.body;
+  const { nombreAutor, apellidoAutor, categoriaId, editorialId, sagaId, ...libroData } = req.body;
 
-  // Fetch related entities
-  const autor = await em.findOne(Autor, { id: autorId });
-  const categoria = await em.findOne(Categoria, { id: categoriaId });
-  const editorial = await em.findOne(Editorial, { id: editorialId });
-  const saga = sagaId ? await em.findOne(Saga, { id: sagaId }) : undefined;
+  try {
+    // 1. Buscar si el autor ya existe en tu base de datos.
+    let autor = await em.findOne(Autor, {
+      nombre: nombreAutor,
+      apellido: apellidoAutor,
+    });
 
-  if (!autor || !categoria || !editorial) {
-    return res.status(404).json({ error: 'Autor, categoría o editorial no encontrado' });
+    // 2. Si el autor NO existe, crearlo.
+    if (!autor) {
+      console.log('El autor no existe, creando uno nuevo...');
+      autor = em.create(Autor, {
+        nombre: nombreAutor,
+        apellido: apellidoAutor,
+        createdAt: new Date()
+      });
+      await em.persist(autor); // Guardamos el nuevo autor para que tenga un ID
+    } else {
+      console.log('El autor ya existía en la base de datos.');
+    }
+
+    // Fetch other related entities
+    const categoria = await em.findOne(Categoria, { id: categoriaId });
+    const editorial = await em.findOne(Editorial, { id: editorialId });
+    const saga = sagaId ? await em.findOne(Saga, { id: sagaId }) : undefined;
+
+    if (!categoria || !editorial) {
+      return res.status(404).json({ error: 'Categoría o editorial no encontrada' });
+    }
+
+    // 3. Crear la nueva entidad de Libro.
+    const nuevoLibro = em.create(Libro, {
+      ...libroData,
+      // 4. ¡Aquí está la magia! Asignas el objeto completo del autor.
+      // MikroORM se encargará de establecer el `autor_id` correcto en la base de datos.
+      autor,
+      categoria,
+      editorial,
+      saga
+    });
+
+    // 5. Guardar el libro en la base de datos.
+    await em.persistAndFlush(nuevoLibro);
+
+    res.status(201).json(nuevoLibro);
+  } catch (error) {
+    console.error('Error al guardar el libro:', error);
+    res.status(500).json({ message: 'Ocurrió un error en el servidor.' });
   }
-
-  const nuevoLibro = em.create(Libro, {
-    ...libroData,
-    autor,
-    categoria,
-    editorial,
-    saga
-  });
-
-  await em.persistAndFlush(nuevoLibro);
-  res.status(201).json(nuevoLibro);
 };
 
 export const updateLibro = async (req: Request, res: Response) => {

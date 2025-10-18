@@ -4,6 +4,7 @@ import { Favorito } from '../entities/favorito.entity';
 import { Libro } from '../entities/libro.entity';
 import { RatingLibro } from '../entities/ratingLibro.entity';
 import { ActividadService } from '../services/actividad.service';
+import { Autor } from '../entities/autor.entity';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const getFavoritos = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -70,6 +71,25 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
     });
 
     if (!libro) {
+      let autor: Autor | undefined;
+      if (libroData.autores && libroData.autores.length > 0) {
+        const autorNombreCompleto = libroData.autores[0];
+        // Split name into first and last name (simple split by space)
+        const partesNombre = autorNombreCompleto.split(' ');
+        const nombre = partesNombre[0] || autorNombreCompleto;
+        const apellido = partesNombre.slice(1).join(' ') || '';
+
+        autor = await orm.em.findOne(Autor, { nombre, apellido }) || undefined;
+        if (!autor) {
+          autor = orm.em.create(Autor, {
+            nombre,
+            apellido,
+            createdAt: new Date()
+          });
+          await orm.em.persist(autor);
+        }
+      }
+
       libro = orm.em.create(Libro, {
         externalId: libroData.externalId,
         source: libroData.source,
@@ -77,6 +97,7 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
         sinopsis: libroData.sinopsis || null,
         imagen: libroData.imagen || null,
         enlace: libroData.enlace || null,
+        autor,
         createdAt: new Date(),
       });
       await orm.em.persistAndFlush(libro);

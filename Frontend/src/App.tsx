@@ -20,6 +20,7 @@ import { CrearLibro } from './paginas/CrearLibro';
 import { CrearCategoria } from './paginas/CrearCategoria';
 import { CrearEditorial } from './paginas/CrearEditorial';
 import { CrearSaga } from './paginas/CrearSaga';
+import CrearSagaAdmin from './paginas/CrearSagaAdmin';
 import PerfilPage from './paginas/PerfilPage';
 import { motion } from 'framer-motion';
 import AutoresPage from './paginas/AutoresPage';
@@ -154,6 +155,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
           <Route path="/crear-categoria" element={<CrearCategoria />} />
           <Route path="/crear-editorial" element={<CrearEditorial />} />
           <Route path="/crear-saga" element={<CrearSaga />} />
+          <Route path="/admin/crear-saga" element={<CrearSagaAdmin />} />
           <Route path="/admin/moderation" element={<AdminModerationPage />} />
           <Route path="/admin/actividad" element={<AdminActividadPage />} />
           <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />

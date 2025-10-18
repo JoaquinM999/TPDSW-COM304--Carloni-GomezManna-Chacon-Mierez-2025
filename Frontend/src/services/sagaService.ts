@@ -17,7 +17,7 @@ export const getSagaById = async (id: number) => {
   return await response.json();
 };
 
-export const createSaga = async (sagaData: any, token: string) => {
+export const createSaga = async (sagaData: { nombre: string; libroIds: number[] }, token: string) => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {

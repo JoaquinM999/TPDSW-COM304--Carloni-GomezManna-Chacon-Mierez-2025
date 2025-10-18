@@ -24,7 +24,7 @@ export class Libro {
   @Property({ type: 'text', nullable: true }) // sinopsis puede ser larga
   sinopsis?: string;
 
-  @Property({ nullable: true })
+  @Property({ type: 'text', nullable: true })
   imagen?: string;
 
   @Property({ nullable: true })

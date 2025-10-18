@@ -15,7 +15,7 @@ export const getNewAccessToken = async (): Promise<string> => {
     throw new Error('No refresh token available, please login again');
   }
 
-  const response = await fetch('http://localhost:3000/api/auth/refresh', {
+  const response = await fetch('http://localhost:3000/api/auth/refresh-token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import LibroCard from "../componentes/LibroCard";
 import { getResenasByLibro } from "../services/resenaService";
@@ -34,6 +34,9 @@ export default function TodosLosLibros() {
   const debounceDelay = 300;
   const baseQuery = "subject:fantasy";
 
+  // Hook para leer los parámetros de la URL
+  const [searchParams] = useSearchParams();
+
   // Panel debug (visible en UI)
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [lastCount, setLastCount] = useState<number | null>(null);
@@ -50,26 +53,24 @@ export default function TodosLosLibros() {
     return () => window.clearTimeout(id);
   }, [searchTerm]);
 
-  // cuando cambia la búsqueda "debounced", resetear página a 1 y libros
+  // 2. useEffect para leer los parámetros de la URL al cargar la página
   useEffect(() => {
-    setPagina(1);
-    setLibros([]);
-    setHasMore(true);
-  }, [debouncedSearchTerm]);
+    const filtroFromURL = searchParams.get('filtro');
+    const terminoFromURL = searchParams.get('termino');
 
-  // cuando cambia el filtro, resetear página a 1 y libros
-  useEffect(() => {
-    setPagina(1);
-    setLibros([]);
-    setHasMore(true);
-  }, [searchFilter]);
+    // 3. Si existen, actualiza el estado del buscador
+    if (filtroFromURL && terminoFromURL) {
+      setSearchFilter(filtroFromURL);
+      setSearchTerm(terminoFromURL);
+    }
+  }, []);
 
-  // cuando cambia el sortOrder, resetear página a 1 y libros
+  // Cuando cambia la búsqueda, el filtro o el orden, se resetea la paginación.
   useEffect(() => {
     setPagina(1);
     setLibros([]);
     setHasMore(true);
-  }, [sortOrder]);
+  }, [debouncedSearchTerm, searchFilter, sortOrder]);
 
   useEffect(() => {
     const controller = new AbortController();

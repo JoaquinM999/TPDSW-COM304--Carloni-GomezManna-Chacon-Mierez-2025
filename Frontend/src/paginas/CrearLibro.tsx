@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, Upload, Plus, X, Globe, Users, Calendar, FileText, Tag, Building } from 'lucide-react';
+import { getEditoriales } from '../services/editorialService'; // Asumiendo que tienes estos servicios
+import { getCategorias } from '../services/categoriaService';
+import { getSagas } from '../services/sagaService';
 
 interface Idioma {
   codigo: string;
@@ -36,31 +39,14 @@ const idiomasDisponibles: Idioma[] = [
   { codigo: 'ar', nombre: 'Árabe' }
 ];
 
-const mockEditoriales: Editorial[] = [
-  { id: 1, nombre: 'Penguin Random House' },
-  { id: 2, nombre: 'Editorial Planeta' },
-  { id: 3, nombre: 'Anagrama' },
-  { id: 4, nombre: 'Alfaguara' }
-];
-
-const mockCategorias: Categoria[] = [
-  { id: 1, nombre: 'Ficción' },
-  { id: 2, nombre: 'Ciencia Ficción' },
-  { id: 3, nombre: 'Romance' },
-  { id: 4, nombre: 'Misterio' },
-  { id: 5, nombre: 'Historia' }
-];
-
-const mockSagas: Saga[] = [
-  { id: 1, nombre: 'Harry Potter' },
-  { id: 2, nombre: 'El Señor de los Anillos' },
-  { id: 3, nombre: 'Crónicas de Narnia' }
-];
-
 export const CrearLibro: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [portadaPreview, setPortadaPreview] = useState<string>('');
+
+  const [editoriales, setEditoriales] = useState<Editorial[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [sagas, setSagas] = useState<Saga[]>([]);
   
   const [libroData, setLibroData] = useState({
     titulo: '',
@@ -81,6 +67,25 @@ export const CrearLibro: React.FC = () => {
 
   // Check user role (replace with actual auth check)
   const userRole = 'admin'; // or 'autor' - get from auth context
+
+  useEffect(() => {
+    // Cargar datos para los dropdowns desde el backend
+    const fetchData = async () => {
+      try {
+        const [editorialesData, categoriasData, sagasData] = await Promise.all([
+          getEditoriales(),
+          getCategorias(),
+          getSagas()
+        ]);
+        setEditoriales(editorialesData);
+        setCategorias(categoriasData);
+        setSagas(sagasData);
+      } catch (error) {
+        console.error("Error al cargar datos para el formulario:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -343,7 +348,7 @@ export const CrearLibro: React.FC = () => {
                   }`}
                 >
                   <option value="">Selecciona una editorial</option>
-                  {mockEditoriales.map(editorial => (
+                  {editoriales.map(editorial => (
                     <option key={editorial.id} value={editorial.id}>
                       {editorial.nombre}
                     </option>
@@ -366,7 +371,7 @@ export const CrearLibro: React.FC = () => {
                   }`}
                 >
                   <option value="">Selecciona una categoría</option>
-                  {mockCategorias.map(categoria => (
+                  {categorias.map(categoria => (
                     <option key={categoria.id} value={categoria.id}>
                       {categoria.nombre}
                     </option>
@@ -387,7 +392,7 @@ export const CrearLibro: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">No pertenece a una saga</option>
-                  {mockSagas.map(saga => (
+                  {sagas.map(saga => (
                     <option key={saga.id} value={saga.id}>
                       {saga.nombre}
                     </option>

@@ -9,7 +9,7 @@ const api = axios.create({
 export const obtenerFavoritos = async (): Promise<{
   id: number;
   titulo: string;
-  autor: string;
+  autores: string[];
   categoria: string;
   rating: number;
   imagen: string;

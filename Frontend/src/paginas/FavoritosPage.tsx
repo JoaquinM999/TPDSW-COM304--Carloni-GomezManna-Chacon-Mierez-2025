@@ -112,9 +112,9 @@ export const FavoritosPage: React.FC = () => {
             if (existing) {
                 // Si el libro ya existe (viene de una lista), añade el estado 'favorito'
                 existing.estados.add('favorito');
-                // Actualiza los autores si no hay o son desconocidos
-                if (existing.autores.length === 0 || existing.autores[0] === 'Autor desconocido') {
-                    existing.autores = [fav.autor];
+                // Actualiza los autores si no hay
+                if (existing.autores.length === 0) {
+                    existing.autores = fav.autores;
                 }
 
                 if (rating > existing.rating) {
@@ -126,12 +126,11 @@ export const FavoritosPage: React.FC = () => {
                     libroData: {
                         id: libroId,
                         nombre: fav.titulo,
-                        autor: fav.autor, // Mantener para compatibilidad
                         categoria: { nombre: fav.categoria },
                         imagen: fav.imagen,
                         externalId: fav.externalId, // Aseguramos que externalId se propague
                     },
-                    autores: [fav.autor],
+                    autores: fav.autores,
                     estados: new Set(['favorito']),
                     fecha: fav.fechaAgregado,
                     rating: rating,

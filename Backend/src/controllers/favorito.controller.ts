@@ -6,10 +6,12 @@ import { RatingLibro } from '../entities/ratingLibro.entity';
 import { ActividadService } from '../services/actividad.service';
 import { Autor } from '../entities/autor.entity';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { getBookById } from '../services/googleBooks.service';
 
 export const getFavoritos = async (req: AuthRequest, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
   const usuarioId = req.user?.id;
+  const em = orm.em.fork(); // Usar un fork para posibles escrituras
 
   if (!usuarioId) {
     res.status(401).json({ error: 'Usuario no autenticado' });
@@ -27,18 +29,51 @@ export const getFavoritos = async (req: AuthRequest, res: Response): Promise<voi
   const ratings = await orm.em.find(RatingLibro, { libro: { $in: libroIds } });
   const ratingMap = new Map(ratings.map(r => [r.libro.id, r.avgRating]));
 
-  // Devolver array con datos completos del libro
-  const result = favoritos.map(fav => ({
-    id: fav.id, // ID del favorito
-    libroId: fav.libro.id, // ID interno numérico del libro
-    titulo: fav.libro.nombre,
-    autor: fav.libro.autor?.nombre || 'Autor desconocido',
-    categoria: fav.libro.categoria?.nombre || 'Sin categoría',
-    rating: ratingMap.get(fav.libro.id) || 0,
-    imagen: fav.libro.imagen,
-    externalId: fav.libro.externalId,
-    source: fav.libro.source,
-    fechaAgregado: fav.fechaAgregado
+  // Transformar libros con autocorrección de autores
+  const result = await Promise.all(favoritos.map(async fav => {
+    let autores = ['Autor desconocido'];
+
+    if (fav.libro.autor) {
+      autores = [`${fav.libro.autor.nombre} ${fav.libro.autor.apellido}`.trim() || 'Autor desconocido'];
+    } else if (fav.libro.externalId) { // Si no hay autor pero sí ID externo, intentamos arreglarlo
+      try {
+        const googleBook = await getBookById(fav.libro.externalId);
+        if (googleBook && googleBook.autores && googleBook.autores.length > 0) {
+          autores = googleBook.autores;
+
+          // --- LÓGICA DE AUTOCORRECCIÓN ---
+          // 1. Buscar o crear el autor
+          const autorNombreCompleto = googleBook.autores[0];
+          const partesNombre = autorNombreCompleto.split(' ');
+          const nombre = partesNombre[0] || autorNombreCompleto;
+          const apellido = partesNombre.slice(1).join(' ') || '';
+
+          let autorEntity = await em.findOne(Autor, { nombre, apellido });
+          if (!autorEntity) {
+            autorEntity = em.create(Autor, { nombre, apellido, createdAt: new Date() });
+            await em.persist(autorEntity);
+          }
+          // 2. Asignar el autor al libro y guardar el cambio
+          fav.libro.autor = autorEntity;
+          await em.flush(); // Guardamos los cambios en la BD
+        }
+      } catch (error) {
+        console.error('Error fetching author from Google Books:', error);
+      }
+    }
+
+    return {
+      id: fav.id, // ID del favorito
+      libroId: fav.libro.id, // ID interno numérico del libro
+      titulo: fav.libro.nombre,
+      autores,
+      categoria: fav.libro.categoria?.nombre || 'Sin categoría',
+      rating: ratingMap.get(fav.libro.id) || 0,
+      imagen: fav.libro.imagen,
+      externalId: fav.libro.externalId,
+      source: fav.libro.source,
+      fechaAgregado: fav.fechaAgregado
+    };
   }));
 
   res.json(result);

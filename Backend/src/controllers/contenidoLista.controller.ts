@@ -6,9 +6,11 @@ import { Libro } from '../entities/libro.entity';
 import { Lista } from '../entities/lista.entity'; // Asegúrate de importar la entidad Lista
 import { Categoria } from '../entities/categoria.entity';
 import { Autor } from '../entities/autor.entity';
+import { getBookById } from '../services/googleBooks.service';
 
 export const getContenidoLista = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork(); // Usar un fork para posibles escrituras
   const listaId = Number(req.params.listaId);
 
   if (isNaN(listaId)) {
@@ -22,13 +24,47 @@ export const getContenidoLista = async (req: Request, res: Response): Promise<vo
     { populate: ['libro.autor', 'libro.categoria', 'lista'] }
   );
 
-  // Map to include externalId
-  const mappedContenidos = contenidos.map(contenido => ({
-    ...contenido,
-    libro: {
-      ...contenido.libro,
-      externalId: contenido.libro.externalId
+  // Map to include externalId and autores array with autocorrección
+  const mappedContenidos = await Promise.all(contenidos.map(async contenido => {
+    let autores = ['Autor desconocido'];
+
+    if (contenido.libro.autor) {
+      autores = [`${contenido.libro.autor.nombre} ${contenido.libro.autor.apellido}`.trim() || 'Autor desconocido'];
+    } else if (contenido.libro.externalId) { // Si no hay autor pero sí ID externo, intentamos arreglarlo
+      try {
+        const googleBook = await getBookById(contenido.libro.externalId);
+        if (googleBook && googleBook.autores && googleBook.autores.length > 0) {
+          autores = googleBook.autores;
+
+          // --- LÓGICA DE AUTOCORRECCIÓN ---
+          // 1. Buscar o crear el autor
+          const autorNombreCompleto = googleBook.autores[0];
+          const partesNombre = autorNombreCompleto.split(' ');
+          const nombre = partesNombre[0] || autorNombreCompleto;
+          const apellido = partesNombre.slice(1).join(' ') || '';
+
+          let autorEntity = await em.findOne(Autor, { nombre, apellido });
+          if (!autorEntity) {
+            autorEntity = em.create(Autor, { nombre, apellido, createdAt: new Date() });
+            await em.persist(autorEntity);
+          }
+          // 2. Asignar el autor al libro y guardar el cambio
+          contenido.libro.autor = autorEntity;
+          await em.flush(); // Guardamos los cambios en la BD
+        }
+      } catch (error) {
+        console.error('Error fetching author from Google Books:', error);
+      }
     }
+
+    return {
+      ...contenido,
+      libro: {
+        ...contenido.libro,
+        externalId: contenido.libro.externalId,
+        autores
+      }
+    };
   }));
 
   res.json(mappedContenidos);
@@ -129,6 +165,7 @@ export const removeLibroDeLista = async (req: Request, res: Response): Promise<v
 
 export const getAllUserContenido = async (req: Request, res: Response): Promise<void> => {
   const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork(); // Usar un fork para posibles escrituras
   const usuarioId = (req as any).user?.id;
 
   if (!usuarioId) {
@@ -142,13 +179,47 @@ export const getAllUserContenido = async (req: Request, res: Response): Promise<
     { populate: ['libro.autor', 'libro.categoria', 'lista'] }
   );
 
-  // Map to include externalId
-  const mappedContenidos = contenidos.map(contenido => ({
-    ...contenido,
-    libro: {
-      ...contenido.libro,
-      externalId: contenido.libro.externalId
+  // Map to include externalId and autores array with autocorrección
+  const mappedContenidos = await Promise.all(contenidos.map(async contenido => {
+    let autores = ['Autor desconocido'];
+
+    if (contenido.libro.autor) {
+      autores = [`${contenido.libro.autor.nombre} ${contenido.libro.autor.apellido}`.trim() || 'Autor desconocido'];
+    } else if (contenido.libro.externalId) { // Si no hay autor pero sí ID externo, intentamos arreglarlo
+      try {
+        const googleBook = await getBookById(contenido.libro.externalId);
+        if (googleBook && googleBook.autores && googleBook.autores.length > 0) {
+          autores = googleBook.autores;
+
+          // --- LÓGICA DE AUTOCORRECCIÓN ---
+          // 1. Buscar o crear el autor
+          const autorNombreCompleto = googleBook.autores[0];
+          const partesNombre = autorNombreCompleto.split(' ');
+          const nombre = partesNombre[0] || autorNombreCompleto;
+          const apellido = partesNombre.slice(1).join(' ') || '';
+
+          let autorEntity = await em.findOne(Autor, { nombre, apellido });
+          if (!autorEntity) {
+            autorEntity = em.create(Autor, { nombre, apellido, createdAt: new Date() });
+            await em.persist(autorEntity);
+          }
+          // 2. Asignar el autor al libro y guardar el cambio
+          contenido.libro.autor = autorEntity;
+          await em.flush(); // Guardamos los cambios en la BD
+        }
+      } catch (error) {
+        console.error('Error fetching author from Google Books:', error);
+      }
     }
+
+    return {
+      ...contenido,
+      libro: {
+        ...contenido.libro,
+        externalId: contenido.libro.externalId,
+        autores
+      }
+    };
   }));
 
   res.json(mappedContenidos);

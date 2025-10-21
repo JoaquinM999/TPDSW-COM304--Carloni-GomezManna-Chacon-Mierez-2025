@@ -74,16 +74,12 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
       let autor: Autor | undefined;
       if (libroData.autores && libroData.autores.length > 0) {
         const autorNombreCompleto = libroData.autores[0];
-        // Split name into first and last name (simple split by space)
-        const partesNombre = autorNombreCompleto.split(' ');
-        const nombre = partesNombre[0] || autorNombreCompleto;
-        const apellido = partesNombre.slice(1).join(' ') || '';
-
-        autor = await orm.em.findOne(Autor, { nombre, apellido }) || undefined;
+        // Buscar autor por nombre completo para evitar errores de división
+        autor = await orm.em.findOne(Autor, { nombre: autorNombreCompleto }) ?? undefined;
         if (!autor) {
           autor = orm.em.create(Autor, {
-            nombre,
-            apellido,
+            nombre: autorNombreCompleto,
+            apellido: '', // Dejamos el apellido vacío para simplificar
             createdAt: new Date()
           });
           await orm.em.persist(autor);

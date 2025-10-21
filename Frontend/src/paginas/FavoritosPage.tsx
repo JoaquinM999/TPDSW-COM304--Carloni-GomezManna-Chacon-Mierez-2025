@@ -10,7 +10,7 @@ import { obtenerFavoritos } from '../services/favoritosService';
 interface LibroFavorito {
   id: number; // ✅ Volvemos a usar 'number' como el tipo del ID.
   titulo: string;
-  autor: string;
+  autores: string[];
   categoria: string;
   rating: number;
   imagen: string;
@@ -72,25 +72,33 @@ export const FavoritosPage: React.FC = () => {
             }
         };
 
-        // ✅ El mapa ahora guardará un array de estados
-        const librosMap = new Map<number, { libroData: any, estados: Set<string>, fecha: string }>();
+        // ✅ El mapa ahora guardará un array de estados, autores como array y el rating consolidado
+        const librosMap = new Map<number, { libroData: any, autores: string[], estados: Set<string>, fecha: string, rating: number }>();
 
         // 1. PROCESAR LIBROS DE LISTAS (Acumulando estados)
         allContenidos.forEach(contenido => {
             const libroId = contenido.libro.id;
             const estado = contenido.lista.tipo === 'read' ? 'leido' :
                            contenido.lista.tipo === 'to_read' ? 'ver-mas-tarde' : 'pendiente';
+            const rating = contenido.libro.ratingLibro?.avgRating || 0;
 
             const existing = librosMap.get(libroId);
             if (existing) {
                 // Si el libro ya está en el mapa, solo añade el nuevo estado
                 existing.estados.add(estado);
+                // Actualiza el rating si el nuevo es mayor (o si el existente es 0)
+                if (rating > existing.rating) {
+                    existing.rating = rating;
+                }
             } else {
                 // Si es la primera vez que vemos el libro, lo agregamos al mapa
                 librosMap.set(libroId, {
                     libroData: contenido.libro,
+                    // ✅ Normalizamos los autores a un array, filtrando 'Autor desconocido'
+                    autores: (contenido.libro.autores || [contenido.libro.autor?.nombre || 'Autor desconocido']).filter(a => a !== 'Autor desconocido'),
                     estados: new Set([estado]), // Usamos un Set para evitar estados duplicados
                     fecha: contenido.createdAt,
+                    rating: rating,
                 });
             }
         });
@@ -99,23 +107,34 @@ export const FavoritosPage: React.FC = () => {
         favoritos.forEach(fav => {
             const libroId = fav.libroId;
             const existing = librosMap.get(libroId);
+            const rating = fav.rating || 0;
 
             if (existing) {
                 // Si el libro ya existe (viene de una lista), añade el estado 'favorito'
                 existing.estados.add('favorito');
+                // Actualiza los autores si no hay o son desconocidos
+                if (existing.autores.length === 0 || existing.autores[0] === 'Autor desconocido') {
+                    existing.autores = [fav.autor];
+                }
+
+                if (rating > existing.rating) {
+                    existing.rating = rating;
+                }
             } else {
                 // Si es un favorito que no está en ninguna lista, lo agregamos al mapa
                 librosMap.set(libroId, {
                     libroData: {
                         id: libroId,
                         nombre: fav.titulo,
-                        autores: fav.autor ? fav.autor.split(', ') : ['Autor desconocido'],
+                        autor: fav.autor, // Mantener para compatibilidad
                         categoria: { nombre: fav.categoria },
-                        ratingLibro: { avgRating: fav.rating },
                         imagen: fav.imagen,
+                        externalId: fav.externalId, // Aseguramos que externalId se propague
                     },
+                    autores: [fav.autor],
                     estados: new Set(['favorito']),
                     fecha: fav.fechaAgregado,
+                    rating: rating,
                 });
             }
         });
@@ -124,13 +143,9 @@ export const FavoritosPage: React.FC = () => {
         const allLibros: LibroFavorito[] = Array.from(librosMap.values()).map(item => ({
             id: item.libroData.id,
             titulo: item.libroData.nombre,
-            autor: (Array.isArray(item.libroData.autores) && item.libroData.autores.length > 0)
-                ? (typeof item.libroData.autores[0] === 'string'
-                    ? (item.libroData.autores as string[]).join(', ')
-                    : (item.libroData.autores as any[]).map(a => a?.nombre ?? a).join(', '))
-                : 'Autor desconocido',
+            autores: item.autores,
             categoria: typeof item.libroData.categoria === 'string' ? item.libroData.categoria : item.libroData.categoria?.nombre || 'Sin categoría',
-            rating: item.libroData.ratingLibro?.avgRating || 0,
+            rating: item.rating, // Usamos el rating consolidado
             imagen: item.libroData.imagen,
             // ✅ Convertimos el Set de estados a un array
             estados: Array.from(item.estados) as ('leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito')[],
@@ -145,8 +160,8 @@ export const FavoritosPage: React.FC = () => {
         const categoriaMap = new Map<string, CategoriaFavorita>();
 
         allLibros.forEach(libro => {
-            const autoresArray = libro.autor.split(', ').filter(a => a);
-            autoresArray.forEach((autorNombre, index) => {
+            const autoresArray = libro.autores.filter(a => a);
+            autoresArray.forEach((autorNombre: string) => {
                 if (autorNombre === 'Autor desconocido') return;
                 if (!autorMap.has(autorNombre)) {
                     autorMap.set(autorNombre, {
@@ -240,13 +255,14 @@ export const FavoritosPage: React.FC = () => {
         const libroEnLista = librosFavoritos.find(l => l.id === libroId && l.estados.includes(nuevoEstado));
         if (libroEnLista) {
           // Remove from list if already there
-          await listaService.removeLibroDeLista(listaExistente.id, libroId.toString());
+          await listaService.removeLibroDeLista(listaExistente.id, libro.externalId || libroId.toString());
         } else {
           // Add to existing list
           await listaService.addLibroALista(listaExistente.id, {
-            id: libroId.toString(),
+            // Usar el externalId del libro, no el id interno.
+            id: libro.externalId || libroId.toString(),
             titulo: libro.titulo,
-            autores: libro.autor.split(', '),
+            autores: libro.autores,
             descripcion: null,
             imagen: libro.imagen,
             enlace: null,
@@ -266,9 +282,10 @@ export const FavoritosPage: React.FC = () => {
         setListas(updatedListas);
 
         await listaService.addLibroALista(nuevaLista.id, {
-          id: libroId.toString(),
+          // Usar el externalId del libro, no el id interno.
+          id: libro.externalId || libroId.toString(),
           titulo: libro.titulo,
-          autores: libro.autor.split(', '),
+          autores: libro.autores,
           descripcion: null,
           imagen: libro.imagen,
           enlace: null,
@@ -288,7 +305,7 @@ export const FavoritosPage: React.FC = () => {
       <Star
         key={i}
         className={`w-4 h-4 ${
-          i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          i < Math.round(rating) ? 'text-amber-400 fill-current' : 'text-gray-300'
         }`}
       />
     ));
@@ -487,7 +504,7 @@ export const FavoritosPage: React.FC = () => {
 
             {/* Libros Grid */}
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -523,58 +540,58 @@ export const FavoritosPage: React.FC = () => {
                   </div>
                   <div className="p-6">
                     <Link to={`/libro/${libro.externalId || libro.id}`} className="block group">
-                      <h3 className="font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight">
+                      <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight truncate">
                         {libro.titulo}
                       </h3>
                     </Link>
-                    {/* <p className="text-gray-600 text-sm mb-4 font-medium">por {libro.autor}</p>
-                    <div className="flex items-center justify-between mb-5">
-                      <div className="flex items-center space-x-1">
-                        {renderStars(libro.rating)}
-                        <span className="text-sm font-semibold text-gray-700 ml-1">{libro.rating}</span>
-                      </div>
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                        {libro.categoria}
-                      </span>
-                    </div> */}
+
+
+                    <div className="flex items-center text-sm text-gray-600 mb-3 font-medium">
+                      <User className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{libro.autores.join(', ')}</span>
+                    </div>
+                    
 
                     {/* Estado Buttons */}
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 mt-4">
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'leido')}
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
+                        title="Marcar como Leído"
+                        className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
                           libro.estados.includes('leido')
-                            ? 'bg-indigo-900 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                            ? 'bg-green-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        Leídos
+                        <CheckCircle className="w-5 h-5" />
                       </motion.button>
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'ver-mas-tarde')}
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
+                        title="Marcar para Ver más tarde"
+                        className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
                           libro.estados.includes('ver-mas-tarde')
-                            ? 'bg-indigo-800 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        Ver después
+                        <Eye className="w-5 h-5" />
                       </motion.button>
                       <motion.button
                         onClick={() => cambiarEstadoLibro(libro.id, 'pendiente')}
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all duration-300 ${
+                        title="Marcar como Pendiente"
+                        className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
                           libro.estados.includes('pendiente')
-                            ? 'bg-indigo-700 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md'
+                            ? 'bg-orange-600 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md'
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        Pendiente
+                        <Clock className="w-5 h-5" />
                       </motion.button>
                     </div>
                   </div>

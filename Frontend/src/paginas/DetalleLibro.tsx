@@ -481,7 +481,7 @@ const DetalleLibro: React.FC = () => {
     Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`${sizeClass} ${i < Math.floor(rating) ? "text-amber-400 fill-current" : "text-gray-300"}`}
+        className={`${sizeClass} ${i < Math.round(rating) ? "text-amber-400 fill-current" : "text-gray-300"}`}
       />
     ));
 

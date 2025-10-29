@@ -8,7 +8,6 @@ import { createSaga } from "../services/sagaService";
 import { getLibros } from "../services/libroService";
 import axios from "axios";
 import LibroCard from "../componentes/LibroCard";
-import { SearchBar } from "../componentes/SearchBar";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface Libro {
@@ -42,6 +41,9 @@ const CrearSagaAdmin: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchFilter, setSearchFilter] = useState<string>("todos");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(searchTerm);
+  const [finalQuery, setFinalQuery] = useState<string>("");
   const [searchSource, setSearchSource] = useState<'local' | 'google'>('local');
   const [filteredLibros, setFilteredLibros] = useState<Libro[]>([]);
   const [filteredGoogleBooks, setFilteredGoogleBooks] = useState<GoogleBook[]>([]);
@@ -73,6 +75,42 @@ const CrearSagaAdmin: React.FC = () => {
     }
   }, [isAuthorized]);
 
+  // Debounce searchTerm
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [searchTerm]);
+
+  // Build finalQuery
+  useEffect(() => {
+    let q = "";
+    if (debouncedSearchTerm && debouncedSearchTerm.length) {
+      switch (searchFilter) {
+        case "titulo":
+          q = `intitle:${debouncedSearchTerm}`;
+          break;
+        case "autor":
+          q = `inauthor:${debouncedSearchTerm}`;
+          break;
+        case "isbn":
+          q = `isbn:${debouncedSearchTerm}`;
+          break;
+        case "tema":
+          q = `subject:${debouncedSearchTerm}`;
+          break;
+        case "todos":
+        default:
+          q = debouncedSearchTerm;
+          break;
+      }
+    } else {
+      q = "subject:fantasy";
+    }
+    setFinalQuery(q);
+  }, [debouncedSearchTerm, searchFilter]);
+
   // Filter libros based on search
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -93,7 +131,7 @@ const CrearSagaAdmin: React.FC = () => {
         // Search Google Books
         const fetchGoogleBooks = async () => {
           try {
-            const response = await axios.get(`http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(searchTerm)}`);
+            const response = await axios.get(`http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
             const results = response.data;
             setGoogleBooks(results);
             setFilteredGoogleBooks(results);
@@ -107,7 +145,7 @@ const CrearSagaAdmin: React.FC = () => {
         fetchGoogleBooks();
       }
     }
-  }, [searchTerm, libros, searchSource]);
+  }, [searchTerm, libros, searchSource, finalQuery]);
 
   const handleLibroSelect = (libroId: number) => {
     const newSelected = new Set(selectedLibros);
@@ -263,12 +301,10 @@ const CrearSagaAdmin: React.FC = () => {
             >
               {loading ? (
                 <>
-                  <DotLottieReact
-                    src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
-                    loop
-                    autoplay
-                    style={{ width: 20, height: 20 }}
-                  />
+                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   Creando...
                 </>
               ) : (
@@ -318,28 +354,51 @@ const CrearSagaAdmin: React.FC = () => {
           className="mb-6"
         >
           <div className="max-w-2xl mx-auto">
-            <SearchBar
-              placeholder="Buscar libros por título, autor o saga..."
-              onSearch={(query) => setSearchTerm(query)}
-              database={[
-                ...libros.map(libro => ({
-                  id: libro.id.toString(),
-                  title: libro.titulo,
-                  type: 'book' as const,
-                  author: libro.autores?.join(', ') || 'Autor desconocido',
-                  image: libro.imagen || undefined
-                })),
-                ...googleBooks.map(book => ({
-                  id: book.id,
-                  title: book.titulo,
-                  type: 'book' as const,
-                  author: book.autores?.join(', ') || 'Autor desconocido',
-                  image: book.imagen || undefined
-                }))
-              ]}
-              className="mb-4"
-              disableSuggestions={true}
-            />
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="flex-shrink-0">
+                <select
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="px-4 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 font-medium min-w-[120px]"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="titulo">Título</option>
+                  <option value="autor">Autor</option>
+                  <option value="isbn">ISBN</option>
+                  <option value="tema">Tema</option>
+                </select>
+              </div>
+
+              <div className="w-full max-w-2xl relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                  <svg className="w-5 h-5 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+                    <circle cx="11" cy="11" r="6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Buscar libros (ej: tolkien, subject:fantasy, 978014...)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-12 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 placeholder-gray-400"
+                />
+
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    title="Limpiar búsqueda"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 transition-colors duration-200"
+                  >
+                    <svg className="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex gap-2 justify-center">
               <button
                 onClick={() => setSearchSource('local')}

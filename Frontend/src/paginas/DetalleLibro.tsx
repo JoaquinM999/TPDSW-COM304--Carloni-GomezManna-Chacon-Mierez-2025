@@ -158,6 +158,23 @@ const DetalleLibro: React.FC = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Función para detectar si el texto contiene etiquetas HTML
+  const hasHtmlTags = (text: string) => /<[^>]*>/.test(text);
+
+  // Función para obtener la longitud del texto plano (sin etiquetas HTML)
+  const plainTextLength = (text: string) => text.replace(/<[^>]*>/g, '').length;
+
+  // Función para renderizar la sinopsis
+  const renderSinopsis = (descripcion: string | null) => {
+    if (!descripcion) return null;
+    const isHtml = hasHtmlTags(descripcion);
+    if (isHtml) {
+      return <span dangerouslySetInnerHTML={{ __html: descripcion }} />;
+    } else {
+      return <span>{descripcion}</span>;
+    }
+  };
+
   const nombresDeListasFijas = ["Ver más tarde", "Pendiente", "Leídos"];
 
   // Filtra las listas del usuario para mostrar solo las que NO son fijas
@@ -911,9 +928,9 @@ const DetalleLibro: React.FC = () => {
             Sinopsis
           </h2>
           <p className={`text-gray-700 leading-relaxed ${!mostrarSinopsis ? "line-clamp-4" : ""}`}>
-            {libro.descripcion}
+            {renderSinopsis(libro.descripcion)}
           </p>
-          {libro.descripcion && libro.descripcion.length > 200 && (
+          {libro.descripcion && plainTextLength(libro.descripcion) > 200 && (
             <button
               onClick={() => setMostrarSinopsis(!mostrarSinopsis)}
               className="mt-3 text-indigo-600 flex items-center gap-1 hover:underline"

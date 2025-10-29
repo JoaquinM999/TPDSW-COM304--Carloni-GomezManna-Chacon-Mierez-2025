@@ -23,7 +23,7 @@ El sistema permitirá a los usuarios ingresar a la página web y observar difere
 Regularidad:
 |Req|Detalle|
 |:-|:-|
-|CRUD simple|1. CRUD de Usuario<br>2. CRUD de Editorial<br>3. CRUD de Categoría<br>4. CRUD de Autor|
+|CRUD simple|1. CRUD de Usuario<br>2. CRUD de Editorial - Se cambio a CRUD de Sagas<br>3. CRUD de Categoría - Se cambio a CRUD de Reseña<br>4. CRUD de Autor|
 |CRUD dependiente|1. Libro depende del Autor<br>2. Las Sagas dependen de los Libros.|
 |Listado + Detalle|1. Ingresando una categoría, se muestra un listado de libros coincidentes<br>2. Filtrado de libros por mayor cantidad de estrellas|
 |CUU/Epic|1. Listas de "Leído", "Ver más tarde", "Pendientes".<br>2. Reseñas de los Libros.|

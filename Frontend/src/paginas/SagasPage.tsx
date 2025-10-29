@@ -9,6 +9,15 @@ interface Saga {
   id: number;
   nombre: string;
   cantidadLibros: number;
+  libros: Array<{
+    id: number;
+    titulo: string;
+    autores: string[];
+    descripcion: string | null;
+    imagen: string | null;
+    enlace: string | null;
+    externalId: string | null;
+  }>;
 }
 
 const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-gray-700', 'bg-amber-600', 'bg-green-500', 'bg-indigo-500', 'bg-red-500'];
@@ -102,35 +111,59 @@ const SagasPage: React.FC = () => {
           initial="hidden"
           animate="visible"
         >
-          {sagas.map((saga, index) => (
-            <motion.div
-              key={saga.id}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
-              variants={cardVariants}
-              whileHover={{
-                scale: 1.03,
-                y: -8,
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className={`h-32 ${colors[index % colors.length]} flex items-center justify-center relative`}>
-                <BookOpen className="w-12 h-12 text-white" />
-              </div>
-              <div className="p-6">
-                <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{saga.nombre}</h3>
-                <p className="text-gray-600 text-sm mb-4 font-medium">{saga.cantidadLibros} libros</p>
-                <div className="flex items-center justify-between">
-                  <Link
-                    to={`/sagas/${saga.id}`}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    Explorar
-                  </Link>
+          {sagas.map((saga, index) => {
+            const firstBookWithImage = saga.libros.find(libro => libro.imagen);
+            return (
+              <motion.div
+                key={saga.id}
+                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                variants={cardVariants}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {firstBookWithImage ? (
+                  <div className="h-48 relative overflow-hidden">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${firstBookWithImage.imagen})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(8px)',
+                      }}
+                    />
+                    <div className="relative z-10 h-full flex items-center justify-center">
+                      <img
+                        src={firstBookWithImage.imagen!}
+                        alt={firstBookWithImage.titulo}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`h-48 ${colors[index % colors.length]} flex items-center justify-center relative`}>
+                    <BookOpen className="w-12 h-12 text-white" />
+                  </div>
+                )}
+                <div className="p-6">
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{saga.nombre}</h3>
+                  <p className="text-gray-600 text-sm mb-4 font-medium">{saga.cantidadLibros} libros</p>
+                  <div className="flex items-center justify-between">
+                    <Link
+                      to={`/sagas/${saga.id}`}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      Explorar
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </div>

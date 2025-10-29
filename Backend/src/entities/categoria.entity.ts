@@ -15,6 +15,9 @@ export class Categoria {
   @Property({ nullable: true })
   descripcion?: string;
 
+  @Property({ nullable: true })
+  imagen?: string;
+
   @OneToMany(() => Libro, libro => libro.categoria, { cascade: [Cascade.PERSIST] })
   libros = new Collection<Libro>(this);
 

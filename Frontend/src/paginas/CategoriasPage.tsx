@@ -7,22 +7,23 @@ import { getCategorias } from '../services/categoriaService';
 interface Categoria {
   id: number;
   nombre: string;
-  descripcion?: string; 
+  descripcion?: string;
+  imagen?: string;
 }
 
 const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-gray-700', 'bg-amber-600', 'bg-green-500', 'bg-indigo-500', 'bg-red-500'];
 
 const mockCategorias: Categoria[] = [
-  { id: -1, nombre: 'Fantasy',  descripcion: 'Narrativas que incluyen magia, criaturas míticas y mundos imaginarios.' },
-  { id: -2, nombre: 'Fiction', descripcion: 'Historias basadas en futuros imaginados, tecnología avanzada y conceptos científicos.' },
-  { id: -3, nombre: 'Mystery', descripcion: 'Relatos de crimen, investigación y tramas que mantienen la intriga hasta el final.' },
-  { id: -4, nombre: 'Romance',  descripcion: 'Historias centradas en relaciones amorosas y su desarrollo.' },
-  { id: -5, nombre: 'Comics & Graphic Novels', descripcion: 'Narrativa contada a través de viñetas e ilustraciones, incluyendo manga.' },
-  { id: -6, nombre: 'History', descripcion: 'Libros de no ficción que exploran eventos, épocas y figuras del pasado.' },
-  { id: -7, nombre: 'Self-Help', descripcion: 'Textos enfocados en el desarrollo personal, el bienestar psicológico y la salud.' },
-  { id: -8, nombre: 'Technology', descripcion: 'Guías, manuales y análisis sobre software, programación y tecnología.' },
-  { id: -9, nombre: 'Cooking', descripcion: 'Libros de recetas y textos sobre las artes culinarias y la gastronomía.' },
-  { id: -10, nombre: 'Economics', descripcion: 'Libros sobre finanzas, gestión, emprendimiento y teoría económica.' },
+  { id: -1, nombre: 'Fantasy', descripcion: 'Narrativas que incluyen magia, criaturas míticas y mundos imaginarios.', imagen: 'https://i0.wp.com/xn--oo-yjab.cl/wp-content/uploads/2020/06/oso-polar-definicion-genero-de-la-fantasia.jpg?fit=980%2C589&ssl=1' },
+  { id: -2, nombre: 'Fiction', descripcion: 'Historias basadas en futuros imaginados, tecnología avanzada y conceptos científicos.', imagen: 'https://yosoytuprofe.20minutos.es/wp-content/uploads/2022/11/peliculas-de-ciencia-ficcion.png' },
+  { id: -3, nombre: 'Mystery', descripcion: 'Relatos de crimen, investigación y tramas que mantienen la intriga hasta el final.', imagen: 'https://i.blogs.es/9ad7ec/a-haunting-in-venice-2023-dolby-poster-z7-2560x1700/500_333.jpeg' },
+  { id: -4, nombre: 'Romance', descripcion: 'Historias centradas en relaciones amorosas y su desarrollo.', imagen: 'https://alfayomega.es/wp-content/uploads/2019/01/TriunfoAmor1.jpg' },
+  { id: -5, nombre: 'Comics & Graphic Novels', descripcion: 'Narrativa contada a través de viñetas e ilustraciones, incluyendo manga.', imagen: 'https://i.blogs.es/fded1e/erik-mclean-27kcu7bxgei-unsplash/500_333.webp' },
+  { id: -6, nombre: 'History', descripcion: 'Libros de no ficción que exploran eventos, épocas y figuras del pasado.', imagen: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/The_Intervention_of_the_Sabine_Women.jpg/500px-The_Intervention_of_the_Sabine_Women.jpg' },
+  { id: -7, nombre: 'Self-Help', descripcion: 'Textos enfocados en el desarrollo personal, el bienestar psicológico y la salud.', imagen: 'https://s3.abcstatics.com/media/bienestar/2021/09/25/contra-la-autoayuda-k9cG--1248x698@abc.jpg' },
+  { id: -8, nombre: 'Technology', descripcion: 'Guías, manuales y análisis sobre software, programación y tecnología.', imagen: 'https://media.licdn.com/dms/image/v2/C4D12AQHbZlpFTZ0JOQ/article-cover_image-shrink_600_2000/article-cover_image-shrink_600_2000/0/1618508672269?e=2147483647&v=beta&t=J_BbUqPwVDGgiP8PfXix6kNrxGAn7HkdJPJMbzfuqn0' },
+  { id: -9, nombre: 'Cooking', descripcion: 'Libros de recetas y textos sobre las artes culinarias y la gastronomía.', imagen: 'https://bansalgroup-assets.s3.ap-south-1.amazonaws.com/PRD/BansalOilAndFoods/2022/12/scale.jpg' },
+  { id: -10, nombre: 'Economics', descripcion: 'Libros sobre finanzas, gestión, emprendimiento y teoría económica.', imagen: 'https://media.ambito.com/p/67b2bd94651dd61779a00fc63635e326/adjuntos/239/imagenes/039/809/0039809734/1200x675/smart/economia-del-conocimientojpg.jpg' },
 ];
 
 export const CategoriasPage: React.FC = () => {
@@ -102,8 +103,23 @@ export const CategoriasPage: React.FC = () => {
                 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className={`h-32 ${colors[index % colors.length]} flex items-center justify-center relative`}>
-                  <Tag className="w-12 h-12 text-white" />
+                <div className="h-56 relative overflow-hidden">
+                  <img
+                    src={categoria.imagen || ''}
+                    alt={categoria.nombre}
+                    className="w-full h-full object-cover"
+                    onLoad={() => console.log(`Imagen cargada para ${categoria.nombre}: ${categoria.imagen}`)}
+                    onError={(e) => {
+                      console.error(`Error cargando imagen para ${categoria.nombre}: ${categoria.imagen}`);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className={`${categoria.imagen ? 'hidden' : 'flex'} ${colors[index % colors.length]} items-center justify-center h-full absolute inset-0`}>
+                    <Tag className="w-12 h-12 text-white" />
+                  </div>
                 </div>
                 <div className="p-6 flex-grow flex flex-col justify-between">
                   <div>

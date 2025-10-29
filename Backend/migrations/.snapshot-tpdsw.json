@@ -123,6 +123,16 @@
           "length": 255,
           "mappedType": "string"
         },
+        "imagen": {
+          "name": "imagen",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
         "created_at": {
           "name": "created_at",
           "type": "date",
@@ -419,13 +429,13 @@
         },
         "imagen": {
           "name": "imagen",
-          "type": "varchar(255)",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 255,
-          "mappedType": "string"
+          "length": null,
+          "mappedType": "text"
         },
         "enlace": {
           "name": "enlace",

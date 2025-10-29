@@ -389,7 +389,7 @@ export default function TodosLosLibros() {
           </>
         )}
 
-        {/* Panel debug en acordeón */}
+        {/* Panel debug en acordeón - comentado para no mostrar
         <details className="mt-6 max-w-5xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100">
           <summary className="cursor-pointer p-6 text-lg font-semibold text-gray-800 hover:text-cyan-600 transition-colors duration-200 flex items-center justify-between">
             <span>🔧 Panel de Debug</span>
@@ -429,6 +429,7 @@ export default function TodosLosLibros() {
             </div>
           </div>
         </details>
+        */}
       </main>
     </div>
   );

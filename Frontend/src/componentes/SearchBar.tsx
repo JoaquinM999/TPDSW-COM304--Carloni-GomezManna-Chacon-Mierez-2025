@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Book, User, X, BookOpen } from 'lucide-react';
+import { Search, Book, User, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchItem {
@@ -29,13 +29,10 @@ const mockDatabase: SearchItem[] = [
   { id: '6', title: 'Gabriel García Márquez', type: 'author', books: 15, year: 1927 },
   { id: '7', title: 'Isabel Allende', type: 'author', books: 23, year: 1942 },
   { id: '8', title: 'Julio Cortázar', type: 'author', books: 18, year: 1914 },
-  { id: '9', title: 'Harry Potter', type: 'saga', author: 'J.K. Rowling', books: 7 },
-  { id: '10', title: 'Crónicas de Narnia', type: 'saga', author: 'C.S. Lewis', books: 7 },
-  { id: '11', title: 'El Señor de los Anillos', type: 'saga', author: 'J.R.R. Tolkien', books: 3 },
 ];
 
 export const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = 'Buscar libros, autores, sagas...',
+  placeholder = 'Buscar libros, autores...',
   onSearch,
   database = mockDatabase,
   className = '',
@@ -177,16 +174,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <Book className="w-5 h-5 text-blue-600" />
                   ) : item.type === 'author' ? (
                     <User className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <BookOpen className="w-5 h-5 text-purple-600" />
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{item.title}</p>
                   <p className="text-sm text-gray-500 truncate">
                     {item.type === 'book' && `por ${item.author}`}
                     {item.type === 'author' && `${item.books} libros`}
-                    {item.type === 'saga' && `${item.books} libros por ${item.author}`}
                     {item.year && item.type !== 'saga' && ` (${item.year})`}
                   </p>
                 </div>

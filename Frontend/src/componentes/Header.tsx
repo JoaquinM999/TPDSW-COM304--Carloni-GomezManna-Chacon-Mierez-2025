@@ -50,16 +50,6 @@ const dropdownItems = {
     { name: "Más populares", href: "/libros/populares" },
     { name: "Recomendados", href: "/libros/recomendados" },
   ],
-  Autores: [
-    { name: "Autores destacados", href: "/autores/destacados" },
-    { name: "Nuevos autores", href: "/autores/nuevos" },
-    { name: "Autores por género", href: "/autores/generos" },
-  ],
-  Sagas: [
-    { name: "Todas las sagas", href: "/sagas" },
-    { name: "Sagas populares", href: "/sagas/populares" },
-    { name: "Nuevas sagas", href: "/sagas/nuevas" },
-  ],
   Configuración: [
     { name: "Preferencias", href: "/configuracion/preferencias" },
     { name: "Cuenta", href: "/configuracion/cuenta" },

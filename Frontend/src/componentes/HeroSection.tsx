@@ -120,8 +120,8 @@ export const HeroSection: React.FC = () => {
             className="mb-16 max-w-xl mx-auto lg:mx-0"
           >
             <SearchBar
-              placeholder="Buscar libros, autores, sagas..."
-              aria-label="Buscar libros, autores, sagas"
+              placeholder="Buscar libros, autores..."
+              aria-label="Buscar libros, autores"
               className="shadow-lg"
             />
           </motion.div>

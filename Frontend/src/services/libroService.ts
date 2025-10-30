@@ -37,3 +37,12 @@ export const searchLibros = async (query: string) => {
   }
   return await response.json();
 };
+
+// ✅ Obtener nuevos lanzamientos (últimos 30 días)
+export const getNuevosLanzamientos = async (limit: number = 20) => {
+  const response = await fetch(`http://localhost:3000/api/libro/nuevos?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error('Error al obtener nuevos lanzamientos');
+  }
+  return await response.json();
+};

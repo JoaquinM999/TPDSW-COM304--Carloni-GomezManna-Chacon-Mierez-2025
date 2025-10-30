@@ -297,3 +297,76 @@ export const getListasForLibro = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+// =======================
+// Obtener libros recientes (últimos 30 días)
+// =======================
+export const getNuevosLanzamientos = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    // Fecha de hace 30 días
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Obtener libros creados en los últimos 30 días
+    const libros = await em.find(
+      Libro,
+      { createdAt: { $gte: thirtyDaysAgo } },
+      {
+        populate: ['autor', 'categoria', 'editorial', 'resenas'],
+        orderBy: { createdAt: 'DESC' },
+        limit,
+      }
+    );
+
+    // Transformar libros con información completa
+    const librosTransformados = await Promise.all(libros.map(async (libro) => {
+      let autores = ['Autor desconocido'];
+
+      if (libro.autor) {
+        autores = [`${libro.autor.nombre} ${libro.autor.apellido}`.trim()];
+      } else if (libro.externalId) {
+        try {
+          const googleBook = await getBookById(libro.externalId);
+          if (googleBook && googleBook.autores && googleBook.autores.length > 0) {
+            autores = googleBook.autores;
+          }
+        } catch (error) {
+          console.error('Error fetching author from Google Books:', error);
+        }
+      }
+
+      // Calcular rating promedio
+      let avgRating = 0;
+      if (libro.resenas.isInitialized() && libro.resenas.length > 0) {
+        const resenasArray = libro.resenas.getItems();
+        const sum = resenasArray.reduce((s, r) => s + (r?.estrellas ?? 0), 0);
+        avgRating = sum / resenasArray.length;
+      }
+
+      return {
+        id: libro.externalId || libro.id.toString(),
+        titulo: libro.nombre,
+        autores,
+        imagen: libro.imagen,
+        descripcion: libro.sinopsis || null,
+        averageRating: avgRating,
+        categoria: libro.categoria ? libro.categoria.nombre : null,
+        fechaPublicacion: libro.createdAt,
+        esNuevo: true,
+      };
+    }));
+
+    console.log(`📚 Nuevos lanzamientos: ${librosTransformados.length} libros encontrados`);
+    res.json({
+      total: librosTransformados.length,
+      libros: librosTransformados,
+    });
+  } catch (error) {
+    console.error('❌ Error al obtener nuevos lanzamientos:', error);
+    res.status(500).json({ error: 'Error al obtener nuevos lanzamientos' });
+  }
+};

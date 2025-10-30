@@ -23,11 +23,22 @@ export class ModerationService {
   constructor() {
     this.sentiment = new Sentiment();
     
-    // Lista simple de palabras ofensivas en español e inglés
+    // Lista expandida de palabras ofensivas en español e inglés
     this.profanityWords = new Set([
-      'idiota', 'estúpido', 'tonto', 'basura', 'horrible', 'pésimo', 'asqueroso',
-      'mierda', 'pendejo', 'cabron', 'carajo', 'puta', 'puto',
-      'shit', 'fuck', 'damn', 'ass', 'bitch', 'stupid', 'idiot', 'dumb'
+      // Español - ofensas directas
+      'idiota', 'estúpido', 'estupido', 'tonto', 'imbecil', 'imbécil',
+      'mierda', 'mier*a', 'pendejo', 'cabron', 'cabrón', 'carajo',
+      'puta', 'puto', 'joder', 'coño', 'gilipollas', 'mamón', 'mamon',
+      'chingar', 'verga', 'pinche', 'culero', 'huevón', 'huevon',
+      // Español - términos despectivos
+      'basura', 'porquería', 'porqueria', 'caca', 'puto asco',
+      // Inglés - ofensas directas
+      'shit', 'fuck', 'fucking', 'fuckin', 'damn', 'ass', 'asshole',
+      'bitch', 'bastard', 'cunt', 'dick', 'cock', 'pussy',
+      // Inglés - términos despectivos
+      'stupid', 'idiot', 'dumb', 'moron', 'retard', 'loser', 'trash',
+      // Variaciones con símbolos
+      'sh1t', 'f*ck', 'b1tch', 'a$$', 'sh!t'
     ]);
   }
 
@@ -35,9 +46,23 @@ export class ModerationService {
    * Verifica si el texto contiene palabras ofensivas
    */
   private containsProfanity(text: string): boolean {
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remover acentos
+    
+    // Normalizar espacios y símbolos comunes usados para evasión
+    const normalizedText = lowerText
+      .replace(/[*@#$%]/g, '') // Remover símbolos de evasión
+      .replace(/\s+/g, ' ')    // Normalizar espacios
+      .replace(/[0o]/g, 'o')   // Normalizar números usados como letras
+      .replace(/[1i]/g, 'i')
+      .replace(/[3e]/g, 'e')
+      .replace(/[4a]/g, 'a')
+      .replace(/[5s]/g, 's');
+    
     for (const word of this.profanityWords) {
-      if (lowerText.includes(word)) {
+      // Buscar palabra completa (no dentro de otras palabras)
+      const wordPattern = new RegExp(`\\b${word}\\b`, 'i');
+      if (wordPattern.test(normalizedText) || lowerText.includes(word)) {
         return true;
       }
     }
@@ -110,27 +135,34 @@ export class ModerationService {
     // Calcular score final (0-100)
     let score = 100;
     
-    if (flags.profanity) score -= 40;
-    if (flags.spam) score -= 30;
-    if (flags.negativeSentiment) score -= 15;
-    if (flags.toxicity) score -= 35;
+    // Penalizaciones más severas
+    if (flags.profanity) score -= 50;  // Mayor penalización por profanidad
+    if (flags.spam) score -= 35;       // Mayor penalización por spam
+    if (flags.negativeSentiment) score -= 20;
+    if (flags.toxicity) score -= 45;   // Mayor penalización por toxicidad
     
-    // Bonus por texto constructivo
+    // Penalización extra si hay múltiples flags
+    const flagCount = Object.values(flags).filter(f => f).length;
+    if (flagCount >= 2) score -= 15;   // Penalización adicional por múltiples problemas
+    if (flagCount >= 3) score -= 25;   // Penalización severa si tiene 3+ problemas
+    
+    // Bonus por texto constructivo y bien estructurado
     if (text.length > 50 && text.length < 1000) score += 10;
-    if (sentimentScore > 0) score += 5;
+    if (sentimentScore > 0 && !flags.negativeSentiment) score += 5;
+    if (text.length > 100 && !flags.spam) score += 5; // Bonus por reseñas detalladas
 
     score = Math.max(0, Math.min(100, score));
 
     // Decisión de auto-rechazo: contenido extremadamente problemático
-    // Score muy bajo (<20) O múltiples flags críticos simultáneos
+    // Score muy bajo (<15) O múltiples flags críticos simultáneos
     const shouldAutoReject = 
-      score < 20 || 
+      score < 15 || 
       (flags.profanity && flags.toxicity) || 
-      (flags.spam && flags.profanity) ||
-      (flags.toxicity && sentimentScore < -8);
+      (flags.spam && flags.profanity && flags.toxicity) ||
+      (flags.toxicity && flags.profanity && sentimentScore < -8);
 
-    // Decisión final: aprobar si score >= 60 y no hay flags críticos
-    const isApproved = score >= 60 && !flags.profanity && !flags.toxicity;
+    // Decisión final: aprobar si score >= 70 y no hay flags críticos de profanidad o toxicidad
+    const isApproved = score >= 70 && !flags.profanity && !flags.toxicity;
 
     return {
       isApproved,
@@ -199,12 +231,17 @@ export class ModerationService {
    */
   private hasToxicKeywords(text: string): boolean {
     const toxicPatterns = [
-      /\b(odio|odiar)\b/gi,
-      /\b(asco|asqueroso)\b/gi,
-      /\b(horrible|horroroso)\b/gi,
-      /\b(porquería|basura)\b/gi,
-      /\b(pésimo|terrible)\b/gi,
+      /\b(odio|odiar|odioso)\b/gi,
+      /\b(asco|asqueroso|repugnante)\b/gi,
+      /\b(horrible|horroroso|horrendo)\b/gi,
+      /\b(porquería|basura|desperdicio)\b/gi,
+      /\b(pésimo|terrible|espantoso|deplorable)\b/gi,
       /\bmier[dz]a\b/gi,
+      /\b(maldito|maldita|condenado)\b/gi,
+      /\b(inútil|incompetente|mediocre)\b/gi,
+      /\b(apesta|huele mal|da asco)\b/gi,
+      /\b(no sirve|no vale nada|vale verga)\b/gi,
+      /\b(una mierda|una basura|una porquería)\b/gi,
     ];
 
     let toxicCount = 0;
@@ -212,8 +249,8 @@ export class ModerationService {
       if (pattern.test(text)) toxicCount++;
     }
 
-    // Si tiene 3 o más palabras tóxicas, flag
-    return toxicCount >= 3;
+    // Si tiene 2 o más palabras tóxicas, flag (más estricto)
+    return toxicCount >= 2;
   }
 
   /**

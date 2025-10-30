@@ -84,6 +84,16 @@
   - [x] Mensaje de error claro para el usuario
   - [x] Documentación completa en `SISTEMA_AUTO_RECHAZO.md`
 
+#### Mejoras Implementadas ✅ (30/10/2025)
+- [x] **Optimización del sistema de moderación automática**
+  - [x] Ajustados umbrales: auto-aprobación 70+, auto-rechazo <30
+  - [x] Lista expandida de palabras ofensivas (35+ español, 20+ inglés)
+  - [x] Detección mejorada de evasión de filtros (mi3rd4 → mierda, etc.)
+  - [x] Sistema de penalizaciones más severo (-50 profanidad, -45 toxicidad)
+  - [x] Detección de toxicidad más agresiva (2+ palabras vs 3+ antes)
+  - [x] Penalización adicional por múltiples flags (-15/-25 puntos)
+  - [x] Documentación completa en `MEJORAS_MODERACION.md`
+
 #### Pendientes (Mejoras Opcionales)
 - [ ] Dashboard de estadísticas de moderación
 - [ ] Sistema de apelaciones para reseñas rechazadas
@@ -93,7 +103,7 @@
 
 ---
 
-### 2. Sistema de Reacciones a Reseñas ✅ COMPLETADO
+### 2. Sistema de Reacciones a Reseñas ✅ COMPLETADO (30/10/2025)
 
 - [x] Entidad Reaccion implementada
 - [x] Controlador de reacciones (`reaccion.controller.ts`)
@@ -108,18 +118,36 @@
 - [x] `DELETE /api/reacciones/:usuarioId/:resenaId` - Eliminar reacción
 - [x] Validación de tipo de reacción en backend
 
-#### Mejoras Pendientes (Alta Prioridad)
-- [ ] **Contador de reacciones en reseñas**
-  - [ ] Agregar campos calculados: `totalLikes`, `totalDislikes`, `totalCorazon`
-  - [ ] Query optimizada con COUNT agrupado por tipo
-  - [ ] Mostrar contadores en frontend junto a cada reseña
-  - [ ] Actualizar contador en tiempo real al reaccionar
+#### Sistema de Contadores ✅ COMPLETADO (30/10/2025)
+- [x] **Backend: Contador de reacciones en reseñas**
+  - [x] Campo `reaccionesCount` agregado dinámicamente en respuestas
+  - [x] Contadores desglosados: `likes`, `dislikes`, `corazones`, `total`
+  - [x] Implementado en `getResenas` y `getResenaById`
+  - [x] Contadores incluidos en respuestas anidadas
 
-- [ ] **Ordenar reseñas por popularidad**
-  - [ ] Endpoint `/api/resenas/populares?libroId=X`
-  - [ ] Ordenar por total de reacciones positivas
-  - [ ] Implementar en LibroDetallePage
-  - [ ] Opción de toggle: "Más recientes" / "Más populares"
+- [x] **Backend: Ordenar reseñas por popularidad**
+  - [x] Endpoint `/api/resenas/populares?libroId=X&limit=10` implementado
+  - [x] Algoritmo de popularidad: likes + (corazones × 2) - dislikes
+  - [x] Ordenamiento por score de popularidad descendente
+  - [x] Servicio frontend `obtenerResenasPopulares()` creado
+
+- [x] **Frontend: Visualización de contadores** ✅ COMPLETADO (30/10/2025)
+  - [x] Componente `ReaccionContadores` creado con iconos de lucide-react
+  - [x] Mostrar contadores en reseñas principales y respuestas
+  - [x] Estilos con colores: verde (likes), rojo (corazones), gris (dislikes)
+  - [x] Integrado en `DetalleLibro.tsx`
+
+- [x] **Frontend: Toggle de ordenamiento** ✅ COMPLETADO (30/10/2025)
+  - [x] Botón "Más populares" agregado al toggle
+  - [x] useEffect para recargar reseñas según orden seleccionado
+  - [x] Consumo de endpoint `/api/resenas/populares` cuando se selecciona
+  - [x] Estados: "Más recientes", "Mejor valoradas", "Más populares"
+
+- [x] **Frontend: Actualización en tiempo real** ✅ COMPLETADO (30/10/2025)
+  - [x] Función `handleToggleLike` actualizada para modificar contadores
+  - [x] Actualización optimista de likes en reaccionesCount
+  - [x] Actualización en reseñas principales y respuestas anidadas
+  - [x] Rollback en caso de error en la API
 
 ---
 
@@ -420,15 +448,21 @@
 
 ## 📋 Priorización (Actualizada 30/10/2025)
 
-### ✅ COMPLETADOS (Sesión actual)
+### ✅ COMPLETADOS (Sesión actual - 30/10/2025)
 1. ~~Sistema de moderación automática de reseñas~~ - ✅ COMPLETADO
 2. ~~Mejorar sistema de recomendaciones~~ - ✅ COMPLETADO
 3. ~~Implementar feed de actividades de seguidos~~ - ✅ COMPLETADO
 4. ~~Caché estratégico Redis (recomendaciones + feed)~~ - ✅ COMPLETADO
+5. ~~Contadores de reacciones en reseñas (backend)~~ - ✅ COMPLETADO
+6. ~~Endpoint de reseñas populares por reacciones~~ - ✅ COMPLETADO
+7. ~~Optimización sistema de moderación (umbrales, detección, penalizaciones)~~ - ✅ COMPLETADO
+8. ~~Frontend de contadores de reacciones~~ - ✅ COMPLETADO (30/10/2025)
+   - ~~Componente ReaccionContadores con iconos~~
+   - ~~Toggle "Más recientes/Mejor valoradas/Más populares"~~
+   - ~~Actualización en tiempo real de contadores~~
 
 ### 🔴 ALTA PRIORIDAD (Para aprobar - Siguiente sprint)
-1. **Contadores de reacciones visibles** - Agregar `reaccionesCount` a Resena
-2. **Frontend de sistemas nuevos** - Feed, recomendaciones, moderación
+1. **Frontend de sistemas nuevos** - Feed completo, página de recomendaciones
 3. **Validación completa de datos** - class-validator en todos los endpoints
 4. **Tests básicos** - Jest + Supertest en endpoints críticos
 5. **Documentación de API** - Swagger o Postman collection completa
@@ -457,7 +491,7 @@
 - [x] Recomendaciones personalizadas funcionan ✅
 - [x] Feed de seguidos implementado ✅
 - [x] Reacciones a reseñas (endpoints) ✅
-- [ ] **Contadores de reacciones en respuesta** - PENDIENTE
+- [x] **Contadores de reacciones en respuesta** - ✅ COMPLETADO
 - [ ] Validación con class-validator
 - [ ] Tests unitarios básicos
 
@@ -467,9 +501,10 @@
 - [x] Sistema de listas (leído, pendiente)
 - [x] Reseñas CRUD básico
 - [x] Sistema de seguimiento
+- [x] **Contadores de reacciones en reseñas** - ✅ COMPLETADO (30/10/2025)
+- [x] **Toggle de ordenamiento (recientes/valoradas/populares)** - ✅ COMPLETADO (30/10/2025)
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] **Página de recomendaciones** - PENDIENTE
-- [ ] **Contadores visibles en reseñas** - PENDIENTE
 - [ ] Notificaciones visuales
 
 ### Calidad

@@ -171,3 +171,28 @@ export const crearRespuesta = async (
 
   return response.json();
 };
+
+/**
+ * 🔹 Obtiene reseñas populares (ordenadas por cantidad de reacciones).
+ */
+export const obtenerResenasPopulares = async (libroId?: string, limit: number = 10) => {
+  const params = new URLSearchParams();
+  if (libroId) params.append('libroId', libroId);
+  params.append('limit', limit.toString());
+
+  const response = await fetchWithRefresh(`${API_URL}s/populares?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('❌ Error al obtener reseñas populares:', error);
+    throw new Error('Error al obtener reseñas populares');
+  }
+
+  return response.json();
+};

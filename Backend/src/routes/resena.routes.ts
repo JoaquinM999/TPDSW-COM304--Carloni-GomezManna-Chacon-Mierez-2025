@@ -6,6 +6,7 @@ import { requireAdmin } from '../middleware/admin.middleware';
 const router = Router();
 
 router.get('/', optionalAuthenticateJWT, resenaController.getResenas);
+router.get('/populares', optionalAuthenticateJWT, resenaController.getResenasPopulares); // Debe ir ANTES de /:id
 router.get('/:id', resenaController.getResenaById);
 router.post('/', authenticateJWT, resenaController.createResena);
 router.put('/:id', authenticateJWT, resenaController.updateResena);

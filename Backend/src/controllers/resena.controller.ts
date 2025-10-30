@@ -75,6 +75,22 @@ export const getResenas = async (req: Request, res: Response) => {
       orderBy: { createdAt: 'DESC' },
     });
 
+    // 📊 Agregar contadores de reacciones a cada reseña
+    const agregarContadores = (resena: Resena) => {
+      const reacciones = resena.reacciones.getItems();
+      (resena as any).reaccionesCount = {
+        likes: reacciones.filter(r => r.tipo === 'like').length,
+        dislikes: reacciones.filter(r => r.tipo === 'dislike').length,
+        corazones: reacciones.filter(r => r.tipo === 'corazon').length,
+        total: reacciones.length
+      };
+    };
+    
+    resenas.forEach(r => {
+      agregarContadores(r);
+      r.respuestas?.getItems().forEach(agregarContadores);
+    });
+
     // Special handling for pending reviews (admin moderation): return flat array without pagination or top-level filtering
     if (estado === 'PENDING' || where.estado?.$in?.includes(EstadoResena.PENDING)) {
       console.log('🔍 getResenas => moderation reviews:', resenas.length);
@@ -154,8 +170,18 @@ export const getResenaById = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario', 'libro'] });
+    const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario', 'libro', 'reacciones'] });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
+    
+    // 📊 Agregar contadores de reacciones
+    const reacciones = resena.reacciones.getItems();
+    (resena as any).reaccionesCount = {
+      likes: reacciones.filter(r => r.tipo === 'like').length,
+      dislikes: reacciones.filter(r => r.tipo === 'dislike').length,
+      corazones: reacciones.filter(r => r.tipo === 'corazon').length,
+      total: reacciones.length
+    };
+    
     res.json(resena);
   } catch (error) {
     console.error('Error en getResenaById:', error);
@@ -251,18 +277,18 @@ export const createResena = async (req: Request, res: Response) => {
 
     // Determinar estado inicial basado en moderación
     let estadoInicial = EstadoResena.PENDING;
-    if (moderationResult.isApproved && moderationResult.score >= 80) {
-      // Auto-aprobar reseñas con score alto
+    if (moderationResult.isApproved && moderationResult.score >= 70) {
+      // Auto-aprobar reseñas con score alto y sin flags críticos
       estadoInicial = EstadoResena.APPROVED;
-      console.log('✅ Reseña auto-aprobada');
-    } else if (!moderationResult.isApproved || moderationResult.score < 40) {
-      // Auto-rechazar reseñas con score muy bajo (pero no tan bajo como para bloquear)
+      console.log('✅ Reseña auto-aprobada con score:', moderationResult.score);
+    } else if (moderationResult.score < 30 || moderationResult.flags.profanity || moderationResult.flags.toxicity) {
+      // Auto-flagged si: score muy bajo O contiene profanidad O toxicidad
       estadoInicial = EstadoResena.FLAGGED;
       console.log('⚠️ Reseña auto-flagged por:', moderationResult.reasons.join(', '));
     } else {
-      // Enviar a moderación manual si está en zona gris (40-79)
+      // Enviar a moderación manual si está en zona gris (30-69) sin flags críticos
       estadoInicial = EstadoResena.PENDING;
-      console.log('⏳ Reseña enviada a moderación manual');
+      console.log('⏳ Reseña enviada a moderación manual - Score:', moderationResult.score);
     }
 
     // Crear la reseña
@@ -587,5 +613,70 @@ export const analyzeResena = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('❌ Error en analyzeResena:', error);
     res.status(500).json({ error: 'Error al analizar la reseña' });
+  }
+};
+
+// =======================
+// Obtener reseñas populares (ordenadas por reacciones)
+// =======================
+export const getResenasPopulares = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const { libroId, limit = 10 } = req.query;
+
+    const where: any = {
+      deletedAt: null,
+      estado: EstadoResena.APPROVED
+    };
+
+    if (libroId) {
+      where.libro = { externalId: libroId.toString() };
+    }
+
+    // Obtener todas las reseñas con sus reacciones
+    const resenas = await em.find(Resena, where, {
+      populate: ['usuario', 'libro', 'reacciones', 'respuestas'],
+      orderBy: { createdAt: 'DESC' },
+    });
+
+    // Calcular popularidad y agregar contadores
+    const resenasConPopularidad = resenas.map(resena => {
+      const reacciones = resena.reacciones.getItems();
+      const likes = reacciones.filter(r => r.tipo === 'like').length;
+      const corazones = reacciones.filter(r => r.tipo === 'corazon').length;
+      const dislikes = reacciones.filter(r => r.tipo === 'dislike').length;
+      
+      // Score de popularidad: likes + corazones*2 - dislikes
+      const popularityScore = likes + (corazones * 2) - dislikes;
+      
+      return {
+        ...resena,
+        reaccionesCount: {
+          likes,
+          dislikes,
+          corazones,
+          total: reacciones.length
+        },
+        popularityScore
+      };
+    });
+
+    // Ordenar por popularidad
+    resenasConPopularidad.sort((a, b) => b.popularityScore - a.popularityScore);
+
+    // Limitar resultados
+    const limitNum = Math.min(parseInt(limit.toString()), 50);
+    const topResenas = resenasConPopularidad.slice(0, limitNum);
+
+    console.log(`📊 Reseñas populares: ${topResenas.length} resultados`);
+    res.json({
+      total: resenas.length,
+      showing: topResenas.length,
+      reviews: topResenas
+    });
+  } catch (error) {
+    console.error('❌ Error en getResenasPopulares:', error);
+    res.status(500).json({ error: 'Error al obtener reseñas populares' });
   }
 };

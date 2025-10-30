@@ -545,6 +545,13 @@
   - [x] Grid de libros con badges "NUEVO", rating, categoría y fecha
   - [x] Estados de carga y error manejados correctamente
   - [x] Click en libro navega al detalle
+- [x] **Mejoras visuales en LibroCard** - ✅ COMPLETADO (30/10/2025)
+  - [x] Imágenes más grandes (h-80 vs h-64) con object-cover
+  - [x] Efecto hover con scale en imagen
+  - [x] Badge de rating siempre visible con gradiente amarillo-naranja
+  - [x] Placeholder mejorado con ícono SVG cuando no hay portada
+  - [x] Mejor aprovechamiento del espacio de las imágenes
+  - [x] Diseño más limpio eliminando overlay complejo
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] **Página de recomendaciones** - PENDIENTE
 - [ ] Notificaciones visuales

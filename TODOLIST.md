@@ -309,6 +309,20 @@
   - [x] Entidad ContenidoLista con timestamps
   - [x] Verificación de existencia antes de agregar
 
+#### Página de Favoritos - Mejoras Implementadas ✅ (30/10/2025)
+
+- [x] **Funcionalidad de categorías mejorada**
+  - [x] Tarjetas de categorías clickeables completas (no solo botón)
+  - [x] Redirección correcta a `/libros?filtro=tema&termino=` 
+  - [x] Texto mejorado: "Ver libros →" en lugar de "Ver más"
+  - [x] UX consistente con patrón de CategoriasPage
+  - [x] Toda la tarjeta funciona como enlace con hover effects
+
+- [x] **Eliminación de imágenes predeterminadas de autores**
+  - [x] Interfaz AutorFavorito con campo `imagen` opcional
+  - [x] Placeholder con User icon en gradient purple-pink
+  - [x] Sin imágenes genéricas engañosas
+
 #### Backend - Mejoras Implementadas ✅ (30/10/2025)
 
 - [x] **Ordenamiento y filtrado de libros en listas**
@@ -321,7 +335,6 @@
 
 #### Frontend - Mejoras Implementadas ✅ (30/10/2025)
 
-
 - [x] **Vista de detalle de lista mejorada**
   - [x] Grid/tabla toggle de visualización - Implementado con lucide-react icons
   - [x] Filtros sidebar: autor, categoría, rating - Panel colapsable completo
@@ -329,16 +342,19 @@
   - [x] Componente DetalleLista.tsx creado (480+ líneas)
   - [x] Servicios: getListaDetallada(), reordenarLista() en listaService
   - [x] Ruta /lista/:id agregada a App.tsx
+  - [x] Eliminar libros individualmente con confirmación
+  - [x] Navegación al detalle del libro con click
 
 - [ ] **Funcionalidades Pendientes**
-  - [ ] Drag & drop para reordenar libros (@dnd-kit instalado)
-  - [ ] Modo de edición rápida (quitar múltiples libros)
+  - [ ] Drag & drop para reordenar libros (@dnd-kit instalado, backend listo)
+  - [ ] Modo de edición rápida (seleccionar y quitar múltiples libros)
+  - [ ] Editar nombre y tipo de lista desde el frontend
 
 
 - [ ] **Modo de lectura/exploración**
   - [ ] Vista "Modo presentación" (fullscreen, pasar libros con flechas)
-  - [ ] Vista "Modo estantería" (simula estante de libros físicos)
-  - [ ] Vista "Portadas grandes" vs "Lista compacta"
+  - [ ] Vista "Modo estantería" (simula estante de libros físicos 3D)
+  - [ ] Toggle "Portadas grandes" vs "Lista compacta" (actualmente solo grid/list)
 
 #### UX/UI Específico de Listas
 
@@ -349,28 +365,63 @@
   - [x] ⭐ Listas personalizadas → Púrpura (BookOpen icon + bg-purple-100)
   - [x] Funciones: getListaIcon(), getListaColor() en DetalleLista.tsx
 
-- [ ] **Animaciones y micro-interacciones**
-  - [ ] Animación al agregar libro a lista (confetti o checkmark)
-  - [ ] Swipe para remover libro de lista (mobile)
-  - [ ] Transición suave al reordenar
-  - [ ] Loading skeleton durante carga de listas
+- [x] **Diseño y UX mejorado** ✅ IMPLEMENTADO (30/10/2025)
+  - [x] Header con gradiente y estadísticas de lista
+  - [x] Toolbar con controles: búsqueda, ordenamiento, vista, filtros
+  - [x] Panel de filtros colapsable (ChevronDown icon)
+  - [x] Grid responsivo: 5 columnas desktop, 3 tablet, 2 mobile
+  - [x] Vista lista compacta con toda la info en una fila
+  - [x] Hover effects con framer-motion
+  - [x] Confirmación al eliminar libro (window.confirm)
+
+- [ ] **Animaciones y micro-interacciones pendientes**
+  - [ ] Animación al agregar libro a lista (confetti o checkmark con framer-motion)
+  - [ ] Swipe gesture para remover libro (mobile con react-swipeable)
+  - [ ] Transición suave al reordenar con drag & drop
+  - [ ] Loading skeleton durante carga (actualmente spinner genérico)
+  - [ ] Toast notifications en lugar de window.confirm/alert
 
 
 #### Prioridades Sugeridas 🎯
 
-**Alta Prioridad (Quick Wins):**
-1. ✅ Protección contra duplicados (COMPLETADO 30/10/2025)
-2. ✅ Vista detallada de lista con filtros básicos (COMPLETADO 30/10/2025)
-3. Reordenamiento drag & drop (backend listo, falta frontend)
+**✅ Completados (30/10/2025):**
+1. ✅ Protección contra duplicados (COMPLETADO)
+2. ✅ Vista detallada de lista con filtros completos (COMPLETADO)
+3. ✅ Sistema de ordenamiento múltiple (COMPLETADO)
+4. ✅ Funcionalidad de categorías en favoritos (COMPLETADO)
+5. ✅ Eliminación de imágenes genéricas de autores (COMPLETADO)
+
+**Alta Prioridad (Siguiente Sprint):**
+1. **Drag & drop para reordenar libros** - Backend listo, @dnd-kit instalado, falta implementar UI
+   - Usar @dnd-kit/core + @dnd-kit/sortable
+   - Indicadores visuales de drag (opacity, shadow)
+   - Actualizar orden en tiempo real
+   - Llamar a endpoint PUT /api/listas/:id/reordenar
+
+2. **Toast notifications** - Reemplazar window.confirm/alert
+   - Instalar react-hot-toast o sonner
+   - Feedback visual al agregar/quitar libros
+   - Confirmaciones no bloqueantes
 
 **Media Prioridad:**
-4. Modos de visualización avanzados (presentación, estantería)
-5. Animaciones y micro-interacciones
-6. Color picker para listas personalizadas
+3. Modo de edición múltiple (seleccionar varios libros y eliminar)
+4. Loading skeletons (reemplazar spinners genéricos)
+5. Editar listas desde el frontend (nombre, descripción, tipo)
+6. Modos de visualización avanzados (presentación fullscreen, estantería 3D)
+7. Color picker para listas personalizadas
+
+**Baja Prioridad:**
+8. Animaciones de confetti al agregar libros
+9. Swipe gestures en mobile
+10. Compartir listas públicas (generar URL)
 
 #### Documentación Asociada
 - [x] `LISTAS_DUPLICADAS.md` - Protección contra duplicados
 - [x] `LISTAS_AVANZADAS.md` - Sistema de listas mejorado ✅ COMPLETADO (30/10/2025)
+- [x] Commits relacionados:
+  - `efcf671` - Implementación sistema de listas mejorado (30/10/2025)
+  - `1029415` - Eliminación imagen predeterminada autores (30/10/2025)
+  - `075eb26` - Funcionalidad categorías en favoritos (30/10/2025)
 
 ---
 

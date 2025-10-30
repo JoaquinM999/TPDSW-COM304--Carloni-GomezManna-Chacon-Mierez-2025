@@ -681,43 +681,45 @@ export const FavoritosPage: React.FC = () => {
             animate="visible"
           >
             {categoriasFavoritas.length > 0 ? categoriasFavoritas.map((categoria) => (
-              <motion.div
+              <Link 
                 key={categoria.id}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
-                variants={cardVariants}
-                whileHover={{
-                  scale: 1.03,
-                  y: -8,
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-                }}
-                whileTap={{ scale: 0.98 }}
+                to={`/libros?filtro=tema&termino=${encodeURIComponent(categoria.nombre)}`}
+                className="block"
               >
-                <div className={`h-32 ${categoria.color} flex items-center justify-center relative`}>
-                  <Tag className="w-12 h-12 text-white" />
-                  <motion.div
-                    className="absolute top-3 right-3"
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Heart className="w-6 h-6 text-white fill-current drop-shadow-lg" />
-                  </motion.div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
-                  <p className="text-gray-600 text-sm mb-4 font-medium">{categoria.librosCount} libro{categoria.librosCount !== 1 ? 's' : ''} en tu colección</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
-                      Agregado el {new Date(categoria.fechaAgregado).toLocaleDateString('es-ES')}
-                    </span>
-                    <Link
-                      to={`/categorias`}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                <motion.div
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 cursor-pointer"
+                  variants={cardVariants}
+                  whileHover={{
+                    scale: 1.03,
+                    y: -8,
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className={`h-32 ${categoria.color} flex items-center justify-center relative`}>
+                    <Tag className="w-12 h-12 text-white" />
+                    <motion.div
+                      className="absolute top-3 right-3"
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      Ver más
-                    </Link>
+                      <Heart className="w-6 h-6 text-white fill-current drop-shadow-lg" />
+                    </motion.div>
                   </div>
-                </div>
-              </motion.div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
+                    <p className="text-gray-600 text-sm mb-4 font-medium">{categoria.librosCount} libro{categoria.librosCount !== 1 ? 's' : ''} en tu colección</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        Agregado el {new Date(categoria.fechaAgregado).toLocaleDateString('es-ES')}
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Ver libros →
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
             )) : (
               <div className="col-span-full text-center py-12">
                 <Tag className="w-16 h-16 text-gray-300 mx-auto mb-4" />

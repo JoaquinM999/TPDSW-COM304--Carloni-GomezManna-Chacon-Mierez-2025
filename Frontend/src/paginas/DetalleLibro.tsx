@@ -539,24 +539,50 @@ const DetalleLibro: React.FC = () => {
     const tipo = tipoMap[nombre] || 'custom';
 
     try {
-      // Buscar si la lista ya existe
-      const listasUsuario = await listaService.getUserListas();
-      let lista = listasUsuario.find(l => l.nombre === nombre);
-
+      // Primero verificar en el estado local si ya existe
+      let lista = listas.find(l => l.nombre === nombre);
+      
       if (!lista) {
-        // Crear la lista si no existe
-        lista = await listaService.createLista(nombre, tipo);
-        // Actualizar el estado de listas para incluir la nueva
-        setListas(prev => [...prev, lista!]);
+        // Si no está en el estado local, buscar en el servidor
+        const listasUsuario = await listaService.getUserListas();
+        lista = listasUsuario.find(l => l.nombre === nombre);
+        
+        if (!lista) {
+          // Crear la lista solo si realmente no existe en el servidor
+          lista = await listaService.createLista(nombre, tipo);
+        }
+        
+        // Actualizar el estado de listas para incluir la nueva o la encontrada
+        setListas(prev => {
+          // Verificar que no esté ya en el array antes de agregarla
+          const exists = prev.some(l => l.id === lista!.id);
+          if (!exists) {
+            return [...prev, lista!];
+          }
+          return prev;
+        });
       }
 
       // Agregar el libro a la lista
       await listaService.addLibroALista(lista.id, libro);
+      
+      // Actualizar listasConLibro para marcar que este libro está en esta lista
+      setListasConLibro(prevSet => {
+        const newSet = new Set(prevSet);
+        newSet.add(lista!.id);
+        return newSet;
+      });
+      
       alert(`Libro agregado a "${nombre}" exitosamente`);
       setShowListaDropdown(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding book to list by name:", error);
-      alert("Error al agregar el libro a la lista");
+      // Mostrar mensaje más específico si la lista ya existe
+      if (error.message?.includes('ya existe') || error.response?.data?.message?.includes('ya existe')) {
+        alert(`La lista "${nombre}" ya existe. El libro se agregó a la lista existente.`);
+      } else {
+        alert("Error al agregar el libro a la lista");
+      }
     }
   };
 

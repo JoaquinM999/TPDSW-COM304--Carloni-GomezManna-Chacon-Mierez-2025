@@ -12,6 +12,7 @@ export interface Lista {
 export interface ContenidoLista {
   id: number;
   createdAt: string;
+  orden?: number; // Para drag & drop y ordenamiento personalizado
   lista: { id: number; tipo: string };
   libro: {
     id: number;
@@ -116,5 +117,48 @@ export const listaService = {
     });
     if (!response.ok) throw new Error('Error al obtener todo el contenido del usuario');
     return response.json();
+  },
+
+  // Obtener lista con filtros y ordenamiento
+  async getListaDetallada(
+    listaId: number, 
+    filtros?: {
+      orderBy?: 'alfabetico' | 'fecha' | 'rating' | 'personalizado';
+      filterAutor?: string;
+      filterCategoria?: string;
+      filterRating?: number;
+      search?: string;
+    }
+  ): Promise<Lista & { contenidos: ContenidoLista[] }> {
+    const params = new URLSearchParams();
+    if (filtros?.orderBy) params.append('orderBy', filtros.orderBy);
+    if (filtros?.filterAutor) params.append('filterAutor', filtros.filterAutor);
+    if (filtros?.filterCategoria) params.append('filterCategoria', filtros.filterCategoria);
+    if (filtros?.filterRating !== undefined) params.append('filterRating', filtros.filterRating.toString());
+    if (filtros?.search) params.append('search', filtros.search);
+
+    const queryString = params.toString();
+    const url = queryString ? `/api/lista/${listaId}?${queryString}` : `/api/lista/${listaId}`;
+
+    const response = await fetchWithRefresh(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Error al obtener lista detallada');
+    return response.json();
+  },
+
+  // Reordenar libros en lista (drag & drop)
+  async reordenarLista(listaId: number, ordenamiento: { libroId: number; orden: number }[]): Promise<void> {
+    const response = await fetchWithRefresh(`/api/lista/${listaId}/reordenar`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ordenamiento }),
+    });
+    if (!response.ok) throw new Error('Error al reordenar lista');
   },
 };

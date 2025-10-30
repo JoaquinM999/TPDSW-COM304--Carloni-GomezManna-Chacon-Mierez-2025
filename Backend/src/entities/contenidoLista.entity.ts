@@ -15,6 +15,9 @@ export class ContenidoLista {
   @ManyToOne(() => Libro)
   libro!: Libro;
 
+  @Property({ nullable: true })
+  orden?: number; // Para drag & drop y ordenamiento personalizado
+
   @Property({ type: 'date', onCreate: () => new Date() })
   createdAt: Date = new Date();
 

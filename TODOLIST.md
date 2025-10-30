@@ -309,23 +309,29 @@
   - [x] Entidad ContenidoLista con timestamps
   - [x] Verificación de existencia antes de agregar
 
-#### Backend - Mejoras Propuestas 🚀
+#### Backend - Mejoras Implementadas ✅ (30/10/2025)
 
-- [ ] **Ordenamiento y filtrado de libros en listas**
-  - [ ] Campo `orden` en ContenidoLista (número de posición)
-  - [ ] Endpoint: `PUT /api/listas/:id/reordenar` (drag & drop)
-  - [ ] Filtros: por autor, categoría, rating, fecha de agregado
-  - [ ] Ordenamiento: alfabético, fecha, rating, personalizado
-
-
-#### Frontend - Mejoras Propuestas 🎨
+- [x] **Ordenamiento y filtrado de libros en listas**
+  - [x] Campo `orden` en ContenidoLista (número de posición) - Migración ejecutada
+  - [x] Endpoint: `PUT /api/listas/:id/reordenar` (drag & drop) - Implementado
+  - [x] Filtros: por autor, categoría, rating, fecha de agregado - Implementados
+  - [x] Ordenamiento: alfabético, fecha, rating, personalizado - Implementado
+  - [x] GET /api/lista/:id con query params completos
 
 
-- [ ] **Vista de detalle de lista mejorada**
-  - [ ] Grid/tabla toggle de visualización
-  - [ ] Drag & drop para reordenar libros
-  - [ ] Filtros sidebar: autor, categoría, rating
-  - [ ] Búsqueda en lista
+#### Frontend - Mejoras Implementadas ✅ (30/10/2025)
+
+
+- [x] **Vista de detalle de lista mejorada**
+  - [x] Grid/tabla toggle de visualización - Implementado con lucide-react icons
+  - [x] Filtros sidebar: autor, categoría, rating - Panel colapsable completo
+  - [x] Búsqueda en lista - Input con ícono de búsqueda
+  - [x] Componente DetalleLista.tsx creado (480+ líneas)
+  - [x] Servicios: getListaDetallada(), reordenarLista() en listaService
+  - [x] Ruta /lista/:id agregada a App.tsx
+
+- [ ] **Funcionalidades Pendientes**
+  - [ ] Drag & drop para reordenar libros (@dnd-kit instalado)
   - [ ] Modo de edición rápida (quitar múltiples libros)
 
 
@@ -336,11 +342,12 @@
 
 #### UX/UI Específico de Listas
 
-- [ ] **Iconos y estilos por tipo de lista**
-  - [ ] 📚 "Leídos" → Verde con check
-  - [ ] ⏰ "Ver más tarde" → Azul con reloj
-  - [ ] 📝 "Pendiente" → Amarillo con bookmark
-  - [ ] ⭐ Listas personalizadas → Color personalizable por usuario
+- [x] **Iconos y estilos por tipo de lista** ✅ IMPLEMENTADO (30/10/2025)
+  - [x] 📚 "Leídos" → Verde con check (Check icon + bg-green-100)
+  - [x] ⏰ "Ver más tarde" → Azul con reloj (Clock icon + bg-blue-100)
+  - [x] 📝 "Pendiente" → Amarillo con bookmark (BookMarked icon + bg-yellow-100)
+  - [x] ⭐ Listas personalizadas → Púrpura (BookOpen icon + bg-purple-100)
+  - [x] Funciones: getListaIcon(), getListaColor() en DetalleLista.tsx
 
 - [ ] **Animaciones y micro-interacciones**
   - [ ] Animación al agregar libro a lista (confetti o checkmark)
@@ -353,12 +360,17 @@
 
 **Alta Prioridad (Quick Wins):**
 1. ✅ Protección contra duplicados (COMPLETADO 30/10/2025)
-3. Vista detallada de lista con filtros básicos
-4. Reordenamiento drag & drop
+2. ✅ Vista detallada de lista con filtros básicos (COMPLETADO 30/10/2025)
+3. Reordenamiento drag & drop (backend listo, falta frontend)
+
+**Media Prioridad:**
+4. Modos de visualización avanzados (presentación, estantería)
+5. Animaciones y micro-interacciones
+6. Color picker para listas personalizadas
 
 #### Documentación Asociada
 - [x] `LISTAS_DUPLICADAS.md` - Protección contra duplicados
-- [ ] `LISTAS_AVANZADAS.md` - Sistema de listas mejorado (pendiente)
+- [x] `LISTAS_AVANZADAS.md` - Sistema de listas mejorado ✅ COMPLETADO (30/10/2025)
 
 ---
 

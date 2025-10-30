@@ -32,6 +32,7 @@ import SagaDetallePage from './paginas/SagaDetallePage';
 import NuevosLanzamientos from './paginas/NuevosLanzamientos';
 import LibrosRecomendados from './paginas/LibrosRecomendados';
 import LibrosPopulares from './paginas/LibrosPopulares';
+import DetalleLista from './paginas/DetalleLista';
 
 import ConfiguracionUsuario from './paginas/ConfiguracionUsuario';
 import AdminModerationPage from './paginas/AdminModerationPage';
@@ -141,6 +142,9 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
           <Route path="/libros/nuevos" element={<NuevosLanzamientos />} />
           <Route path="/libros/recomendados" element={<LibrosRecomendados />} />
           <Route path="/libros/populares" element={<LibrosPopulares />} />
+
+          {/* Listas */}
+          <Route path="/lista/:id" element={<DetalleLista />} />
 
           {/* Rutas originales */}
           <Route path="/LoginPage" element={<LoginPage />} />

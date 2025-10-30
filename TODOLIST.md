@@ -561,11 +561,16 @@
   - [x] Diseño consistente en toda la aplicación
   - [x] Tipografía y layout idénticos a nuevos lanzamientos (gradient background, text-gray-900, text-lg)
   - [x] **Mejoras de legibilidad v1 (30/10/2025)**: Títulos con min-h y line-clamp-2, autores con "por", rating con badge amarillo
-  - [x] **Mejoras de legibilidad v2 - CRÍTICAS (30/10/2025)**: 
-    - [x] Títulos text-xl con h-[4.5rem] fija y line-clamp-3 (muestran hasta 3 líneas completas)
-    - [x] Autores con label descriptivo, text-base, font-semibold, h-[3rem] fija, text-gray-800
-    - [x] Rating con gradient (yellow-50 to orange-50) y border amarillo
-    - [x] Razones con gradients, borders, text-sm (más grande), separador bullet (•), iconos w-5
+  - [x] **Mejoras de legibilidad v2 - CRÍTICAS (30/10/2025)**: Títulos text-xl, autores con label, rating con gradient
+  - [x] **REDISEÑO FINAL v3 (30/10/2025)**: Ahora usa LibroCard (igual que Libros Populares)
+    - [x] Componente LibroCard compartido para consistencia total
+    - [x] Grid de 5 columnas (2/3/5 responsivo) idéntico a populares
+    - [x] Background gradient purple-50 to pink-50
+    - [x] Badge de Match Score en extraInfo con Award icon
+    - [x] Badge NUEVO cuando esReciente
+    - [x] Razones con emojis (📚 categorías, ✍️ autores)
+    - [x] Rating en badge estándar de LibroCard (esquina superior derecha)
+    - [x] Código limpio, mantenible y consistente
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] Notificaciones visuales
 

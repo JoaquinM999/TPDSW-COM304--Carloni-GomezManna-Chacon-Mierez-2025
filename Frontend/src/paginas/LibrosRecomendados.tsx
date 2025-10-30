@@ -70,20 +70,21 @@ export const LibrosRecomendados: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Sparkles className="w-10 h-10 text-purple-600" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800">Recomendaciones para ti</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles className="w-8 h-8 text-purple-600" />
+              <h1 className="text-4xl font-bold text-gray-900">Recomendaciones para ti</h1>
+            </div>
             {data?.metadata && (
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-600 text-lg">
                 {data.metadata.totalRecomendaciones} libros seleccionados por nuestro algoritmo
               </p>
             )}
           </div>
-        </div>
         
         <button
           onClick={actualizarRecomendaciones}
@@ -216,6 +217,7 @@ export const LibrosRecomendados: React.FC = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

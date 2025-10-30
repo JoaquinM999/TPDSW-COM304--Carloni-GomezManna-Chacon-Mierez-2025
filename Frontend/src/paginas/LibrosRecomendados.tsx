@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, RefreshCw, Tag, User, Clock, Award, Info } from 'lucide-react';
-import LibroCard from '../componentes/LibroCard';
+import { Sparkles, RefreshCw, Tag, User, Award, Info, BookOpen, Star } from 'lucide-react';
 import { obtenerRecomendaciones, invalidarCacheRecomendaciones, RecomendacionResponse } from '../services/recomendacionService';
 
 export const LibrosRecomendados: React.FC = () => {
@@ -120,59 +119,99 @@ export const LibrosRecomendados: React.FC = () => {
           <p className="text-gray-500">Empieza a calificar libros, agregar favoritos y escribir reseñas para recibir recomendaciones personalizadas.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {data?.libros.map((libro) => (
             <div
               key={libro.id}
-              className="cursor-pointer transform transition-transform duration-200"
               onClick={() => navigate(`/libros/${libro.id}`)}
+              className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
             >
-              <LibroCard
-                title={libro.titulo}
-                authors={libro.autores}
-                image={libro.imagen}
-                description={libro.descripcion || undefined}
-                rating={libro.averageRating}
-                extraInfo={
-                  <div className="space-y-2 pt-3 border-t border-gray-100">
-                    {/* Score del algoritmo */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Award className="w-4 h-4 text-purple-500" />
-                      <span className="text-gray-600">Match: <span className="font-semibold text-purple-600">{(libro.score * 100).toFixed(0)}%</span></span>
-                    </div>
-
-                    {/* Categorías coincidentes */}
-                    {libro.matchCategorias.length > 0 && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <Tag className="w-4 h-4 text-blue-500 mt-0.5" />
-                        <div className="flex-1">
-                          <span className="text-gray-600">Categorías: </span>
-                          <span className="font-medium text-blue-600">{libro.matchCategorias.join(', ')}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Autores coincidentes */}
-                    {libro.matchAutores.length > 0 && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <User className="w-4 h-4 text-green-500 mt-0.5" />
-                        <div className="flex-1">
-                          <span className="text-gray-600">Autores: </span>
-                          <span className="font-medium text-green-600">{libro.matchAutores.join(', ')}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Badge de novedad */}
-                    {libro.esReciente && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-orange-500" />
-                        <span className="font-medium text-orange-600">Lanzamiento reciente</span>
-                      </div>
-                    )}
+              {/* Badge de match score */}
+              <div className="relative">
+                <div className="absolute top-2 right-2 z-10">
+                  <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                    <Award className="w-3 h-3" />
+                    {(libro.score * 100).toFixed(0)}% Match
+                  </span>
+                </div>
+                
+                {/* Badge de reciente si aplica */}
+                {libro.esReciente && (
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      NUEVO
+                    </span>
                   </div>
-                }
-              />
+                )}
+                
+                {/* Imagen */}
+                <div className="h-80 overflow-hidden bg-gray-100">
+                  {libro.imagen ? (
+                    <img
+                      src={libro.imagen}
+                      alt={libro.titulo}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+                      <BookOpen className="w-16 h-16 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-4">
+                {/* Título */}
+                <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                  {libro.titulo}
+                </h3>
+
+                {/* Autores */}
+                <p className="text-gray-600 text-sm mb-3 line-clamp-1">
+                  {libro.autores.join(', ')}
+                </p>
+
+                {/* Rating */}
+                {libro.averageRating > 0 && (
+                  <div className="flex items-center gap-1 mb-3">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {libro.averageRating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Razones de la recomendación */}
+                <div className="space-y-2 pt-3 border-t border-gray-100">
+                  {/* Categorías coincidentes */}
+                  {libro.matchCategorias.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <Tag className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-gray-500">Categorías: </span>
+                        <span className="text-xs font-medium text-blue-600 line-clamp-1">
+                          {libro.matchCategorias.join(', ')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Autores coincidentes */}
+                  {libro.matchAutores.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <User className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-gray-500">Autores: </span>
+                        <span className="text-xs font-medium text-green-600 line-clamp-1">
+                          {libro.matchAutores.join(', ')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>

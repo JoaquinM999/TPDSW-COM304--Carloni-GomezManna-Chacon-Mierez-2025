@@ -538,6 +538,13 @@
 - [x] Sistema de seguimiento
 - [x] **Contadores de reacciones en reseñas** - ✅ COMPLETADO (30/10/2025)
 - [x] **Toggle de ordenamiento (recientes/valoradas/populares)** - ✅ COMPLETADO (30/10/2025)
+- [x] **Página de Nuevos Lanzamientos** - ✅ COMPLETADO (30/10/2025)
+  - [x] Backend: Endpoint `/api/libro/nuevos?limit=X` con filtro últimos 30 días
+  - [x] Controlador `getNuevosLanzamientos` con transformación completa de libros
+  - [x] Frontend: Página `NuevosLanzamientos.tsx` con diseño moderno y responsivo
+  - [x] Grid de libros con badges "NUEVO", rating, categoría y fecha
+  - [x] Estados de carga y error manejados correctamente
+  - [x] Click en libro navega al detalle
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] **Página de recomendaciones** - PENDIENTE
 - [ ] Notificaciones visuales

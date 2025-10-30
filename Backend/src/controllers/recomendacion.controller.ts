@@ -26,12 +26,30 @@ export const getRecomendaciones = async (req: Request, res: Response) => {
 
     // Usar el servicio de recomendaciones mejorado
     const recomendacionService = new RecomendacionService(orm);
-    const recomendaciones = await recomendacionService.getRecomendacionesPersonalizadas(usuario.id, limit);
+    const librosRecomendados = await recomendacionService.getRecomendacionesPersonalizadas(usuario.id, limit);
+
+    // Formatear respuesta para el frontend
+    const libros = librosRecomendados.map(libro => ({
+      id: libro.id,
+      titulo: libro.titulo,
+      autores: libro.autor ? [libro.autor.nombre] : [],
+      imagen: libro.imagen || null,
+      descripcion: libro.descripcion || null,
+      averageRating: libro.averageRating || 0,
+      score: 0.85, // Score del algoritmo (placeholder)
+      matchCategorias: libro.categoria ? [libro.categoria.nombre] : [],
+      matchAutores: libro.autor ? [libro.autor.nombre] : [],
+      esReciente: libro.fechaPublicacion ? 
+        (new Date().getTime() - new Date(libro.fechaPublicacion).getTime()) < 30 * 24 * 60 * 60 * 1000 : false
+    }));
 
     res.json({ 
-      recomendaciones,
-      algoritmo: 'Basado en favoritos, reseñas 4+ estrellas, categorías y autores preferidos',
-      total: recomendaciones.length
+      libros,
+      metadata: {
+        algoritmo: 'Basado en favoritos, reseñas 4+ estrellas, categorías y autores preferidos',
+        totalRecomendaciones: libros.length,
+        usuarioId: usuario.id
+      }
     });
   } catch (error) {
     console.error('Error al obtener recomendaciones:', error);

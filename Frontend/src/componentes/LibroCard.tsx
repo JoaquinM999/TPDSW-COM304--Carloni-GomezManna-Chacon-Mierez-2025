@@ -5,7 +5,7 @@ interface LibroCardProps {
   authors?: string[];
   image: string | null;
   description?: string;
-  extraInfo?: string;
+  extraInfo?: string | React.ReactNode;
   rating?: number | null;
 }
 
@@ -33,7 +33,9 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, descriptio
           {authors?.length ? authors.join(", ") : "Autor desconocido"}
         </p>
         {extraInfo && (
-          <p className="text-sm text-gray-500 mb-4">{extraInfo}</p>
+          <div className="text-sm text-gray-500 mb-4">
+            {typeof extraInfo === 'string' ? <p>{extraInfo}</p> : extraInfo}
+          </div>
         )}
       </div>
 

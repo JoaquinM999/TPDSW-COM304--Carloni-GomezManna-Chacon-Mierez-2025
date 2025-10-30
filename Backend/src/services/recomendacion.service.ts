@@ -55,6 +55,7 @@ export class RecomendacionService {
 
     // Si el usuario no tiene actividad, retornar libros populares
     if (favoritos.length === 0 && resenas.length === 0) {
+      console.log('👤 Usuario nuevo - mostrando libros populares');
       const populares = await this.getLibrosPopulares(limit);
       this.cacheRecomendaciones(cacheKey, populares);
       return populares;
@@ -70,6 +71,15 @@ export class RecomendacionService {
 
     // 5. Buscar libros candidatos
     const candidatos = await this.buscarCandidatos(em, preferencias, Array.from(librosConocidos));
+
+    // Si no hay suficientes candidatos, mezclar con populares
+    if (candidatos.length < limit) {
+      console.log(`⚠️ Solo ${candidatos.length} candidatos - mezclando con populares`);
+      const populares = await this.getLibrosPopulares(limit - candidatos.length);
+      const idsExistentes = new Set(candidatos.map(c => c.id));
+      const popularesNuevos = populares.filter(p => !idsExistentes.has(p.id));
+      candidatos.push(...popularesNuevos);
+    }
 
     // 7. Calcular puntuaciones
     const librosConScore = this.calcularPuntuaciones(candidatos, preferencias);
@@ -214,14 +224,23 @@ export class RecomendacionService {
   private async getLibrosPopulares(limit: number): Promise<Libro[]> {
     const em = this.orm.em.fork();
     
-    // Obtener libros con más favoritos o ratings
-    const populares = await em.find(Libro, {}, {
+    // Obtener libros variados (recientes primero, luego mezclar aleatoriamente)
+    const libros = await em.find(Libro, {}, {
       populate: ['categoria', 'autor'],
-      orderBy: { createdAt: 'DESC' }, // Por ahora ordenar por recientes
-      limit
+      orderBy: { createdAt: 'DESC' },
+      limit: Math.max(limit * 3, 30) // Obtener más para tener variedad
     });
 
-    return populares;
+    // Si no hay libros en la BD, retornar array vacío
+    if (libros.length === 0) {
+      console.log('⚠️ No hay libros en la base de datos');
+      return [];
+    }
+
+    // Mezclar aleatoriamente para que cada usuario vea diferentes libros
+    const mezclados = libros.sort(() => Math.random() - 0.5);
+    
+    return mezclados.slice(0, limit);
   }
 
   /**

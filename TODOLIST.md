@@ -184,18 +184,34 @@
 - [x] Ejemplos de cálculo de scores
 - [x] Guía de uso e integración
 
+#### Frontend Implementado ✅ (30/10/2025)
+- [x] **Servicio de recomendaciones** (`recomendacionService.ts`)
+  - [x] Función `obtenerRecomendaciones(limit)` - Consume GET endpoint
+  - [x] Función `invalidarCacheRecomendaciones()` - DELETE endpoint
+  - [x] Interfaces TypeScript con metadata completa
+
+- [x] **Página de recomendaciones completa** (`LibrosRecomendados.tsx`)
+  - [x] Integración con servicio backend
+  - [x] Mostrar razones de cada recomendación (categorías + autores matched)
+  - [x] Score del algoritmo con porcentaje de match visual
+  - [x] Badge "Lanzamiento reciente" para libros nuevos
+  - [x] Botón "Actualizar recomendaciones" con invalidación de caché
+  - [x] Estados de carga y error bien manejados
+  - [x] Diseño mejorado con Tailwind CSS e iconos lucide-react
+  - [x] Click en tarjetas navega al detalle del libro
+  - [x] Info del algoritmo con tooltip explicativo
+
+- [x] **Componente LibroCard mejorado**
+  - [x] Modificado `extraInfo` para aceptar `string | React.ReactNode`
+  - [x] Permite componentes personalizados en tarjetas
+  - [x] Renderizado condicional según tipo de contenido
+
 #### Mejoras Futuras (Opcional)
 - [ ] Machine Learning para scoring más preciso
 - [ ] Collaborative filtering real (usuarios similares)
 - [ ] A/B testing de diferentes algoritmos
 - [ ] Feedback loop (aprender de clicks/no clicks)
 - [ ] Context-aware recommendations (hora, estación)
-
-#### Frontend Pendiente
-- [ ] Página dedicada de recomendaciones
-- [ ] Mostrar razón de cada recomendación
-- [ ] Sección "Porque te gustó X, te puede interesar Y"
-- [ ] Botón de "Actualizar recomendaciones"
 
 ---
 

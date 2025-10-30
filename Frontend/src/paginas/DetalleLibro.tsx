@@ -23,6 +23,7 @@ import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService
 import { isAuthenticated, getToken } from "../services/authService";
 import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
+import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
 
 interface Libro {
   id: string;
@@ -197,6 +198,17 @@ const DetalleLibro: React.FC = () => {
   const [listasConLibro, setListasConLibro] = useState<Set<number>>(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Estado para modal de error de moderación
+  const [showModerationModal, setShowModerationModal] = useState(false);
+  const [moderationError, setModerationError] = useState<{
+    message: string;
+    details?: {
+      score?: number;
+      reasons?: string[];
+      autoRejected?: boolean;
+    };
+  } | null>(null);
 
   // Función para detectar si el texto contiene etiquetas HTML
   const hasHtmlTags = (text: string) => /<[^>]*>/.test(text);
@@ -839,7 +851,30 @@ const DetalleLibro: React.FC = () => {
         setEstrellas(5);
       } catch (err: any) {
         console.error("Error creando reseña:", err);
-        setErrorLocal(err.message || "No se pudo crear la reseña");
+        
+        // Detectar si es un error de moderación
+        const errorMsg = err.message || "No se pudo crear la reseña";
+        const isModerationError = errorMsg.toLowerCase().includes('moderación') || 
+                                  errorMsg.toLowerCase().includes('rechazada') ||
+                                  errorMsg.toLowerCase().includes('normas') ||
+                                  errorMsg.toLowerCase().includes('calidad');
+
+        if (isModerationError) {
+          // Extraer detalles si los hay en el error
+          setModerationError({
+            message: errorMsg,
+            details: {
+              autoRejected: true,
+              reasons: err.reasons || [],
+              score: err.score
+            }
+          });
+          setShowModerationModal(true);
+          setErrorLocal(null); // No mostrar error simple si mostramos el modal
+        } else {
+          setErrorLocal(errorMsg);
+        }
+        
         // quitar el temporal pidiendo al padre refrescar (onAdded)
         onAdded?.();
       } finally {
@@ -910,9 +945,21 @@ const DetalleLibro: React.FC = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-        <button
+    <>
+      {/* Modal de Error de Moderación */}
+      <ModerationErrorModal
+        isOpen={showModerationModal}
+        onClose={() => {
+          setShowModerationModal(false);
+          setModerationError(null);
+        }}
+        errorMessage={moderationError?.message || ''}
+        moderationDetails={moderationError?.details}
+      />
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+          <button
           onClick={() => navigate(from)}
           className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors duration-200 group mb-6"
           aria-label="Volver a la página anterior"
@@ -1448,6 +1495,7 @@ const DetalleLibro: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

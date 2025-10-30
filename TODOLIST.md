@@ -94,12 +94,21 @@
   - [x] Penalización adicional por múltiples flags (-15/-25 puntos)
   - [x] Documentación completa en `MEJORAS_MODERACION.md`
 
+#### Mejoras Implementadas ✅ (30/10/2025 - Sesión 2)
+- [x] **Frontend: mensaje de error mejorado con normas de comunidad** - ✅ COMPLETADO
+  - [x] Componente `ModerationErrorModal` creado con diseño profesional
+  - [x] Normas de comunidad dinámicas según razones de rechazo
+  - [x] Muestra razones específicas con iconos
+  - [x] Sugerencias para mejorar la reseña
+  - [x] Guía completa de reseñas incluida
+  - [x] Integrado en `DetalleLibro.tsx` con detección automática
+  - [x] Modal solo se muestra en errores de moderación
+
 #### Pendientes (Mejoras Opcionales)
 - [ ] Dashboard de estadísticas de moderación
 - [ ] Sistema de apelaciones para reseñas rechazadas
 - [ ] Histórico de decisiones de moderación con gráficos
 - [ ] Machine Learning para mejorar precisión
-- [ ] Frontend: mensaje de error mejorado con normas de comunidad
 
 ---
 

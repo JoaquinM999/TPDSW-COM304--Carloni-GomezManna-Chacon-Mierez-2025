@@ -439,6 +439,8 @@
   - `efcf671` - Implementación sistema de listas mejorado (30/10/2025)
   - `1029415` - Eliminación imagen predeterminada autores (30/10/2025)
   - `075eb26` - Funcionalidad categorías en favoritos (30/10/2025)
+  - `164b87a` - Actualización TODOLIST.md con listas y favoritos (30/10/2025)
+  - `ad80e4b` - Animaciones y micro-interacciones implementadas (30/10/2025)
 
 ---
 

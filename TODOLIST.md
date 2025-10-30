@@ -560,7 +560,12 @@
   - [x] Razones de recomendación compactas (categorías y autores)
   - [x] Diseño consistente en toda la aplicación
   - [x] Tipografía y layout idénticos a nuevos lanzamientos (gradient background, text-gray-900, text-lg)
-  - [x] **Mejoras de legibilidad (30/10/2025)**: Títulos con min-h y line-clamp-2, autores con "por", rating con badge amarillo, razones con backgrounds de color y subtítulos descriptivos
+  - [x] **Mejoras de legibilidad v1 (30/10/2025)**: Títulos con min-h y line-clamp-2, autores con "por", rating con badge amarillo
+  - [x] **Mejoras de legibilidad v2 - CRÍTICAS (30/10/2025)**: 
+    - [x] Títulos text-xl con h-[4.5rem] fija y line-clamp-3 (muestran hasta 3 líneas completas)
+    - [x] Autores con label descriptivo, text-base, font-semibold, h-[3rem] fija, text-gray-800
+    - [x] Rating con gradient (yellow-50 to orange-50) y border amarillo
+    - [x] Razones con gradients, borders, text-sm (más grande), separador bullet (•), iconos w-5
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] Notificaciones visuales
 

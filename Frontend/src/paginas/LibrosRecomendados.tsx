@@ -164,41 +164,45 @@ export const LibrosRecomendados: React.FC = () => {
 
               {/* Contenido */}
               <div className="p-5">
-                {/* Título con mejor altura y espaciado */}
-                <h3 className="font-bold text-gray-900 text-lg leading-tight mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors">
+                {/* Título con altura dinámica y espaciado mejorado */}
+                <h3 className="font-bold text-gray-900 text-xl leading-snug mb-3 line-clamp-3 h-[4.5rem] overflow-hidden group-hover:text-purple-600 transition-colors">
                   {libro.titulo}
                 </h3>
 
-                {/* Autores con mejor visibilidad */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem] leading-relaxed">
-                  por <span className="font-medium text-gray-700">{libro.autores.join(', ')}</span>
-                </p>
+                {/* Autores con mejor visibilidad y altura fija */}
+                <div className="mb-4 h-[3rem]">
+                  <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Autor{libro.autores.length > 1 ? 'es' : ''}</p>
+                  <p className="text-gray-800 text-base font-semibold line-clamp-2 leading-snug">
+                    {libro.autores.join(', ')}
+                  </p>
+                </div>
 
                 {/* Rating con mejor diseño */}
                 {libro.averageRating > 0 && (
-                  <div className="flex items-center gap-2 mb-4 bg-yellow-50 rounded-lg px-3 py-2">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-base font-bold text-gray-900">
+                  <div className="flex items-center gap-2 mb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg px-3 py-2.5 border border-yellow-200">
+                    <Star className="w-5 h-5 text-yellow-600 fill-yellow-500" />
+                    <span className="text-lg font-bold text-gray-900">
                       {libro.averageRating.toFixed(1)}
                     </span>
-                    <span className="text-xs text-gray-500">/ 5.0</span>
+                    <span className="text-xs text-gray-600 font-medium">/ 5.0</span>
                   </div>
                 )}
 
-                {/* Razones de la recomendación con mejor espaciado */}
-                <div className="space-y-3 pt-4 border-t-2 border-gray-100">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                    Por qué te recomendamos este libro:
+                {/* Razones de la recomendación con mejor espaciado y legibilidad */}
+                <div className="space-y-2.5 pt-4 border-t-2 border-purple-100">
+                  <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    ¿Por qué este libro?
                   </p>
                   
                   {/* Categorías coincidentes */}
                   {libro.matchCategorias.length > 0 && (
-                    <div className="flex items-start gap-2 bg-blue-50 rounded-lg p-2">
-                      <Tag className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-lg p-3 border border-blue-200">
+                      <Tag className="w-5 h-5 text-blue-700 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-blue-900 mb-1">Categorías que te gustan:</p>
-                        <p className="text-xs text-blue-700 line-clamp-2 leading-relaxed">
-                          {libro.matchCategorias.join(', ')}
+                        <p className="text-xs font-bold text-blue-900 mb-1.5">Categorías favoritas</p>
+                        <p className="text-sm text-blue-800 font-medium line-clamp-2 leading-relaxed">
+                          {libro.matchCategorias.join(' • ')}
                         </p>
                       </div>
                     </div>
@@ -206,12 +210,12 @@ export const LibrosRecomendados: React.FC = () => {
 
                   {/* Autores coincidentes */}
                   {libro.matchAutores.length > 0 && (
-                    <div className="flex items-start gap-2 bg-green-50 rounded-lg p-2">
-                      <User className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5 bg-gradient-to-r from-green-50 to-green-100/50 rounded-lg p-3 border border-green-200">
+                      <User className="w-5 h-5 text-green-700 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-green-900 mb-1">Autores que sigues:</p>
-                        <p className="text-xs text-green-700 line-clamp-2 leading-relaxed">
-                          {libro.matchAutores.join(', ')}
+                        <p className="text-xs font-bold text-green-900 mb-1.5">Autores que te gustan</p>
+                        <p className="text-sm text-green-800 font-medium line-clamp-2 leading-relaxed">
+                          {libro.matchAutores.join(' • ')}
                         </p>
                       </div>
                     </div>

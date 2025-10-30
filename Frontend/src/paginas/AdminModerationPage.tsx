@@ -16,7 +16,13 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ---------------------------
    Types
@@ -34,6 +40,8 @@ interface Resena {
     id: number;
     nombre: string;
     email: string;
+    username?: string;
+    avatar?: string;
   };
   libro: {
     id: number;
@@ -45,10 +53,52 @@ interface Resena {
 /* ---------------------------
    Constantes
    --------------------------- */
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "");
 
-
+/* ---------------------------
+   Componente Avatar de Usuario
+   --------------------------- */
+const UserAvatar: React.FC<{ 
+  usuario: { nombre: string; username?: string; avatar?: string }; 
+  size?: string 
+}> = ({ usuario, size = "w-12 h-12" }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Si hay avatar y no hubo error al cargar
+  if (usuario.avatar && !imageError) {
+    return (
+      <motion.img
+        whileHover={{ scale: 1.1 }}
+        src={`/assets/${usuario.avatar}.svg`}
+        alt={`Avatar de ${usuario.username || usuario.nombre}`}
+        className={`${size} rounded-full object-cover shadow-md border-2 border-white`}
+        onError={() => {
+          console.log('❌ Error cargando avatar:', usuario.avatar);
+          setImageError(true);
+        }}
+      />
+    );
+  }
+  
+  // Fallback: mostrar iniciales
+  const initials = (usuario.nombre || usuario.username || "?")
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.1 }}
+      className={`${size} rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center font-semibold shadow-md border-2 border-white`}
+      title={`Avatar de ${usuario.nombre}`}
+    >
+      {initials}
+    </motion.div>
+  );
+};
 
 /* ---------------------------
    Componente Score de Moderación
@@ -56,34 +106,44 @@ const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() :
 const ModerationBadge: React.FC<{ score?: number; autoModerated?: boolean }> = ({ score, autoModerated }) => {
   if (score === undefined) return null;
 
-  let bgColor = "bg-gray-100";
+  let bgColor = "bg-gradient-to-r from-gray-100 to-gray-200";
   let textColor = "text-gray-700";
   let icon = <Info className="w-4 h-4" />;
   let label = "Sin analizar";
+  let borderColor = "border-gray-300";
 
   if (score >= 80) {
-    bgColor = "bg-green-100";
-    textColor = "text-green-700";
+    bgColor = "bg-gradient-to-r from-emerald-50 to-green-100";
+    textColor = "text-emerald-700";
     icon = <CheckCircle className="w-4 h-4" />;
     label = "Calidad alta";
+    borderColor = "border-emerald-200";
   } else if (score >= 40) {
-    bgColor = "bg-yellow-100";
-    textColor = "text-yellow-700";
+    bgColor = "bg-gradient-to-r from-amber-50 to-yellow-100";
+    textColor = "text-amber-700";
     icon = <AlertTriangle className="w-4 h-4" />;
     label = "Requiere revisión";
+    borderColor = "border-amber-200";
   } else {
-    bgColor = "bg-red-100";
+    bgColor = "bg-gradient-to-r from-red-50 to-rose-100";
     textColor = "text-red-700";
     icon = <Shield className="w-4 h-4" />;
     label = "Contenido problemático";
+    borderColor = "border-red-200";
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${bgColor} ${textColor} text-xs font-medium`}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${bgColor} ${textColor} border ${borderColor} text-xs font-semibold shadow-sm`}
+    >
       {icon}
       <span>{label}: {score}/100</span>
-      {autoModerated && <span className="ml-1 opacity-70">(Auto)</span>}
-    </div>
+      {autoModerated && (
+        <span className="ml-1 px-2 py-0.5 bg-white/50 rounded-full text-[10px]">Auto</span>
+      )}
+    </motion.div>
   );
 };
 
@@ -109,19 +169,34 @@ const ModerationReasons: React.FC<{ reasons?: string }> = ({ reasons }) => {
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
-      <div className="flex items-start gap-2">
-        <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-        <div className="text-xs text-blue-800">
-          <div className="font-semibold mb-1">Análisis automático:</div>
-          <ul className="space-y-1">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm"
+    >
+      <div className="flex items-start gap-3">
+        <div className="p-2 bg-blue-100 rounded-lg">
+          <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold text-blue-900 mb-2 text-sm">Análisis automático:</div>
+          <ul className="space-y-1.5">
             {items.map((item, idx) => (
-              <li key={idx}>• {item}</li>
+              <motion.li
+                key={idx}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="text-xs text-blue-800 flex items-center gap-2"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                {item}
+              </motion.li>
             ))}
           </ul>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -134,27 +209,45 @@ const Notice: React.FC<{ type: "success" | "error"; text: string; onClose?: () =
   onClose,
 }) => {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 50, scale: 0.9 }}
       role="alert"
       aria-live="polite"
-      className={`fixed right-6 bottom-6 z-50 max-w-xs shadow-lg rounded-lg px-4 py-3 ${
-        type === "success" ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
+      className={`fixed right-6 bottom-6 z-50 max-w-sm shadow-2xl rounded-2xl px-5 py-4 backdrop-blur-lg ${
+        type === "success" 
+          ? "bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300" 
+          : "bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300"
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className="pt-0.5">
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className="pt-0.5"
+        >
           {type === "success" ? (
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600">✓</div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white shadow-lg">
+              <CheckCircle className="w-5 h-5" />
+            </div>
           ) : (
-            <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600">!</div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center text-white shadow-lg">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
           )}
-        </div>
-        <div className="text-sm text-gray-800 flex-1">{text}</div>
-        <button aria-label="Cerrar notificación" onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        </motion.div>
+        <div className="text-sm font-medium text-gray-800 flex-1 pt-1">{text}</div>
+        <button 
+          aria-label="Cerrar notificación" 
+          onClick={onClose} 
+          className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-white/50 rounded-lg"
+        >
           ✕
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -380,92 +473,164 @@ const AdminModerationPage: React.FC = () => {
 
   /* ---------- RENDER ---------- */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* top bar */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">Moderación de Reseñas</h1>
-            <p className="text-sm text-gray-500 mt-1">Revisá, aprobá o rechazá reseñas pendientes.</p>
-          </div>
-
-          {hasPermission !== false && (
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-600 hidden md:block">
-                Pendientes: <span className="font-medium">{resenas.length}</span>
-              </div>
-
-              <button
-                onClick={cargarResenasPendientes}
-                className="flex items-center gap-2 px-3 py-2 bg-white border rounded-lg shadow-sm hover:shadow-md transition"
-                aria-label="Actualizar reseñas"
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      {/* Header mejorado */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-lg sticky top-0 z-40"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+                className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg"
               >
-                <RefreshCw className="w-4 h-4" /> <span className="hidden sm:inline">Actualizar</span>
-              </button>
+                <Shield className="w-8 h-8 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Moderación de Reseñas
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">Revisá, aprobá o rechazá reseñas pendientes de la comunidad</p>
+              </div>
             </div>
-          )}
+
+            {hasPermission !== false && (
+              <div className="flex items-center gap-3">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl"
+                >
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  <span className="text-sm font-semibold text-indigo-900">
+                    {resenas.length} Pendientes
+                  </span>
+                </motion.div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={cargarResenasPendientes}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-indigo-200 rounded-xl shadow-md hover:shadow-lg transition-all hover:border-indigo-300"
+                  aria-label="Actualizar reseñas"
+                >
+                  <RefreshCw className="w-4 h-4 text-indigo-600" />
+                  <span className="hidden sm:inline font-medium text-indigo-900">Actualizar</span>
+                </motion.button>
+              </div>
+            )}
+          </div>
         </div>
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* ---------- SIN PERMISO ---------- */}
         {hasPermission === false && (
-          <section className="grid place-items-center py-12">
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-              <div className="flex gap-6 items-center">
-                <div className="w-28 h-28 rounded-xl bg-gradient-to-br from-red-100 to-orange-50 flex items-center justify-center">
-                  {/* ilustración simple */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-red-600" viewBox="0 0 24 24" fill="none" aria-hidden>
-                    <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M10.29 3.86l-8 14A1 1 0 003.14 19h17.72a1 1 0 00.86-1.5l-8-14a1 1 0 00-1.72 0z" stroke="currentColor" strokeWidth="0" fill="currentColor" opacity="0.06"/>
-                  </svg>
-                </div>
+          <motion.section
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="grid place-items-center py-12"
+          >
+            <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                <motion.div
+                  initial={{ rotate: -10 }}
+                  animate={{ rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="w-32 h-32 rounded-2xl bg-gradient-to-br from-red-100 via-rose-100 to-orange-100 flex items-center justify-center shadow-lg"
+                >
+                  <Shield className="w-16 h-16 text-red-500" />
+                </motion.div>
 
-                <div className="flex-1">
-                  <h2 className="text-2xl font-semibold text-gray-900">Acceso denegado</h2>
-                  <p className="mt-2 text-gray-600">
-                    No tenés permisos para moderar reseñas desde esta cuenta. Si creés que es un error, podés iniciar sesión con otra cuenta o pedir acceso al equipo.
+                <div className="flex-1 text-center md:text-left">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent mb-3">
+                    Acceso denegado
+                  </h2>
+                  <p className="text-gray-600 leading-relaxed">
+                    No tenés permisos para moderar reseñas desde esta cuenta. Si creés que es un error, podés iniciar sesión con otra cuenta o solicitar acceso al equipo de administración.
                   </p>
 
-                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                    <button onClick={goToLogin} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">
-                      <LogIn className="w-6 h-6" /> Iniciar sesión
-                    </button>
-                    <button onClick={contactSupport} className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
-                      <Mail className="w-4 h-4" /> Solicitar acceso
-                    </button>
-                    <button onClick={goHome} className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50">
-                      <Home className="w-4 h-4" /> Volver al inicio
-                    </button>
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={goToLogin}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 shadow-lg font-medium"
+                    >
+                      <LogIn className="w-5 h-5" /> Iniciar sesión
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={contactSupport}
+                      className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
+                    >
+                      <Mail className="w-5 h-5" /> Solicitar acceso
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={goHome}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
+                    >
+                      <Home className="w-5 h-5" /> Volver al inicio
+                    </motion.button>
                   </div>
 
-                  <div className="mt-4 text-xs text-gray-400">
-                    Consejo: Si te conectaste con una cuenta personal y deberías tener permisos, pedile al administrador que te asigne el rol de moderador.
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <p className="text-xs text-blue-800">
+                      💡 <strong>Consejo:</strong> Si te conectaste con una cuenta personal y deberías tener permisos, pedile al administrador que te asigne el rol de moderador.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* ---------- ERROR GLOBAL ---------- */}
         {hasPermission !== false && globalError && (
-          <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {globalError}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-6 shadow-lg flex items-start gap-3"
+          >
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="font-semibold mb-1">Error al cargar</div>
+              <div className="text-sm">{globalError}</div>
+            </div>
+          </motion.div>
         )}
 
         {/* ---------- SKELETON LOADING ---------- */}
         {hasPermission !== false && loading && (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-white rounded-lg p-4 shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="h-6 bg-gray-200 rounded w-48" />
-                  <div className="h-6 bg-gray-200 rounded w-16" />
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="animate-pulse bg-white/70 backdrop-blur rounded-2xl p-6 shadow-lg border border-gray-200"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-full" />
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-48" />
+                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16" />
+                    </div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-full" />
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-5/6" />
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-4/6" />
+                  </div>
                 </div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-5/6" />
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
@@ -473,268 +638,451 @@ const AdminModerationPage: React.FC = () => {
         {/* ---------- UI PRINCIPAL ---------- */}
         {hasPermission !== false && !loading && !globalError && (
           <>
-            {/* controles */}
-            <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-col md:flex-row md:items-center gap-3">
-              <div className="relative flex-1">
-                <div className="absolute left-3 top-2.5 pointer-events-none">
-                  <Search className="w-4 h-4" />
+            {/* controles mejorados */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200 p-6 mb-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <Filter className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Filtros y búsqueda</h3>
+              </div>
+
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Búsqueda */}
+                <div className="relative flex-1">
+                  <div className="absolute left-4 top-3.5 pointer-events-none">
+                    <Search className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <input
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
+                    placeholder="Buscar por comentario, usuario o título del libro..."
+                    aria-label="Buscar reseñas"
+                  />
                 </div>
-                <input
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-11 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-200"
-                  placeholder="Buscar comentario, usuario o título..."
-                  aria-label="Buscar reseñas"
-                />
-              </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <select
-                  value={ratingFilter}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setRatingFilter(v === "all" ? "all" : Number(v));
-                    setPage(1);
-                  }}
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  aria-label="Filtrar por valoración"
-                >
-                  <option value="all">Todas las valoraciones</option>
-                  <option value="5">5 ★</option>
-                  <option value="4">4 ★</option>
-                  <option value="3">3 ★</option>
-                  <option value="2">2 ★</option>
-                  <option value="1">1 ★</option>
-                </select>
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-3">
+                  <select
+                    value={ratingFilter}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setRatingFilter(v === "all" ? "all" : Number(v));
+                      setPage(1);
+                    }}
+                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    aria-label="Filtrar por valoración"
+                  >
+                    <option value="all">⭐ Todas las valoraciones</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 estrellas</option>
+                    <option value="4">⭐⭐⭐⭐ 4 estrellas</option>
+                    <option value="3">⭐⭐⭐ 3 estrellas</option>
+                    <option value="2">⭐⭐ 2 estrellas</option>
+                    <option value="1">⭐ 1 estrella</option>
+                  </select>
 
-                <select
-                  value={moderationFilter}
-                  onChange={(e) => {
-                    setModerationFilter(e.target.value as any);
-                    setPage(1);
-                  }}
-                  className="border rounded-lg px-3 py-2 text-sm bg-white"
-                  aria-label="Filtrar por calidad de moderación"
-                >
-                  <option value="all">Todas las calidades</option>
-                  <option value="high">✓ Alta calidad (80+)</option>
-                  <option value="medium">⚠ Requiere revisión (40-79)</option>
-                  <option value="low">⛔ Problemático (&lt;40)</option>
-                </select>
+                  <select
+                    value={moderationFilter}
+                    onChange={(e) => {
+                      setModerationFilter(e.target.value as any);
+                      setPage(1);
+                    }}
+                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    aria-label="Filtrar por calidad de moderación"
+                  >
+                    <option value="all">🎯 Todas las calidades</option>
+                    <option value="high">✅ Alta calidad (80+)</option>
+                    <option value="medium">⚠️ Requiere revisión (40-79)</option>
+                    <option value="low">🚫 Problemático (&lt;40)</option>
+                  </select>
 
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="border rounded-lg px-3 py-2 text-sm"
-                  aria-label="Ordenar reseñas"
-                >
-                  <option value="fecha_desc">Fecha: recientes</option>
-                  <option value="fecha_asc">Fecha: antiguas</option>
-                  <option value="estrellas_desc">Estrellas: mayor</option>
-                  <option value="estrellas_asc">Estrellas: menor</option>
-                </select>
-              </div>
-            </div>
-
-            {/* acciones en lote */}
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-gray-600">
-                  Seleccionadas: <span className="font-medium">{selectedIds.size}</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    aria-label="Ordenar reseñas"
+                  >
+                    <option value="fecha_desc">🕐 Más recientes</option>
+                    <option value="fecha_asc">🕐 Más antiguas</option>
+                    <option value="estrellas_desc">⭐ Mayor valoración</option>
+                    <option value="estrellas_asc">⭐ Menor valoración</option>
+                  </select>
                 </div>
-                <button
-                  onClick={() => selectAllOnPage(paginated)}
-                  className="px-3 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"
-                >
-                  Seleccionar/Desmarcar página
-                </button>
-                <button onClick={clearSelection} className="px-3 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50">
-                  Limpiar selección
-                </button>
               </div>
+            </motion.div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleAprobarMasivo}
-                  disabled={selectedIds.size === 0}
-                  className={`px-4 py-2 rounded-lg text-white font-medium ${selectedIds.size === 0 ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 shadow"}`}
-                >
-                  Aprobar seleccionadas
-                </button>
-                <button
-                  onClick={() => requestReject(Array.from(selectedIds))}
-                  disabled={selectedIds.size === 0}
-                  className={`px-4 py-2 rounded-lg text-white font-medium ${selectedIds.size === 0 ? "bg-red-300 cursor-not-allowed" : "bg-red-600 hover:bg-red-700 shadow"}`}
-                >
-                  Rechazar seleccionadas
-                </button>
+            {/* acciones en lote mejoradas */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5 border-2 border-indigo-200 shadow-md"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-indigo-200">
+                    <CheckCircle className="w-4 h-4 text-indigo-600" />
+                    <span className="text-sm font-semibold text-gray-700">
+                      Seleccionadas: <span className="text-indigo-600">{selectedIds.size}</span>
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => selectAllOnPage(paginated)}
+                    className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-indigo-300 transition-all"
+                  >
+                    Seleccionar/Desmarcar página
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={clearSelection}
+                    className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-red-300 transition-all"
+                  >
+                    Limpiar selección
+                  </motion.button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <motion.button
+                    whileHover={{ scale: selectedIds.size > 0 ? 1.05 : 1 }}
+                    whileTap={{ scale: selectedIds.size > 0 ? 0.95 : 1 }}
+                    onClick={handleAprobarMasivo}
+                    disabled={selectedIds.size === 0}
+                    className={`px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all ${
+                      selectedIds.size === 0
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+                    }`}
+                  >
+                    ✓ Aprobar seleccionadas
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: selectedIds.size > 0 ? 1.05 : 1 }}
+                    whileTap={{ scale: selectedIds.size > 0 ? 0.95 : 1 }}
+                    onClick={() => requestReject(Array.from(selectedIds))}
+                    disabled={selectedIds.size === 0}
+                    className={`px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all ${
+                      selectedIds.size === 0
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700"
+                    }`}
+                  >
+                    ✕ Rechazar seleccionadas
+                  </motion.button>
+                </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* lista */}
+            {/* lista mejorada */}
             {paginated.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No hay reseñas pendientes.</div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/80 backdrop-blur rounded-2xl shadow-lg p-12 text-center border-2 border-dashed border-gray-300"
+              >
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">¡Todo al día!</h3>
+                <p className="text-gray-500">No hay reseñas pendientes de moderación en este momento.</p>
+              </motion.div>
             ) : (
-              <div className="space-y-4">
-                {paginated.map((resena) => {
-                  const isLoading = !!actionLoadingIds[resena.id];
-                  const isSelected = selectedIds.has(resena.id);
-                  const isExpanded = expandedIds.has(resena.id);
-                  return (
-                    <article key={resena.id} className="bg-white rounded-xl shadow p-4 flex gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center font-semibold">
-                          {resena.usuario.nombre
-                            .split(" ")
-                            .map((s) => s[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase()}
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {paginated.map((resena, index) => {
+                    const isLoading = !!actionLoadingIds[resena.id];
+                    const isSelected = selectedIds.has(resena.id);
+                    const isExpanded = expandedIds.has(resena.id);
+                    return (
+                      <motion.article
+                        key={resena.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ delay: index * 0.05 }}
+                        className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 transition-all ${
+                          isSelected ? "border-indigo-400 shadow-xl" : "border-gray-200 hover:border-indigo-300"
+                        } p-6 flex gap-5 hover:shadow-2xl`}
+                      >
+                        <div className="flex-shrink-0">
+                          <UserAvatar 
+                            usuario={{
+                              nombre: resena.usuario.nombre,
+                              username: resena.usuario.username,
+                              avatar: resena.usuario.avatar
+                            }} 
+                            size="w-16 h-16" 
+                          />
                         </div>
-                      </div>
 
-                      <div className="flex-1">
-                        <header className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900">{resena.usuario.nombre}</h3>
-                            <div className="text-sm text-gray-600">
-                              <span className="font-medium">Libro:</span> {(resena.libro as any).nombre || resena.libro.titulo} · <span className="text-gray-500">{resena.usuario.email}</span>
+                        <div className="flex-1 min-w-0">
+                          <header className="flex items-start justify-between gap-4 mb-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xl font-bold text-gray-900 truncate">{resena.usuario.nombre}</h3>
+                              <div className="text-sm text-gray-600 mt-1">
+                                <span className="font-semibold text-indigo-600">📚 Libro:</span>{" "}
+                                <span className="font-medium">{(resena.libro as any).nombre || resena.libro.titulo}</span>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                <Mail className="w-3 h-3" />
+                                {resena.usuario.email}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatDate(resena.fechaResena)}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-400 mt-1">Fecha: {formatDate(resena.fechaResena)}</div>
-                            
-                            {/* Badge de moderación */}
-                            <div className="mt-2">
-                              <ModerationBadge score={resena.moderationScore} autoModerated={resena.autoModerated} />
+
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-xl border border-amber-300 shadow-sm">
+                                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                                <span className="text-sm font-bold text-amber-700">{resena.estrellas}/5</span>
+                              </div>
+
+                              <label className="inline-flex items-center gap-2 cursor-pointer group">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleSelect(resena.id)}
+                                  className="w-5 h-5 rounded border-2 border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-300 cursor-pointer"
+                                  aria-label={`Seleccionar reseña ${resena.id}`}
+                                />
+                                <span className="text-xs font-medium text-gray-500 group-hover:text-indigo-600 transition-colors">
+                                  Seleccionar
+                                </span>
+                              </label>
                             </div>
+                          </header>
+
+                          {/* Badge de moderación */}
+                          <div className="mb-3">
+                            <ModerationBadge score={resena.moderationScore} autoModerated={resena.autoModerated} />
                           </div>
 
-                          <div className="text-right flex-shrink-0 ml-4">
-                            <div className="text-sm font-semibold text-yellow-500 flex items-center justify-end">
-                              <Star className="w-4 h-4" /> {resena.estrellas}/5
-                            </div>
-
-                            <label className="mt-2 inline-flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(resena.id)}
-                                className="w-4 h-4"
-                                aria-label={`Seleccionar reseña ${resena.id}`}
-                              />
-                              <span className="text-xs text-gray-500">Seleccionar</span>
-                            </label>
+                          <div className="mt-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
+                            <p className="text-gray-800 leading-relaxed">
+                              {isExpanded ? resena.comentario : resena.comentario.slice(0, 300)}
+                              {resena.comentario.length > 300 && (
+                                <>
+                                  {!isExpanded ? "..." : ""}
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    onClick={() => toggleExpand(resena.id)}
+                                    className="ml-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                                  >
+                                    {isExpanded ? "Mostrar menos ↑" : "Mostrar más ↓"}
+                                  </motion.button>
+                                </>
+                              )}
+                            </p>
                           </div>
-                        </header>
 
-                        <div className="mt-3 bg-gray-50 rounded-lg p-3">
-                          <p className="text-gray-800">
-                            {isExpanded ? resena.comentario : resena.comentario.slice(0, 300)}
-                            {resena.comentario.length > 300 && (
-                              <>
-                                {!isExpanded ? "..." : ""}
-                                <button onClick={() => toggleExpand(resena.id)} className="ml-2 text-sm text-sky-600 hover:underline">
-                                  {isExpanded ? "Mostrar menos" : "Mostrar más"}
-                                </button>
-                              </>
-                            )}
-                          </p>
+                          {/* Razones de moderación */}
+                          <ModerationReasons reasons={resena.moderationReasons} />
+
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleAprobar(resena.id)}
+                              disabled={isLoading}
+                              className={`px-6 py-2.5 rounded-xl text-white font-semibold shadow-md transition-all ${
+                                isLoading
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
+                              }`}
+                            >
+                              {isLoading ? "⏳ Procesando..." : "✓ Aprobar"}
+                            </motion.button>
+
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => requestReject([resena.id])}
+                              disabled={isLoading}
+                              className={`px-6 py-2.5 rounded-xl text-white font-semibold shadow-md transition-all ${
+                                isLoading
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700"
+                              }`}
+                            >
+                              ✕ Rechazar
+                            </motion.button>
+
+                            <motion.a
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              href={`/libros/${resena.libro.slug ?? resena.libro.id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-6 py-2.5 rounded-xl border-2 border-indigo-300 text-sm font-semibold hover:bg-indigo-50 flex items-center gap-2 transition-all text-indigo-700"
+                            >
+                              📖 Ver libro ↗
+                            </motion.a>
+                          </div>
                         </div>
-
-                        {/* Razones de moderación */}
-                        <ModerationReasons reasons={resena.moderationReasons} />
-
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            onClick={() => handleAprobar(resena.id)}
-                            disabled={isLoading}
-                            className={`px-4 py-2 rounded-lg text-white font-medium ${isLoading ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 shadow"}`}
-                          >
-                            {isLoading ? "Procesando..." : "Aprobar"}
-                          </button>
-
-                          <button
-                            onClick={() => requestReject([resena.id])}
-                            disabled={isLoading}
-                            className={`px-4 py-2 rounded-lg text-white font-medium ${isLoading ? "bg-red-300 cursor-not-allowed" : "bg-red-600 hover:bg-red-700 shadow"}`}
-                          >
-                            Rechazar
-                          </button>
-
-                          <a
-                            href={`/libros/${resena.libro.slug ?? resena.libro.id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            Ver libro ↗
-                          </a>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+                      </motion.article>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
             )}
 
-            {/* paginación */}
+            {/* paginación mejorada */}
             {filtered.length > 0 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Mostrando <span className="font-medium">{(currentPage - 1) * PAGE_SIZE + 1}</span> - <span className="font-medium">{Math.min(currentPage * PAGE_SIZE, filtered.length)}</span> de <span className="font-medium">{filtered.length}</span>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-5"
+              >
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <TrendingUp className="w-4 h-4 text-indigo-600" />
+                    <span>
+                      Mostrando{" "}
+                      <span className="font-bold text-indigo-600">{(currentPage - 1) * PAGE_SIZE + 1}</span>
+                      {" - "}
+                      <span className="font-bold text-indigo-600">
+                        {Math.min(currentPage * PAGE_SIZE, filtered.length)}
+                      </span>
+                      {" de "}
+                      <span className="font-bold text-indigo-600">{filtered.length}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <motion.button
+                      whileHover={{ scale: currentPage !== 1 ? 1.05 : 1 }}
+                      whileTap={{ scale: currentPage !== 1 ? 0.95 : 1 }}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all ${
+                        currentPage === 1
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-white border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                      }`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Anterior
+                    </motion.button>
+
+                    <div className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold shadow-lg">
+                      Página {currentPage} / {totalPages}
+                    </div>
+
+                    <motion.button
+                      whileHover={{ scale: currentPage !== totalPages ? 1.05 : 1 }}
+                      whileTap={{ scale: currentPage !== totalPages ? 0.95 : 1 }}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all ${
+                        currentPage === totalPages
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-white border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                      }`}
+                    >
+                      Siguiente
+                      <ChevronRight className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-lg"
-                  >
-                    ◀ Anterior
-                  </button>
-
-                  <div className="text-sm text-gray-700">Página {currentPage} / {totalPages}</div>
-
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded-lg"
-                  >
-                    Siguiente ▶
-                  </button>
-                </div>
-              </div>
+              </motion.div>
             )}
           </>
         )}
       </div>
 
-      {/* modal confirmar rechazo */}
-      {confirmReject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-semibold mb-2">Confirmar rechazo</h3>
-            <p className="text-sm text-gray-600 mb-4">Vas a rechazar {confirmReject.ids.length} reseña(s). Podés agregar un comentario opcional que se registre con el rechazo.</p>
+      {/* modal confirmar rechazo mejorado */}
+      <AnimatePresence>
+        {confirmReject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setConfirmReject(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-500 to-rose-600 px-8 py-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur">
+                    <AlertTriangle className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Confirmar rechazo</h3>
+                    <p className="text-red-100 text-sm mt-1">
+                      Esta acción no se puede deshacer
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <textarea
-              value={confirmReject.comentario}
-              onChange={(e) => setConfirmReject({ ...confirmReject, comentario: e.target.value })}
-              placeholder="Comentario opcional..."
-              className="w-full border rounded-md p-2 mb-4 min-h-[90px]"
-            />
+              {/* Content */}
+              <div className="px-8 py-6">
+                <div className="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                  <p className="text-sm text-gray-700">
+                    Vas a rechazar{" "}
+                    <span className="font-bold text-red-600">{confirmReject.ids.length}</span>{" "}
+                    reseña{confirmReject.ids.length > 1 ? "s" : ""}. Podés agregar un comentario opcional que se registre con el rechazo.
+                  </p>
+                </div>
 
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmReject(null)} className="px-4 py-2 border rounded-lg">Cancelar</button>
-              <button onClick={() => performReject(confirmReject.ids, confirmReject.comentario)} className="px-4 py-2 bg-red-600 text-white rounded-lg">Confirmar rechazo</button>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Comentario del moderador (opcional)
+                  </label>
+                  <textarea
+                    value={confirmReject.comentario}
+                    onChange={(e) => setConfirmReject({ ...confirmReject, comentario: e.target.value })}
+                    placeholder="Ej: Contiene lenguaje inapropiado, no cumple con las normas de la comunidad..."
+                    className="w-full border-2 border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all min-h-[120px] text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="bg-gray-50 px-8 py-5 flex gap-3 border-t border-gray-200">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setConfirmReject(null)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl font-semibold hover:bg-gray-100 transition-all"
+                >
+                  Cancelar
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => performReject(confirmReject.ids, confirmReject.comentario)}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-rose-700 shadow-lg transition-all"
+                >
+                  Confirmar rechazo
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* notificación */}
-      {notice && <Notice type={notice.type} text={notice.text} onClose={() => setNotice(null)} />}
+      <AnimatePresence>
+        {notice && <Notice type={notice.type} text={notice.text} onClose={() => setNotice(null)} />}
+      </AnimatePresence>
     </div>
   );
 };

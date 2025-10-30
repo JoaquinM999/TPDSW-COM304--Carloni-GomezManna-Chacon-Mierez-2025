@@ -16,6 +16,7 @@ export enum EstadoResena {
   PENDING = 'pending',
   APPROVED = 'approved',
   FLAGGED = 'flagged',
+  REJECTED = 'rejected',
 }
 
 @Entity()

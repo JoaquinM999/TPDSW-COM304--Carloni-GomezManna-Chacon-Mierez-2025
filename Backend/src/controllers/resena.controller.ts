@@ -115,7 +115,9 @@ export const getResenas = async (req: Request, res: Response) => {
         usuario: {
           id: r.usuario.id,
           nombre: r.usuario.nombre,
-          email: r.usuario.email
+          email: r.usuario.email,
+          username: r.usuario.username,
+          avatar: r.usuario.avatar
         },
         libro: {
           id: r.libro.id,
@@ -706,12 +708,12 @@ export const getModerationStats = async (req: Request, res: Response) => {
     // Contadores por estado
     const total = allResenas.length;
     const autoApproved = allResenas.filter(r => r.estado === EstadoResena.APPROVED && r.autoRejected === false).length;
-    const autoRejected = allResenas.filter(r => r.estado === EstadoResena.REJECTED && r.autoRejected === true).length;
+    const autoRejected = allResenas.filter(r => r.estado === EstadoResena.FLAGGED && r.autoRejected === true).length;
     const pending = allResenas.filter(r => r.estado === EstadoResena.PENDING).length;
     const flagged = allResenas.filter(r => r.estado === EstadoResena.FLAGGED).length;
     const manuallyReviewed = allResenas.filter(r => 
       (r.estado === EstadoResena.APPROVED && r.autoRejected === true) || // Aprobadas después de rechazo automático
-      (r.estado === EstadoResena.REJECTED && r.autoRejected === false) // Rechazadas manualmente
+      (r.estado === EstadoResena.FLAGGED && r.autoRejected === false) // Rechazadas manualmente
     ).length;
 
     // Calcular score promedio
@@ -721,9 +723,10 @@ export const getModerationStats = async (req: Request, res: Response) => {
     // Razones de rechazo más comunes
     const reasonsCount: Record<string, number> = {};
     allResenas
-      .filter(r => r.estado === EstadoResena.REJECTED && r.moderationReasons)
+      .filter(r => r.estado === EstadoResena.FLAGGED && r.moderationReasons)
       .forEach(r => {
-        r.moderationReasons?.forEach(reason => {
+        const reasons: string[] = JSON.parse(r.moderationReasons || '[]');
+        reasons.forEach((reason: string) => {
           reasonsCount[reason] = (reasonsCount[reason] || 0) + 1;
         });
       });

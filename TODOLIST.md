@@ -552,8 +552,14 @@
   - [x] Placeholder mejorado con ícono SVG cuando no hay portada
   - [x] Mejor aprovechamiento del espacio de las imágenes
   - [x] Diseño más limpio eliminando overlay complejo
+- [x] **Rediseño de página de Recomendados** - ✅ COMPLETADO (30/10/2025)
+  - [x] Tarjetas personalizadas con estilo moderno (igual a nuevos lanzamientos)
+  - [x] Badge de match score (púrpura-rosa) con porcentaje
+  - [x] Badge NUEVO (naranja-rojo) para libros recientes
+  - [x] Imágenes h-80 con object-cover y hover effect
+  - [x] Razones de recomendación compactas (categorías y autores)
+  - [x] Diseño consistente en toda la aplicación
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
-- [ ] **Página de recomendaciones** - PENDIENTE
 - [ ] Notificaciones visuales
 
 ### Calidad

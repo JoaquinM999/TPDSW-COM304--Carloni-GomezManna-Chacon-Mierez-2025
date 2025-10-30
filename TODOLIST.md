@@ -294,6 +294,74 @@
 
 ---
 
+### 5. Sistema de Listas Mejorado 🎯 MEJORAS PROPUESTAS (30/10/2025)
+
+#### Funcionalidad Básica Implementada ✅
+- [x] **CRUD de listas**
+  - [x] Crear, leer, actualizar, eliminar listas
+  - [x] Listas predeterminadas: "Ver más tarde", "Pendiente", "Leídos"
+  - [x] Listas personalizadas del usuario
+  - [x] Protección contra duplicados (implementada 30/10/2025)
+  - [x] Script de limpieza de duplicados (`cleanup-duplicate-listas.ts`)
+
+- [x] **Gestión de contenido**
+  - [x] Agregar/quitar libros de listas
+  - [x] Entidad ContenidoLista con timestamps
+  - [x] Verificación de existencia antes de agregar
+
+#### Backend - Mejoras Propuestas 🚀
+
+- [ ] **Ordenamiento y filtrado de libros en listas**
+  - [ ] Campo `orden` en ContenidoLista (número de posición)
+  - [ ] Endpoint: `PUT /api/listas/:id/reordenar` (drag & drop)
+  - [ ] Filtros: por autor, categoría, rating, fecha de agregado
+  - [ ] Ordenamiento: alfabético, fecha, rating, personalizado
+
+
+#### Frontend - Mejoras Propuestas 🎨
+
+
+- [ ] **Vista de detalle de lista mejorada**
+  - [ ] Grid/tabla toggle de visualización
+  - [ ] Drag & drop para reordenar libros
+  - [ ] Filtros sidebar: autor, categoría, rating
+  - [ ] Búsqueda en lista
+  - [ ] Modo de edición rápida (quitar múltiples libros)
+
+
+- [ ] **Modo de lectura/exploración**
+  - [ ] Vista "Modo presentación" (fullscreen, pasar libros con flechas)
+  - [ ] Vista "Modo estantería" (simula estante de libros físicos)
+  - [ ] Vista "Portadas grandes" vs "Lista compacta"
+
+#### UX/UI Específico de Listas
+
+- [ ] **Iconos y estilos por tipo de lista**
+  - [ ] 📚 "Leídos" → Verde con check
+  - [ ] ⏰ "Ver más tarde" → Azul con reloj
+  - [ ] 📝 "Pendiente" → Amarillo con bookmark
+  - [ ] ⭐ Listas personalizadas → Color personalizable por usuario
+
+- [ ] **Animaciones y micro-interacciones**
+  - [ ] Animación al agregar libro a lista (confetti o checkmark)
+  - [ ] Swipe para remover libro de lista (mobile)
+  - [ ] Transición suave al reordenar
+  - [ ] Loading skeleton durante carga de listas
+
+
+#### Prioridades Sugeridas 🎯
+
+**Alta Prioridad (Quick Wins):**
+1. ✅ Protección contra duplicados (COMPLETADO 30/10/2025)
+3. Vista detallada de lista con filtros básicos
+4. Reordenamiento drag & drop
+
+#### Documentación Asociada
+- [x] `LISTAS_DUPLICADAS.md` - Protección contra duplicados
+- [ ] `LISTAS_AVANZADAS.md` - Sistema de listas mejorado (pendiente)
+
+---
+
 ## 🐛 Bugs y Correcciones Identificados
 
 ### Backend

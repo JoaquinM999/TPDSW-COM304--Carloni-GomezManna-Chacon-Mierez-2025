@@ -163,51 +163,56 @@ export const LibrosRecomendados: React.FC = () => {
               </div>
 
               {/* Contenido */}
-              <div className="p-4">
-                {/* Título */}
-                <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
+              <div className="p-5">
+                {/* Título con mejor altura y espaciado */}
+                <h3 className="font-bold text-gray-900 text-lg leading-tight mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-purple-600 transition-colors">
                   {libro.titulo}
                 </h3>
 
-                {/* Autores */}
-                <p className="text-gray-600 text-sm mb-3 line-clamp-1">
-                  {libro.autores.join(', ')}
+                {/* Autores con mejor visibilidad */}
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem] leading-relaxed">
+                  por <span className="font-medium text-gray-700">{libro.autores.join(', ')}</span>
                 </p>
 
-                {/* Rating */}
+                {/* Rating con mejor diseño */}
                 {libro.averageRating > 0 && (
-                  <div className="flex items-center gap-1 mb-3">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-2 mb-4 bg-yellow-50 rounded-lg px-3 py-2">
+                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                    <span className="text-base font-bold text-gray-900">
                       {libro.averageRating.toFixed(1)}
                     </span>
+                    <span className="text-xs text-gray-500">/ 5.0</span>
                   </div>
                 )}
 
-                {/* Razones de la recomendación */}
-                <div className="space-y-2 pt-3 border-t border-gray-100">
+                {/* Razones de la recomendación con mejor espaciado */}
+                <div className="space-y-3 pt-4 border-t-2 border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    Por qué te recomendamos este libro:
+                  </p>
+                  
                   {/* Categorías coincidentes */}
                   {libro.matchCategorias.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <Tag className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2 bg-blue-50 rounded-lg p-2">
+                      <Tag className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-gray-500">Categorías: </span>
-                        <span className="text-xs font-medium text-blue-600 line-clamp-1">
+                        <p className="text-xs font-medium text-blue-900 mb-1">Categorías que te gustan:</p>
+                        <p className="text-xs text-blue-700 line-clamp-2 leading-relaxed">
                           {libro.matchCategorias.join(', ')}
-                        </span>
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* Autores coincidentes */}
                   {libro.matchAutores.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <User className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2 bg-green-50 rounded-lg p-2">
+                      <User className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-gray-500">Autores: </span>
-                        <span className="text-xs font-medium text-green-600 line-clamp-1">
+                        <p className="text-xs font-medium text-green-900 mb-1">Autores que sigues:</p>
+                        <p className="text-xs text-green-700 line-clamp-2 leading-relaxed">
                           {libro.matchAutores.join(', ')}
-                        </span>
+                        </p>
                       </div>
                     </div>
                   )}

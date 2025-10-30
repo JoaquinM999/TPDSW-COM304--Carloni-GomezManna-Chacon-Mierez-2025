@@ -6,6 +6,8 @@ import { listaService, Lista, ContenidoLista } from '../services/listaService';
 import { getAutores } from '../services/autorService';
 import { getCategorias } from '../services/categoriaService';
 import { obtenerFavoritos } from '../services/favoritosService';
+import { MicroSuccessAnimation } from '../componentes/SuccessAnimation';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface LibroFavorito {
   id: number; // ✅ Volvemos a usar 'number' como el tipo del ID.

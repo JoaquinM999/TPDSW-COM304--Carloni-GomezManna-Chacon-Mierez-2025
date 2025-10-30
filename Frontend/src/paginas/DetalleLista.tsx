@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
+import toast, { Toaster } from 'react-hot-toast';
+import { LoadingSkeleton, ListHeaderSkeleton, ToolbarSkeleton } from '../componentes/LoadingSkeleton';
 import { 
   BookOpen, 
   Grid3x3, 
@@ -69,15 +71,44 @@ export default function DetalleLista() {
   };
 
   const handleRemoveLibro = async (libroId: number) => {
-    if (!confirm('¿Eliminar este libro de la lista?')) return;
-
-    try {
-      await listaService.removeLibroDeLista(listaId, libroId.toString());
-      setContenidos(contenidos.filter(c => c.libro.id !== libroId));
-    } catch (err) {
-      console.error('Error al eliminar libro:', err);
-      alert('Error al eliminar libro de la lista');
-    }
+    // Toast de confirmación interactivo
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold text-gray-900">¿Eliminar este libro de la lista?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              
+              // Toast promise para mostrar progreso
+              await toast.promise(
+                listaService.removeLibroDeLista(listaId, libroId.toString()),
+                {
+                  loading: 'Eliminando libro...',
+                  success: '¡Libro eliminado correctamente!',
+                  error: 'Error al eliminar el libro',
+                }
+              );
+              
+              // Actualizar lista después de éxito
+              setContenidos(contenidos.filter(c => c.libro.id !== libroId));
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+          >
+            Eliminar
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+    });
   };
 
   const limpiarFiltros = () => {
@@ -116,8 +147,13 @@ export default function DetalleLista() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+        <Toaster position="top-center" />
+        <ListHeaderSkeleton />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <ToolbarSkeleton />
+          <LoadingSkeleton count={10} viewMode={viewMode} />
+        </div>
       </div>
     );
   }
@@ -125,6 +161,7 @@ export default function DetalleLista() {
   if (error || !lista) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <Toaster position="top-center" />
         <div className="text-center">
           <p className="text-red-600 text-xl mb-4">{error || 'Lista no encontrada'}</p>
           <button
@@ -140,6 +177,7 @@ export default function DetalleLista() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-8 px-4">
+      <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">

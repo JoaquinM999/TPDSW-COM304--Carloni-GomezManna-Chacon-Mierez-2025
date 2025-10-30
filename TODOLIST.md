@@ -374,12 +374,29 @@
   - [x] Hover effects con framer-motion
   - [x] Confirmación al eliminar libro (window.confirm)
 
-- [ ] **Animaciones y micro-interacciones pendientes**
-  - [ ] Animación al agregar libro a lista (confetti o checkmark con framer-motion)
-  - [ ] Swipe gesture para remover libro (mobile con react-swipeable)
-  - [ ] Transición suave al reordenar con drag & drop
-  - [ ] Loading skeleton durante carga (actualmente spinner genérico)
-  - [ ] Toast notifications en lugar de window.confirm/alert
+- [x] **Animaciones y micro-interacciones implementadas** ✅ COMPLETADO (30/10/2025)
+  - [x] Toast notifications con react-hot-toast (reemplaza window.confirm/alert)
+    - [x] Toast de confirmación interactivo al eliminar libros
+    - [x] Toast.promise con estados: loading, success, error
+    - [x] Toaster configurado en DetalleLista.tsx
+  - [x] Loading skeleton durante carga (componente LoadingSkeleton.tsx)
+    - [x] Skeleton para grid view (5 columnas responsivo)
+    - [x] Skeleton para list view (vista compacta)
+    - [x] ListHeaderSkeleton para header de lista
+    - [x] ToolbarSkeleton para barra de herramientas
+    - [x] Animaciones con framer-motion (stagger effect)
+  - [x] Animaciones de éxito con confetti (componente SuccessAnimation.tsx)
+    - [x] SuccessAnimation fullscreen con partículas de confetti
+    - [x] MicroSuccessAnimation para uso en tarjetas
+    - [x] 4 tipos: check (verde), heart (rosa), star (amarillo), sparkles (púrpura)
+    - [x] Círculos de expansión y mensaje personalizable
+  - [x] CSS preparado para drag & drop (styles/drag-drop.css)
+    - [x] Clases .draggable-item, .dragging, .drag-over
+    - [x] Animaciones: pulse, drop-bounce, success-flash
+    - [x] Efectos de sombra animada durante drag
+    - [x] Placeholder con patrón diagonal
+    - [x] Responsive (efectos reducidos en mobile)
+  - [ ] Swipe gesture para remover libro (mobile - react-swipeable pendiente)
 
 
 #### Prioridades Sugeridas 🎯

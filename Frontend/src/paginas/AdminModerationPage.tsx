@@ -12,7 +12,10 @@ import {
   LogIn,
   Mail,
   Home,
-
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Info,
 } from "lucide-react";
 
 /* ---------------------------
@@ -23,6 +26,10 @@ interface Resena {
   comentario: string;
   estrellas: number;
   fechaResena: string;
+  estado?: 'pending' | 'approved' | 'flagged';
+  moderationScore?: number;
+  moderationReasons?: string; // JSON string
+  autoModerated?: boolean;
   usuario: {
     id: number;
     nombre: string;
@@ -42,6 +49,81 @@ const PAGE_SIZE = 6;
 const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() : "");
 
 
+
+/* ---------------------------
+   Componente Score de Moderación
+   --------------------------- */
+const ModerationBadge: React.FC<{ score?: number; autoModerated?: boolean }> = ({ score, autoModerated }) => {
+  if (score === undefined) return null;
+
+  let bgColor = "bg-gray-100";
+  let textColor = "text-gray-700";
+  let icon = <Info className="w-4 h-4" />;
+  let label = "Sin analizar";
+
+  if (score >= 80) {
+    bgColor = "bg-green-100";
+    textColor = "text-green-700";
+    icon = <CheckCircle className="w-4 h-4" />;
+    label = "Calidad alta";
+  } else if (score >= 40) {
+    bgColor = "bg-yellow-100";
+    textColor = "text-yellow-700";
+    icon = <AlertTriangle className="w-4 h-4" />;
+    label = "Requiere revisión";
+  } else {
+    bgColor = "bg-red-100";
+    textColor = "text-red-700";
+    icon = <Shield className="w-4 h-4" />;
+    label = "Contenido problemático";
+  }
+
+  return (
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${bgColor} ${textColor} text-xs font-medium`}>
+      {icon}
+      <span>{label}: {score}/100</span>
+      {autoModerated && <span className="ml-1 opacity-70">(Auto)</span>}
+    </div>
+  );
+};
+
+/* ---------------------------
+   Componente Razones de Moderación
+   --------------------------- */
+const ModerationReasons: React.FC<{ reasons?: string }> = ({ reasons }) => {
+  if (!reasons) return null;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(reasons);
+  } catch {
+    return null;
+  }
+
+  const items: string[] = [];
+  if (parsed.sentiment) items.push(`Sentimiento: ${parsed.sentiment}`);
+  if (parsed.profanity) items.push(`Lenguaje: ${parsed.profanity}`);
+  if (parsed.spam) items.push(`Spam: ${parsed.spam}`);
+  if (parsed.toxicity !== undefined) items.push(`Toxicidad: ${parsed.toxicity}%`);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
+      <div className="flex items-start gap-2">
+        <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="text-xs text-blue-800">
+          <div className="font-semibold mb-1">Análisis automático:</div>
+          <ul className="space-y-1">
+            {items.map((item, idx) => (
+              <li key={idx}>• {item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* ---------------------------
    Notificación flotante
@@ -88,6 +170,7 @@ const AdminModerationPage: React.FC = () => {
   // UI state
   const [query, setQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<number | "all">("all");
+  const [moderationFilter, setModerationFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [sortBy, setSortBy] = useState<"fecha_desc" | "fecha_asc" | "estrellas_desc" | "estrellas_asc">(
     "fecha_desc"
   );
@@ -161,7 +244,18 @@ const AdminModerationPage: React.FC = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let arr = resenas.filter((r) => {
+      // Filtro por rating
       if (ratingFilter !== "all" && r.estrellas !== ratingFilter) return false;
+      
+      // Filtro por score de moderación
+      if (moderationFilter !== "all") {
+        const score = r.moderationScore ?? 0;
+        if (moderationFilter === "high" && score < 80) return false;
+        if (moderationFilter === "medium" && (score < 40 || score >= 80)) return false;
+        if (moderationFilter === "low" && score >= 40) return false;
+      }
+      
+      // Filtro por texto
       if (!q) return true;
       return (
         r.comentario.toLowerCase().includes(q) ||
@@ -187,7 +281,7 @@ const AdminModerationPage: React.FC = () => {
     }
 
     return arr;
-  }, [resenas, query, ratingFilter, sortBy]);
+  }, [resenas, query, ratingFilter, moderationFilter, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -397,7 +491,7 @@ const AdminModerationPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <select
                   value={ratingFilter}
                   onChange={(e) => {
@@ -414,6 +508,21 @@ const AdminModerationPage: React.FC = () => {
                   <option value="3">3 ★</option>
                   <option value="2">2 ★</option>
                   <option value="1">1 ★</option>
+                </select>
+
+                <select
+                  value={moderationFilter}
+                  onChange={(e) => {
+                    setModerationFilter(e.target.value as any);
+                    setPage(1);
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm bg-white"
+                  aria-label="Filtrar por calidad de moderación"
+                >
+                  <option value="all">Todas las calidades</option>
+                  <option value="high">✓ Alta calidad (80+)</option>
+                  <option value="medium">⚠ Requiere revisión (40-79)</option>
+                  <option value="low">⛔ Problemático (&lt;40)</option>
                 </select>
 
                 <select
@@ -489,13 +598,20 @@ const AdminModerationPage: React.FC = () => {
 
                       <div className="flex-1">
                         <header className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{resena.libro.titulo}</h3>
-                            <div className="text-sm text-gray-600">{resena.usuario.nombre} · {resena.usuario.email}</div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{resena.usuario.nombre}</h3>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">Libro:</span> {(resena.libro as any).nombre || resena.libro.titulo} · <span className="text-gray-500">{resena.usuario.email}</span>
+                            </div>
                             <div className="text-xs text-gray-400 mt-1">Fecha: {formatDate(resena.fechaResena)}</div>
+                            
+                            {/* Badge de moderación */}
+                            <div className="mt-2">
+                              <ModerationBadge score={resena.moderationScore} autoModerated={resena.autoModerated} />
+                            </div>
                           </div>
 
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0 ml-4">
                             <div className="text-sm font-semibold text-yellow-500 flex items-center justify-end">
                               <Star className="w-4 h-4" /> {resena.estrellas}/5
                             </div>
@@ -526,6 +642,9 @@ const AdminModerationPage: React.FC = () => {
                             )}
                           </p>
                         </div>
+
+                        {/* Razones de moderación */}
+                        <ModerationReasons reasons={resena.moderationReasons} />
 
                         <div className="mt-3 flex gap-2">
                           <button

@@ -25,6 +25,7 @@ import { externalAuthorRoutes } from './routes/externalAuthor.routes';
 import { actividadRoutes } from './routes/actividad.routes';
 import { permisoRoutes } from './routes/permiso.routes';
 import { ratingLibroRoutes } from './routes/ratingLibro.routes';
+import { feedRoutes } from './routes/feed.routes';
 
 import { authenticateJWT } from './middleware/auth.middleware';
 
@@ -59,6 +60,7 @@ app.use('/api/external-authors', externalAuthorRoutes);
 // 🔹 Nuevos endpoints
 app.use('/api/actividades', actividadRoutes);
 app.use('/api/permisos', permisoRoutes);
+app.use('/api/feed', feedRoutes);
 app.use('/api/rating-libro', ratingLibroRoutes);
 
 // Global error handler middleware

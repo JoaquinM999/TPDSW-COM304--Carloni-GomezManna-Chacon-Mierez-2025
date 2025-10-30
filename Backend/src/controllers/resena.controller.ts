@@ -8,6 +8,7 @@ import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
 import { Autor } from '../entities/autor.entity';
 import { ActividadService } from '../services/actividad.service';
 import redis from '../redis';
+import { moderationService } from '../services/moderation.service';
 
 interface AuthRequest extends Request {
   user?: { id: number; [key: string]: any };
@@ -24,13 +25,22 @@ export const getResenas = async (req: Request, res: Response) => {
 
     const where: any = {};
 
+    // 🚫 Excluir reseñas eliminadas (soft delete) por defecto
+    where.deletedAt = null;
+
     // Filtrado por libroId (siempre externalId, ya que libroId viene del frontend como external)
     if (libroId) {
       where.libro = { externalId: libroId.toString() };
     }
 
     if (usuarioId) where.usuario = +usuarioId;
-    if (estado) where.estado = estado;
+    
+    // 🔹 Para moderación: si piden PENDING, incluir también FLAGGED
+    if (estado === 'PENDING') {
+      where.estado = { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] };
+    } else if (estado) {
+      where.estado = estado;
+    }
 
     // 🔹 Lógica de visibilidad
     if (!estado) {
@@ -66,9 +76,39 @@ export const getResenas = async (req: Request, res: Response) => {
     });
 
     // Special handling for pending reviews (admin moderation): return flat array without pagination or top-level filtering
-    if (estado === 'PENDING') {
-      console.log('🔍 getResenas => pending reviews, returning flat array:', resenas.length);
-      res.json(resenas);
+    if (estado === 'PENDING' || where.estado?.$in?.includes(EstadoResena.PENDING)) {
+      console.log('🔍 getResenas => moderation reviews:', resenas.length);
+      console.log('🔍 Sample moderation data:', resenas[0] ? {
+        id: resenas[0].id,
+        moderationScore: resenas[0].moderationScore,
+        moderationReasons: resenas[0].moderationReasons,
+        autoModerated: resenas[0].autoModerated,
+        estado: resenas[0].estado
+      } : 'No resenas');
+      
+      // Serializar explícitamente para asegurar que incluye campos de moderación
+      const serialized = resenas.map(r => ({
+        id: r.id,
+        comentario: r.comentario,
+        estrellas: r.estrellas,
+        estado: r.estado,
+        fechaResena: r.fechaResena,
+        moderationScore: r.moderationScore,
+        moderationReasons: r.moderationReasons,
+        autoModerated: r.autoModerated,
+        usuario: {
+          id: r.usuario.id,
+          nombre: r.usuario.nombre,
+          email: r.usuario.email
+        },
+        libro: {
+          id: r.libro.id,
+          titulo: r.libro.nombre,
+          slug: r.libro.externalId
+        }
+      }));
+      
+      res.json(serialized);
       return;
     }
 
@@ -187,19 +227,65 @@ export const createResena = async (req: Request, res: Response) => {
       console.log('📚 Nuevo libro creado:', libro.nombre);
     }
 
+    // Análisis de moderación automática
+    const moderationResult = moderationService.analyzeReview(comentario, estrellasNum);
+    console.log('🤖 Análisis de moderación:', {
+      score: moderationResult.score,
+      isApproved: moderationResult.isApproved,
+      shouldAutoReject: moderationResult.shouldAutoReject,
+      reasons: moderationResult.reasons
+    });
+
+    // 🚫 AUTO-RECHAZO: Si el contenido es extremadamente problemático, rechazar inmediatamente
+    if (moderationResult.shouldAutoReject) {
+      console.log('🚫 RESEÑA AUTO-RECHAZADA - Contenido extremadamente inapropiado');
+      console.log('Razones:', moderationResult.reasons.join(', '));
+      
+      return res.status(400).json({
+        error: 'Tu reseña contiene contenido inapropiado y no puede ser publicada',
+        details: 'Por favor, revisa nuestras normas de comunidad y asegúrate de que tu comentario sea respetuoso y constructivo.',
+        moderationScore: moderationResult.score,
+        blocked: true
+      });
+    }
+
+    // Determinar estado inicial basado en moderación
+    let estadoInicial = EstadoResena.PENDING;
+    if (moderationResult.isApproved && moderationResult.score >= 80) {
+      // Auto-aprobar reseñas con score alto
+      estadoInicial = EstadoResena.APPROVED;
+      console.log('✅ Reseña auto-aprobada');
+    } else if (!moderationResult.isApproved || moderationResult.score < 40) {
+      // Auto-rechazar reseñas con score muy bajo (pero no tan bajo como para bloquear)
+      estadoInicial = EstadoResena.FLAGGED;
+      console.log('⚠️ Reseña auto-flagged por:', moderationResult.reasons.join(', '));
+    } else {
+      // Enviar a moderación manual si está en zona gris (40-79)
+      estadoInicial = EstadoResena.PENDING;
+      console.log('⏳ Reseña enviada a moderación manual');
+    }
+
     // Crear la reseña
     const nuevaResena = em.create(Resena, {
       comentario,
       estrellas: estrellasNum,
       libro,
       usuario,
-      estado: EstadoResena.PENDING,
+      estado: estadoInicial,
+      moderationScore: moderationResult.score,
+      moderationReasons: JSON.stringify(moderationResult.reasons),
+      autoModerated: moderationResult.score >= 80 || moderationResult.score < 40,
+      autoRejected: moderationResult.shouldAutoReject,
+      rejectionReason: moderationResult.shouldAutoReject 
+        ? moderationResult.reasons.join('; ') 
+        : undefined,
+      deletedAt: moderationResult.shouldAutoReject ? new Date() : undefined,
       fechaResena: new Date(),
       createdAt: new Date(),
     });
 
     await em.persistAndFlush(nuevaResena);
-    console.log('✅ Reseña guardada con ID:', nuevaResena.id);
+    console.log('✅ Reseña guardada con ID:', nuevaResena.id, '| Estado:', estadoInicial);
 
     // Invalidar cache si existe
     if (redis && redis.del) {
@@ -411,5 +497,95 @@ export const createRespuesta = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('❌ Error en createRespuesta:', error);
     res.status(500).json({ error: 'Error al crear la respuesta' });
+  }
+};
+
+// =======================
+// Obtener reseñas auto-rechazadas (Solo Admin)
+// =======================
+export const getResenasRechazadas = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    
+    const usuarioPayload = (req as AuthRequest).user;
+    if (!usuarioPayload) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
+    if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
+      return res.status(403).json({ error: 'Acceso denegado. Solo administradores.' });
+    }
+
+    // Obtener todas las reseñas soft-deleted (auto-rechazadas)
+    const resenasRechazadas = await em.find(Resena, {
+      deletedAt: { $ne: null },
+      autoRejected: true
+    }, {
+      populate: ['usuario', 'libro'],
+      orderBy: { deletedAt: 'DESC' }
+    });
+
+    res.json({
+      total: resenasRechazadas.length,
+      resenas: resenasRechazadas.map(r => ({
+        id: r.id,
+        comentario: r.comentario,
+        estrellas: r.estrellas,
+        moderationScore: r.moderationScore,
+        rejectionReason: r.rejectionReason,
+        deletedAt: r.deletedAt,
+        usuario: {
+          id: r.usuario.id,
+          nombre: r.usuario.nombre,
+          email: r.usuario.email
+        },
+        libro: {
+          id: r.libro.id,
+          titulo: r.libro.nombre
+        }
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Error en getResenasRechazadas:', error);
+    res.status(500).json({ error: 'Error al obtener reseñas rechazadas' });
+  }
+};
+
+// =======================
+// Analizar reseña con moderación automática
+// =======================
+export const analyzeResena = async (req: Request, res: Response) => {
+  try {
+    const { comentario, estrellas } = req.body;
+
+    if (!comentario || typeof comentario !== 'string') {
+      return res.status(400).json({ error: 'Comentario inválido o faltante' });
+    }
+
+    const estrellasNum = Number(estrellas);
+    if (isNaN(estrellasNum) || estrellasNum < 1 || estrellasNum > 5) {
+      return res.status(400).json({ error: 'Estrellas debe ser un número entre 1 y 5' });
+    }
+
+    // Realizar análisis de moderación
+    const moderationResult = moderationService.analyzeReview(comentario, estrellasNum);
+
+    res.json({
+      analysis: moderationResult,
+      recommendation: moderationResult.shouldAutoReject
+        ? '🚫 Reseña será rechazada automáticamente - Contenido extremadamente inapropiado'
+        : moderationResult.isApproved 
+          ? '✅ Reseña será aprobada automáticamente' 
+          : '⏳ Reseña requiere moderación manual',
+      willBeBlocked: moderationResult.shouldAutoReject,
+      cleanedText: moderationResult.hasProfanity 
+        ? moderationService.cleanText(comentario)
+        : comentario
+    });
+  } catch (error) {
+    console.error('❌ Error en analyzeResena:', error);
+    res.status(500).json({ error: 'Error al analizar la reseña' });
   }
 };

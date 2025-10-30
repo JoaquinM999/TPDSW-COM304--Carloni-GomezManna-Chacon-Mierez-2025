@@ -15,7 +15,11 @@ export const getListas = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
 
-    const listas = await orm.em.find(Lista, { usuario: { id: userId } }, { populate: ['usuario'] });
+    const listas = await orm.em.find(
+      Lista, 
+      { usuario: { id: userId } }, 
+      { populate: ['contenidos.libro.autor', 'contenidos.libro.categoria', 'usuario'] }
+    );
     res.json(listas);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener listas' });
@@ -24,7 +28,11 @@ export const getListas = async (req: AuthRequest, res: Response) => {
 
 export const getListaById = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
-  const lista = await orm.em.findOne(Lista, { id: +req.params.id });
+  const lista = await orm.em.findOne(
+    Lista, 
+    { id: +req.params.id },
+    { populate: ['contenidos.libro.autor', 'contenidos.libro.categoria', 'usuario'] }
+  );
   if (!lista) return res.status(404).json({ error: 'No encontrada' });
   res.json(lista);
 };

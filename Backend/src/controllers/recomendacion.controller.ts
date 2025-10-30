@@ -1,10 +1,14 @@
 // src/controllers/recomendacion.controller.ts
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
-import { Favorito } from '../entities/favorito.entity';
-import { Libro } from '../entities/libro.entity';
 import { Usuario } from '../entities/usuario.entity';
+import { RecomendacionService } from '../services/recomendacion.service';
 
+/**
+ * Obtiene recomendaciones personalizadas para el usuario autenticado
+ * Considera: favoritos, reseñas, ratings, categorías, autores y recencia
+ * Utiliza caché Redis para optimizar respuestas
+ */
 export const getRecomendaciones = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
@@ -17,41 +21,47 @@ export const getRecomendaciones = async (req: Request, res: Response) => {
     const usuario = await orm.em.findOne(Usuario, { id: usuarioPayload.id });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-    // Obtener favoritos con libro y su categoria poblados
-    const favoritos = await orm.em.find(Favorito, { usuario: usuario.id }, { populate: ['libro', 'libro.categoria'] });
+    // Obtener límite de resultados (por defecto 10, máximo 50)
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
 
-    if (favoritos.length === 0) {
-      return res.json({ recomendaciones: [] }); // Sin favoritos no hay recomendaciones
-    }
+    // Usar el servicio de recomendaciones mejorado
+    const recomendacionService = new RecomendacionService(orm);
+    const recomendaciones = await recomendacionService.getRecomendacionesPersonalizadas(usuario.id, limit);
 
-    // Obtener categorías más frecuentes en favoritos
-    const categoriasCount: Record<number, number> = {};
-    favoritos.forEach(fav => {
-      const catId = fav.libro.categoria?.id;
-      if (catId) {
-        categoriasCount[catId] = (categoriasCount[catId] || 0) + 1;
-      }
+    res.json({ 
+      recomendaciones,
+      algoritmo: 'Basado en favoritos, reseñas 4+ estrellas, categorías y autores preferidos',
+      total: recomendaciones.length
     });
+  } catch (error) {
+    console.error('Error al obtener recomendaciones:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Error al obtener recomendaciones' 
+    });
+  }
+};
 
-    // Ordenar categorías por cantidad descendente
-    const categoriasOrdenadas = Object.entries(categoriasCount)
-      .sort(([, a], [, b]) => b - a)
-      .map(([catId]) => Number(catId));
+/**
+ * Invalida el caché de recomendaciones para el usuario autenticado
+ * Útil después de agregar favoritos o reseñas
+ */
+export const invalidarCacheRecomendaciones = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
 
-    if (categoriasOrdenadas.length === 0) {
-      return res.json({ recomendaciones: [] });
+    const usuarioPayload = (req as any).user;
+    if (!usuarioPayload || typeof usuarioPayload === 'string' || !('id' in usuarioPayload)) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // Buscar libros de esas categorías que no estén en favoritos
-    const librosFavoritosIds = favoritos.map(fav => fav.libro.id);
+    const recomendacionService = new RecomendacionService(orm);
+    await recomendacionService.invalidarCache(usuarioPayload.id);
 
-    const recomendaciones = await orm.em.find(Libro, {
-      categoria: { $in: categoriasOrdenadas },
-      id: { $nin: librosFavoritosIds }
-    }, { limit: 10 });
-
-    res.json({ recomendaciones });
+    res.json({ message: 'Caché de recomendaciones invalidado con éxito' });
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Error al obtener recomendaciones' });
+    console.error('Error al invalidar caché:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Error al invalidar caché' 
+    });
   }
 };

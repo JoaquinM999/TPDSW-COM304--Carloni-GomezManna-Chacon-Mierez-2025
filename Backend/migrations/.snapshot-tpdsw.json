@@ -1102,6 +1102,56 @@
           ],
           "mappedType": "enum"
         },
+        "moderation_score": {
+          "name": "moderation_score",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "integer"
+        },
+        "moderation_reasons": {
+          "name": "moderation_reasons",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "text"
+        },
+        "auto_moderated": {
+          "name": "auto_moderated",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 1,
+          "mappedType": "boolean"
+        },
+        "auto_rejected": {
+          "name": "auto_rejected",
+          "type": "tinyint(1)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 1,
+          "mappedType": "boolean"
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": null,
+          "mappedType": "text"
+        },
         "fecha_resena": {
           "name": "fecha_resena",
           "type": "date",
@@ -1109,6 +1159,16 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "length": null,
+          "mappedType": "date"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
           "length": null,
           "mappedType": "date"
         },

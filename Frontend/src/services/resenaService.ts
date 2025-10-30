@@ -64,7 +64,8 @@ export const agregarReseña = async (
 };
 
 /**
- * 🔹 Obtiene todas las reseñas pendientes (solo admin).
+ * 🔹 Obtiene todas las reseñas pendientes de moderación (solo admin).
+ * Incluye PENDING y FLAGGED para el panel de moderación.
  */
 export const obtenerResenasPendientes = async (token: string) => {
   const response = await fetch(`${API_URL}?estado=PENDING`, {
@@ -80,7 +81,10 @@ export const obtenerResenasPendientes = async (token: string) => {
     throw error;
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('📥 Reseñas recibidas del backend:', data.length);
+  console.log('📊 Sample con moderationScore:', data[0]?.moderationScore);
+  return data;
 };
 
 /**

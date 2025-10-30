@@ -10,7 +10,7 @@ dotenv.config();
 
 // Apply CORS before initializing ORM and routes
 app.use(cors({
-  origin: 'http://localhost:5173', // o la URL donde corre tu frontend
+  origin: ['http://localhost:5173', 'http://localhost:5174'], // Permitir ambos puertos
   credentials: true,
 }));
 

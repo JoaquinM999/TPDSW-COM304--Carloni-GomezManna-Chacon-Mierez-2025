@@ -14,6 +14,10 @@ router.delete('/:id', authenticateJWT, resenaController.deleteResena);
 // Admin-only routes for moderation
 router.put('/:id/approve', authenticateJWT, requireAdmin, resenaController.approveResena);
 router.put('/:id/reject', authenticateJWT, requireAdmin, resenaController.rejectResena);
+router.get('/admin/rechazadas', authenticateJWT, requireAdmin, resenaController.getResenasRechazadas);
+
+// Moderation analysis endpoint (testing/admin)
+router.post('/analyze', authenticateJWT, resenaController.analyzeResena);
 
 // Reply to a review
 router.post('/:id/responder', authenticateJWT, resenaController.createRespuesta);

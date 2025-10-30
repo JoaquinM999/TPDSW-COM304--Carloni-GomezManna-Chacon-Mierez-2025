@@ -32,8 +32,27 @@ export class Resena {
   @Enum(() => EstadoResena)
   estado: EstadoResena = EstadoResena.PENDING;
 
+  // Campos de moderación automática
+  @Property({ nullable: true })
+  moderationScore?: number; // Score de 0-100 del análisis automático
+
+  @Property({ type: 'text', nullable: true })
+  moderationReasons?: string; // Razones del sistema de moderación (JSON string)
+
+  @Property({ nullable: true })
+  autoModerated?: boolean; // Si fue moderada automáticamente
+
+  @Property({ nullable: true })
+  autoRejected?: boolean; // Si fue rechazada automáticamente por el sistema
+
+  @Property({ type: 'text', nullable: true })
+  rejectionReason?: string; // Razón del rechazo automático
+
   @Property({ type: 'date', onCreate: () => new Date() })
   fechaResena!: Date;
+
+  @Property({ type: 'date', nullable: true })
+  deletedAt?: Date; // Soft delete - fecha de eliminación
 
   @ManyToOne(() => Usuario, { nullable: false })
   usuario!: Usuario;

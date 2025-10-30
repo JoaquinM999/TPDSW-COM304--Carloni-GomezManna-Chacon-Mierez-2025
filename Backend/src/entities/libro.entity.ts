@@ -7,7 +7,6 @@ import { Saga } from './saga.entity';
 import { Resena } from './resena.entity';
 import { ContenidoLista } from './contenidoLista.entity';
 import { Favorito } from './favorito.entity';
-import { Lista } from './lista.entity';
 
 @Entity()
 export class Libro {

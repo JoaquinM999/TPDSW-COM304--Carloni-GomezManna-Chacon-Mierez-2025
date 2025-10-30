@@ -23,7 +23,7 @@ interface AutorFavorito {
   id: number;
   nombre: string;
   libros: number;
-  imagen: string;
+  imagen?: string; // Opcional: no mostraremos imagen predeterminada
   fechaAgregado: string;
 }
 
@@ -167,7 +167,6 @@ export const FavoritosPage: React.FC = () => {
                         id: Date.now() + Math.random(),
                         nombre: autorNombre,
                         libros: 1,
-                        imagen: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg',
                         fechaAgregado: libro.fechaAgregado
                     });
                 } else {
@@ -621,11 +620,10 @@ export const FavoritosPage: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="relative group">
-                  <img
-                    src={autor.imagen}
-                    alt={autor.nombre}
-                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  {/* Placeholder sin imagen predeterminada */}
+                  <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <User className="w-24 h-24 text-purple-300" />
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <motion.div
                     className="absolute top-4 right-4"

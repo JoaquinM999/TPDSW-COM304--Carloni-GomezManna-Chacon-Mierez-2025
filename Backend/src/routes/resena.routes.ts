@@ -16,6 +16,7 @@ router.delete('/:id', authenticateJWT, resenaController.deleteResena);
 router.put('/:id/approve', authenticateJWT, requireAdmin, resenaController.approveResena);
 router.put('/:id/reject', authenticateJWT, requireAdmin, resenaController.rejectResena);
 router.get('/admin/rechazadas', authenticateJWT, requireAdmin, resenaController.getResenasRechazadas);
+router.get('/admin/moderation/stats', authenticateJWT, requireAdmin, resenaController.getModerationStats);
 
 // Moderation analysis endpoint (testing/admin)
 router.post('/analyze', authenticateJWT, resenaController.analyzeResena);

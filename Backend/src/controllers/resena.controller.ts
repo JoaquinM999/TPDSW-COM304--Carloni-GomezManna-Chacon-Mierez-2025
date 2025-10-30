@@ -680,3 +680,104 @@ export const getResenasPopulares = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al obtener reseñas populares' });
   }
 };
+
+// =======================
+// Obtener estadísticas de moderación (ADMIN)
+// =======================
+export const getModerationStats = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const { range = '30d' } = req.query;
+
+    // Calcular fecha de inicio según el rango
+    const daysMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 };
+    const days = daysMap[range as string] || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Obtener todas las reseñas en el rango (incluyendo eliminadas para estadísticas)
+    const allResenas = await em.find(Resena, {
+      createdAt: { $gte: startDate }
+    }, {
+      populate: ['usuario']
+    });
+
+    // Contadores por estado
+    const total = allResenas.length;
+    const autoApproved = allResenas.filter(r => r.estado === EstadoResena.APPROVED && r.autoRejected === false).length;
+    const autoRejected = allResenas.filter(r => r.estado === EstadoResena.REJECTED && r.autoRejected === true).length;
+    const pending = allResenas.filter(r => r.estado === EstadoResena.PENDING).length;
+    const flagged = allResenas.filter(r => r.estado === EstadoResena.FLAGGED).length;
+    const manuallyReviewed = allResenas.filter(r => 
+      (r.estado === EstadoResena.APPROVED && r.autoRejected === true) || // Aprobadas después de rechazo automático
+      (r.estado === EstadoResena.REJECTED && r.autoRejected === false) // Rechazadas manualmente
+    ).length;
+
+    // Calcular score promedio
+    const scoresSum = allResenas.reduce((sum, r) => sum + (r.moderationScore || 0), 0);
+    const averageScore = total > 0 ? Math.round((scoresSum / total) * 10) / 10 : 0;
+
+    // Razones de rechazo más comunes
+    const reasonsCount: Record<string, number> = {};
+    allResenas
+      .filter(r => r.estado === EstadoResena.REJECTED && r.moderationReasons)
+      .forEach(r => {
+        r.moderationReasons?.forEach(reason => {
+          reasonsCount[reason] = (reasonsCount[reason] || 0) + 1;
+        });
+      });
+
+    const topReasons = Object.entries(reasonsCount)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([reason, count]) => ({ reason, count }));
+
+    // Tendencia de los últimos 7 días
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const dayResenas = allResenas.filter(r => {
+        const rDate = new Date(r.createdAt);
+        return rDate >= date && rDate < nextDate;
+      });
+
+      last7Days.push({
+        date: date.toISOString().split('T')[0],
+        approved: dayResenas.filter(r => r.estado === EstadoResena.APPROVED).length,
+        rejected: dayResenas.filter(r => r.estado === EstadoResena.REJECTED).length,
+        pending: dayResenas.filter(r => r.estado === EstadoResena.PENDING || r.estado === EstadoResena.FLAGGED).length
+      });
+    }
+
+    const stats = {
+      total,
+      autoApproved,
+      autoRejected,
+      pending: pending + flagged, // Combinamos pending y flagged
+      manuallyReviewed,
+      averageScore,
+      topReasons,
+      recentTrend: last7Days
+    };
+
+    console.log(`📊 Estadísticas de moderación generadas (${range}):`, {
+      total,
+      autoApproved,
+      autoRejected,
+      pending: pending + flagged,
+      averageScore
+    });
+
+    res.json(stats);
+  } catch (error) {
+    console.error('❌ Error al obtener estadísticas de moderación:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas de moderación' });
+  }
+};

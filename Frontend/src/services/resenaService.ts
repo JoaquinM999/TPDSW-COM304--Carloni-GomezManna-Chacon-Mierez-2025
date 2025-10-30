@@ -196,3 +196,23 @@ export const obtenerResenasPopulares = async (libroId?: string, limit: number = 
 
   return response.json();
 };
+
+/**
+ * 🔹 Obtiene estadísticas de moderación (solo admin).
+ */
+export const obtenerEstadisticasModeracion = async (range: '7d' | '30d' | '90d' = '30d', token: string) => {
+  const response = await fetch(`${API_URL}/admin/moderation/stats?range=${range}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Cache-Control': 'no-cache',
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error('Error al obtener estadísticas de moderación');
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  return response.json();
+};

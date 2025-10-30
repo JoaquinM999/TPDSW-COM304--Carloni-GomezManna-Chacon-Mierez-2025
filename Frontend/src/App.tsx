@@ -38,6 +38,7 @@ import AdminModerationPage from './paginas/AdminModerationPage';
 import AdminActividadPage from './paginas/AdminActividadPage';
 import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
+import { ModerationDashboard } from './paginas/Admin/ModerationDashboard';
 
 
 interface FooterLink {
@@ -157,6 +158,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
           <Route path="/crear-saga" element={<CrearSaga />} />
           <Route path="/admin/crear-saga" element={<CrearSagaAdmin />} />
           <Route path="/admin/moderation" element={<AdminModerationPage />} />
+          <Route path="/admin/moderation/stats" element={<ModerationDashboard />} />
           <Route path="/admin/actividad" element={<AdminActividadPage />} />
           <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
           <Route path="/admin/permiso" element={<AdminPermisoPage />} />

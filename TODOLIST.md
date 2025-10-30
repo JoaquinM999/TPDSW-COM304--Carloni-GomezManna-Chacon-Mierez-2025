@@ -104,8 +104,18 @@
   - [x] Integrado en `DetalleLibro.tsx` con detección automática
   - [x] Modal solo se muestra en errores de moderación
 
+#### Mejoras Implementadas ✅ (Continuación - 30/10/2025)
+- [x] **Dashboard de estadísticas de moderación**
+  - [x] Backend: Endpoint `/api/resena/admin/moderation/stats` con estadísticas agregadas
+  - [x] Frontend: Componente `ModerationDashboard.tsx` con visualizaciones
+  - [x] Métricas: Total, auto-aprobadas, auto-rechazadas, pendientes, revisión manual
+  - [x] Score promedio con barra de progreso
+  - [x] Top 5 razones de rechazo más comunes
+  - [x] Tendencia de últimos 7 días con gráficos de barras
+  - [x] Filtros por rango: 7d, 30d, 90d
+  - [x] Ruta `/admin/moderation/stats` agregada al router
+
 #### Pendientes (Mejoras Opcionales)
-- [ ] Dashboard de estadísticas de moderación
 - [ ] Sistema de apelaciones para reseñas rechazadas
 - [ ] Histórico de decisiones de moderación con gráficos
 - [ ] Machine Learning para mejorar precisión

@@ -559,6 +559,7 @@
   - [x] Imágenes h-80 con object-cover y hover effect
   - [x] Razones de recomendación compactas (categorías y autores)
   - [x] Diseño consistente en toda la aplicación
+  - [x] Tipografía y layout idénticos a nuevos lanzamientos (gradient background, text-gray-900, text-lg)
 - [ ] **Feed de actividades (UI completa)** - PENDIENTE
 - [ ] Notificaciones visuales
 

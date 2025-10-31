@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Usuario } from '../entities/usuario.entity';
 import { RecomendacionService } from '../services/recomendacion.service';
+import { generateSlug } from '../shared/utils/slug.util';
 
 /**
  * Obtiene recomendaciones personalizadas para el usuario autenticado
@@ -31,16 +32,17 @@ export const getRecomendaciones = async (req: Request, res: Response) => {
     // Formatear respuesta para el frontend
     const libros = librosRecomendados.map(libro => ({
       id: libro.id,
-      titulo: libro.titulo,
+      slug: libro.slug || generateSlug(libro.nombre || `libro-${libro.id}`), // Usar slug real
+      titulo: libro.nombre || 'Sin título',
       autores: libro.autor ? [libro.autor.nombre] : [],
       imagen: libro.imagen || null,
-      descripcion: libro.descripcion || null,
-      averageRating: libro.averageRating || 0,
+      descripcion: libro.sinopsis || null,
+      averageRating: 0, // TODO: Calcular desde reseñas
       score: 0.85, // Score del algoritmo (placeholder)
       matchCategorias: libro.categoria ? [libro.categoria.nombre] : [],
       matchAutores: libro.autor ? [libro.autor.nombre] : [],
-      esReciente: libro.fechaPublicacion ? 
-        (new Date().getTime() - new Date(libro.fechaPublicacion).getTime()) < 30 * 24 * 60 * 60 * 1000 : false
+      esReciente: libro.createdAt ? 
+        (new Date().getTime() - new Date(libro.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000 : false
     }));
 
     res.json({ 

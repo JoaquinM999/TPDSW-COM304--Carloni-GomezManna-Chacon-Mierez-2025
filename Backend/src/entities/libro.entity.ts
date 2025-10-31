@@ -20,6 +20,10 @@ export class Libro {
   @Index() // permite búsquedas rápidas por nombre de libro
   nombre?: string;
 
+  @Property({ nullable: true })
+  @Index() // permite búsquedas rápidas por slug (URL-friendly)
+  slug?: string;
+
   @Property({ type: 'text', nullable: true }) // sinopsis puede ser larga
   sinopsis?: string;
 

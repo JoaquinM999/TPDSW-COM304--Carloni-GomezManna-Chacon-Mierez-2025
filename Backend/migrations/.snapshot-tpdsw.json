@@ -1082,7 +1082,7 @@
         },
         "estado": {
           "name": "estado",
-          "type": "enum('pending','approved','flagged')",
+          "type": "enum('pending','approved','flagged','rejected')",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -1091,7 +1091,8 @@
           "enumItems": [
             "pending",
             "approved",
-            "flagged"
+            "flagged",
+            "rejected"
           ],
           "mappedType": "enum"
         },

@@ -54,7 +54,7 @@ export const HeroSection: React.FC = () => {
   return (
     <section
       aria-label="Sección principal de bienvenida"
-      className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-10"
+      className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-16 md:py-20"
     >
       {/* Fondo animado */}
       <motion.div
@@ -66,7 +66,7 @@ export const HeroSection: React.FC = () => {
       />
 
       {/* Contenedor principal */}
-      <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 flex flex-col lg:flex-row items-center lg:justify-center gap-12">
+      <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 flex flex-col lg:flex-row items-center lg:justify-center gap-8 lg:gap-12 mb-16 md:mb-20">
         
         {/* Pollito - solo en desktop y iPad Pro */}
         <div className="hidden lg:flex relative z-10 justify-center items-center h-full min-h-[300px]">
@@ -117,34 +117,34 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.9 }}
-            className="mb-16 max-w-xl mx-auto lg:mx-0"
+            className="max-w-xl mx-auto lg:mx-0"
           >
             <SearchBar
               placeholder="Buscar libros, autores..."
               aria-label="Buscar libros, autores"
-              className="shadow-lg"
+              className="shadow-lg hover:shadow-xl transition-shadow duration-300"
             />
           </motion.div>
         </div>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {stats.map(({ icon: Icon, label, value, color }, idx) => (
           <motion.div
             key={idx}
-            className="relative rounded-2xl p-6 sm:p-8 border border-white/30 shadow-lg cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white/70 to-white/30 backdrop-blur-xl"
+            className="relative rounded-2xl p-6 sm:p-8 border border-white/40 shadow-md cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl hover:border-white/60"
             whileHover="hover"
             initial="rest"
             animate="rest"
             variants={{
-              rest: { scale: 1, rotate: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' },
-              hover: { scale: 1.05, rotate: 1, boxShadow: '0 12px 32px rgba(0,0,0,0.15)' }
+              rest: { scale: 1, rotate: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+              hover: { scale: 1.08, rotate: 1.5, boxShadow: '0 16px 40px rgba(0,0,0,0.12)' }
             }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {/* Efecto de brillo de fondo */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
 
             {/* Icono */}
             <motion.div

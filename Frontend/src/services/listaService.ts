@@ -45,8 +45,48 @@ export const listaService = {
       },
       body: JSON.stringify({ nombre, tipo }),
     });
-    if (!response.ok) throw new Error('Error al crear lista');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Si el error es por lista duplicada, intentar obtener la existente
+      if (response.status === 409 || errorData.message?.includes('ya existe')) {
+        console.log('⚠️ Lista ya existe, buscando la existente...');
+        const listas = await this.getUserListas();
+        const listaExistente = listas.find(l => l.tipo === tipo || l.nombre === nombre);
+        if (listaExistente) {
+          console.log('✅ Lista existente encontrada:', listaExistente);
+          return listaExistente;
+        }
+      }
+      
+      throw new Error(errorData.message || 'Error al crear lista');
+    }
     return response.json();
+  },
+
+  // ✅ Nuevo método: Obtener o crear lista (idempotente)
+  async getOrCreateLista(nombre: string, tipo: string): Promise<Lista> {
+    try {
+      // 1. Intentar obtener todas las listas del usuario
+      const listas = await this.getUserListas();
+      
+      // 2. Buscar por tipo primero (más confiable para listas fijas)
+      let listaExistente = listas.find(l => l.tipo === tipo);
+      
+      // 3. Si no existe, intentar crear
+      if (!listaExistente) {
+        console.log('📝 Creando nueva lista:', { nombre, tipo });
+        listaExistente = await this.createLista(nombre, tipo);
+      } else {
+        console.log('✅ Lista ya existe:', listaExistente);
+      }
+      
+      return listaExistente;
+    } catch (error: any) {
+      console.error('Error en getOrCreateLista:', error);
+      throw error;
+    }
   },
 
   async getContenidoLista(listaId: number): Promise<ContenidoLista[]> {

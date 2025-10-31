@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Book, User, Tag, Star, Clock, CheckCircle, Bookmark, Eye, Plus, X, Edit, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Heart, Book, User, Tag, Clock, CheckCircle, Eye, Loader } from 'lucide-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
-import { getAutores } from '../services/autorService';
-import { getCategorias } from '../services/categoriaService';
 import { obtenerFavoritos } from '../services/favoritosService';
-import { MicroSuccessAnimation } from '../componentes/SuccessAnimation';
 import toast, { Toaster } from 'react-hot-toast';
+import { LISTA_NOMBRES, LISTA_TIPOS } from '../constants/listas';
 
 interface LibroFavorito {
   id: number; // ✅ Volvemos a usar 'number' como el tipo del ID.
@@ -47,15 +46,24 @@ export const FavoritosPage: React.FC = () => {
   const [autoresFavoritos, setAutoresFavoritos] = useState<AutorFavorito[]>([]);
   const [categoriasFavoritas, setCategoriasFavoritas] = useState<CategoriaFavorita[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingBookId, setUpdatingBookId] = useState<number | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-        const [favoritos, allContenidos, userListas] = await Promise.all([
+        // ✅ Optimización: Hacer las llamadas en paralelo pero con timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 10000)
+        );
+        
+        const [favoritos, allContenidos, userListas] = await Promise.race([
+          Promise.all([
             obtenerFavoritos(),
             listaService.getAllUserContenido(),
             listaService.getUserListas(),
-        ]);
+          ]),
+          timeoutPromise
+        ]) as [any[], ContenidoLista[], Lista[]];
 
         // ======================= DEBUGGING =======================
         console.log("DATOS DE LISTAS (allContenidos):", allContenidos);
@@ -63,16 +71,6 @@ export const FavoritosPage: React.FC = () => {
         // =========================================================
 
         setListas(userListas);
-
-        const getPriority = (estado: string) => {
-            switch (estado) {
-                case 'favorito': return 4;
-                case 'leido': return 3;
-                case 'ver-mas-tarde': return 2;
-                case 'pendiente': return 1;
-                default: return 0;
-            }
-        };
 
         // ✅ El mapa ahora guardará un array de estados, autores como array y el rating consolidado
         const librosMap = new Map<number, { libroData: any, autores: string[], estados: Set<string>, fecha: string, rating: number }>();
@@ -198,14 +196,15 @@ export const FavoritosPage: React.FC = () => {
 
     } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Error al cargar los datos. Por favor, recarga la página.');
     } finally {
         setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const getRandomColor = () => {
     const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
@@ -234,127 +233,209 @@ export const FavoritosPage: React.FC = () => {
     }
   };
 
+  // ✅ Ref para prevenir race conditions
+  const creatingLista = useRef<Record<string, Promise<Lista> | null>>({});
+
   const cambiarEstadoLibro = async (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
+    // ✅ Feedback visual inmediato
+    setUpdatingBookId(libroId);
+    
     try {
-      // Find the libro object
+      // Find the libro object usando el estado actual
       const libro = librosFavoritos.find(l => l.id === libroId);
       if (!libro) {
-        console.error('Libro not found');
+        toast.error('Libro no encontrado');
+        setUpdatingBookId(null);
         return;
       }
 
-      // Map estado to lista tipo
-      const tipoLista = nuevoEstado === 'leido' ? 'read' :
-                       nuevoEstado === 'ver-mas-tarde' ? 'to_read' : 'pending';
+      console.log('🔍 Cambiando estado:', { 
+        libroId, 
+        titulo: libro.titulo, 
+        nuevoEstado,
+        estadosActuales: libro.estados,
+        externalId: libro.externalId
+      });
 
-      // Find if user already has a list of this type
-      const listaExistente = listas.find(l => l.tipo === tipoLista);
+      // ✅ Map estado to lista tipo usando constantes
+      const tipoLista = nuevoEstado === 'leido' ? LISTA_TIPOS.READ :
+                       nuevoEstado === 'ver-mas-tarde' ? LISTA_TIPOS.TO_READ : 
+                       LISTA_TIPOS.PENDING;
 
-      if (listaExistente) {
-        // Check if book is already in this list
-        const libroEnLista = librosFavoritos.find(l => l.id === libroId && l.estados.includes(nuevoEstado));
-        if (libroEnLista) {
-          // Remove from list if already there
-          await listaService.removeLibroDeLista(listaExistente.id, libro.externalId || libroId.toString());
-        } else {
-          // Add to existing list
-          await listaService.addLibroALista(listaExistente.id, {
-            // Usar el externalId del libro, no el id interno.
+      // ✅ Verificar si el libro YA tiene este estado
+      const yaEstaEnEstado = libro.estados.includes(nuevoEstado);
+      console.log('📊 Ya está en estado:', yaEstaEnEstado, '| Estados:', libro.estados);
+
+      // ✅ Buscar lista con manejo mejorado
+      let listaExistente = listas.find(l => l.tipo === tipoLista);
+      
+      // Si no existe en estado local, sincronizar con servidor
+      if (!listaExistente) {
+        console.log('🔄 Lista no en estado local, sincronizando con servidor...');
+        const todasLasListas = await listaService.getUserListas();
+        listaExistente = todasLasListas.find(l => l.tipo === tipoLista);
+        
+        // Actualizar estado local con todas las listas
+        setListas(todasLasListas);
+      }
+      
+      console.log('📋 Lista existente:', listaExistente?.nombre || 'No existe', '| Todas las listas:', listas.map(l => ({ nombre: l.nombre, tipo: l.tipo })));
+
+      if (yaEstaEnEstado && listaExistente) {
+        // ✅ QUITAR del estado (toggle off)
+        console.log('❌ Eliminando de lista...', {
+          listaId: listaExistente.id,
+          libroIdentificador: libro.externalId || libroId.toString()
+        });
+        
+        await listaService.removeLibroDeLista(listaExistente.id, libro.externalId || libroId.toString());
+        
+        // ✅ Actualización optimista del estado local
+        setLibrosFavoritos(prev => prev.map(l => 
+          l.id === libroId 
+            ? { ...l, estados: l.estados.filter(e => e !== nuevoEstado) }
+            : l
+        ));
+        
+        toast.success(`✓ Eliminado de "${getNombreEstado(nuevoEstado)}"`, {
+          duration: 2000,
+          icon: '🗑️'
+        });
+      } else {
+        // ✅ AGREGAR al estado (toggle on)
+        if (!listaExistente) {
+          // ✅ Usar getOrCreateLista para prevenir duplicados
+          console.log('📝 Obteniendo o creando lista de tipo:', tipoLista);
+          const nombreLista = tipoLista === LISTA_TIPOS.READ ? LISTA_NOMBRES.READ :
+                            tipoLista === LISTA_TIPOS.TO_READ ? LISTA_NOMBRES.TO_READ : 
+                            LISTA_NOMBRES.PENDING;
+          
+          // Verificar si ya se está creando (lock)
+          if (!creatingLista.current[tipoLista]) {
+            const createPromise = listaService.getOrCreateLista(nombreLista, tipoLista);
+            creatingLista.current[tipoLista] = createPromise;
+            
+            try {
+              listaExistente = await createPromise;
+              console.log('✨ Lista obtenida/creada:', listaExistente);
+              
+              // Actualizar estado local solo si no existe
+              setListas(prev => {
+                const exists = prev.some(l => l.id === listaExistente!.id);
+                if (!exists) {
+                  return [...prev, listaExistente!];
+                }
+                return prev;
+              });
+            } finally {
+              creatingLista.current[tipoLista] = null;
+            }
+          } else {
+            // Esperar a que termine la creación en curso
+            console.log('⏳ Esperando creación en curso...');
+            listaExistente = await creatingLista.current[tipoLista]!;
+          }
+        }
+
+        console.log('✅ Agregando libro a lista...', {
+          listaId: listaExistente.id,
+          listaName: listaExistente.nombre,
+          libroData: {
             id: libro.externalId || libroId.toString(),
             titulo: libro.titulo,
-            autores: libro.autores,
-            descripcion: null,
-            imagen: libro.imagen,
-            enlace: null,
-            source: 'google' // default, since we don't have source info here
-          });
-        }
-      } else {
-        // Create new list and add book
-        const nuevaLista = await listaService.createLista(
-          tipoLista === 'read' ? 'Leídos' :
-          tipoLista === 'to_read' ? 'Para Leer' : 'Pendientes',
-          tipoLista
-        );
-
-        // Update listas state synchronously for immediate use
-        const updatedListas = [...listas, nuevaLista];
-        setListas(updatedListas);
-
-        await listaService.addLibroALista(nuevaLista.id, {
-          // Usar el externalId del libro, no el id interno.
+            autores: libro.autores
+          }
+        });
+        
+        await listaService.addLibroALista(listaExistente.id, {
           id: libro.externalId || libroId.toString(),
           titulo: libro.titulo,
           autores: libro.autores,
           descripcion: null,
           imagen: libro.imagen,
           enlace: null,
-          source: 'google' // default, since we don't have source info here
+          source: 'google'
+        });
+        
+        // ✅ Actualización optimista del estado local
+        setLibrosFavoritos(prev => prev.map(l => 
+          l.id === libroId 
+            ? { ...l, estados: [...l.estados, nuevoEstado] }
+            : l
+        ));
+        
+        toast.success(`✓ Agregado a "${getNombreEstado(nuevoEstado)}"`, {
+          duration: 2000,
+          icon: '📚'
         });
       }
 
-      // Refresh data after state change
+    } catch (error: any) {
+      console.error('❌ Error cambiando estado del libro:', {
+        error,
+        mensaje: error.message,
+        stack: error.stack,
+        response: error.response
+      });
+      
+      // Mensajes de error más específicos
+      let mensajeError = 'Error al actualizar el estado';
+      
+      if (error.message?.includes('ECONNREFUSED')) {
+        mensajeError = '⚠️ El servidor no está disponible. Por favor, inicia el backend.';
+      } else if (error.message?.includes('404')) {
+        mensajeError = '⚠️ Libro o lista no encontrada';
+      } else if (error.message?.includes('401') || error.message?.includes('403')) {
+        mensajeError = '⚠️ No tienes permisos. Por favor, inicia sesión de nuevo.';
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      toast.error(mensajeError, { duration: 4000 });
+      
+      // ✅ Revertir cambios en caso de error
+      console.log('🔄 Recargando datos después del error...');
       await fetchData();
-    } catch (error) {
-      console.error('Error cambiando estado del libro:', error);
+    } finally {
+      setUpdatingBookId(null);
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.round(rating) ? 'text-amber-400 fill-current' : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
-
-  const getEstadoIcon = (estado: string) => {
+  const getNombreEstado = (estado: string) => {
     switch (estado) {
-      case 'leido':
-        return <CheckCircle className="w-5 h-5 text-emerald-600" />;
-      case 'ver-mas-tarde':
-        return <Eye className="w-5 h-5 text-sky-600" />;
-      case 'pendiente':
-        return <Clock className="w-5 h-5 text-amber-600" />;
-      case 'favorito':
-        return <Heart className="w-5 h-5 text-rose-600" />;
-      default:
-        return null;
+      case 'leido': return 'Leídos';
+      case 'ver-mas-tarde': return 'Ver más tarde';
+      case 'pendiente': return 'Pendientes';
+      default: return estado;
     }
   };
 
-  const getPrimaryEstado = (estados: string[]) => {
-    const priority = ['favorito', 'leido', 'ver-mas-tarde', 'pendiente'];
-    for (const p of priority) {
-      if (estados.includes(p)) return p;
-    }
-    return estados[0] || 'pendiente';
-  };
+  // ✅ Optimización: Memorizar libros filtrados
+  const librosFiltrados = useMemo(() => {
+    return filtroEstado === 'todos'
+      ? librosFavoritos
+      : librosFavoritos.filter(libro => libro.estados.includes(filtroEstado as 'leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito'));
+  }, [filtroEstado, librosFavoritos]);
 
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case 'leido':
-        return 'bg-slate-200 text-slate-800';
-      case 'ver-mas-tarde':
-        return 'bg-slate-300 text-slate-900';
-      case 'pendiente':
-        return 'bg-slate-400 text-slate-900';
-      case 'favorito':
-        return 'bg-slate-100 text-slate-700';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const librosFiltrados = filtroEstado === 'todos'
-    ? librosFavoritos
-    : librosFavoritos.filter(libro => libro.estados.includes(filtroEstado as 'leido' | 'ver-mas-tarde' | 'pendiente' | 'favorito'));
+  // ✅ Pantalla de carga completa con el pollito de Lottie
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+          loop
+          autoplay
+          style={{ width: '300px', height: '300px' }}
+        />
+        <h3 className="text-2xl font-bold text-gray-700 mt-4">Cargando tus favoritos...</h3>
+        <p className="text-gray-500 mt-2">El pollito está buscando tus libros 🐣</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+      <Toaster position="top-center" />
       {/* Header */}
       <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -503,13 +584,20 @@ export const FavoritosPage: React.FC = () => {
             </motion.div>
 
             {/* Libros Grid */}
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {librosFiltrados.map((libro) => (
+            {librosFiltrados.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No hay libros en esta categoría</h3>
+                <p className="text-gray-500">Intenta con otro filtro o agrega más libros a tus listas</p>
+              </div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {librosFiltrados.map((libro) => (
                 <motion.div
                   key={libro.id}
                   className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
@@ -555,49 +643,83 @@ export const FavoritosPage: React.FC = () => {
                     {/* Estado Buttons */}
                     <div className="flex space-x-2 mt-4">
                       <motion.button
-                        onClick={() => cambiarEstadoLibro(libro.id, 'leido')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          cambiarEstadoLibro(libro.id, 'leido');
+                        }}
+                        disabled={updatingBookId === libro.id}
                         title="Marcar como Leído"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          libro.estados.includes('leido')
+                          updatingBookId === libro.id 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : libro.estados.includes('leido')
                             ? 'bg-green-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:shadow-md'
                         }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        <CheckCircle className="w-5 h-5" />
+                        {updatingBookId === libro.id ? (
+                          <Loader className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5" />
+                        )}
                       </motion.button>
                       <motion.button
-                        onClick={() => cambiarEstadoLibro(libro.id, 'ver-mas-tarde')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          cambiarEstadoLibro(libro.id, 'ver-mas-tarde');
+                        }}
+                        disabled={updatingBookId === libro.id}
                         title="Marcar para Ver más tarde"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          libro.estados.includes('ver-mas-tarde')
+                          updatingBookId === libro.id 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : libro.estados.includes('ver-mas-tarde')
                             ? 'bg-blue-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md'
                         }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        <Eye className="w-5 h-5" />
+                        {updatingBookId === libro.id ? (
+                          <Loader className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
                       </motion.button>
                       <motion.button
-                        onClick={() => cambiarEstadoLibro(libro.id, 'pendiente')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          cambiarEstadoLibro(libro.id, 'pendiente');
+                        }}
+                        disabled={updatingBookId === libro.id}
                         title="Marcar como Pendiente"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          libro.estados.includes('pendiente')
+                          updatingBookId === libro.id 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : libro.estados.includes('pendiente')
                             ? 'bg-orange-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md'
                         }`}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        <Clock className="w-5 h-5" />
+                        {updatingBookId === libro.id ? (
+                          <Loader className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Clock className="w-5 h-5" />
+                        )}
                       </motion.button>
                     </div>
                   </div>
                 </motion.div>
-              ))}
-            </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         )}
 

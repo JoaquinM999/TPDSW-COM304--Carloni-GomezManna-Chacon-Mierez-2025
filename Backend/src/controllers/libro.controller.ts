@@ -13,8 +13,18 @@ import { Resena } from '../entities/resena.entity';
 export const getLibros = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
+  
+  // Filtro opcional por autor
+  const { autor, autorId } = req.query;
+  const filtro: any = {};
+  
+  if (autor || autorId) {
+    const idAutor = (autor || autorId) as string;
+    filtro.autor = +idAutor; // Convertir a número
+  }
+  
   // Replace 'ratingLibro' (non-existing relation) with 'resenas' to match entity relations
-  const libros = await em.find(Libro, {}, { populate: ['autor', 'categoria', 'editorial', 'saga', 'resenas'] });
+  const libros = await em.find(Libro, filtro, { populate: ['autor', 'categoria', 'editorial', 'saga', 'resenas'] });
 
   const librosTransformados = await Promise.all(libros.map(async (libro) => {
     let autores = ['Autor desconocido'];

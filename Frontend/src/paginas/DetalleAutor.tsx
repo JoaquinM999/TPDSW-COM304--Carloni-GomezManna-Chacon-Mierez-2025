@@ -8,17 +8,14 @@ import {
   MessageCircle,
   UserCircle,
   ChevronDown,
-  ChevronUp,
-  Award,
-  TrendingUp,
-  ExternalLink
+  ChevronUp
 } from 'lucide-react';
 import { 
   buscarAutorEnGoogleBooks, 
-  buscarFotoAutor, 
-  combinarLibros,
+  buscarFotoAutor,
   type GoogleBook
 } from '../services/googleBooksAutorService';
+import { createGoogleBookSlug } from '../utils/slugUtils';
 
 interface AutorDetalle {
   id: number;
@@ -47,23 +44,12 @@ interface EstadisticasAutor {
   };
 }
 
-interface Libro {
-  id: number;
-  nombre: string;
-  imagen?: string;
-  descripcion?: string;
-  isbn?: string;
-  idioma?: string;
-  fecha_publicacion?: string;
-}
-
 const DetalleAutor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   const [autor, setAutor] = useState<AutorDetalle | null>(null);
   const [estadisticas, setEstadisticas] = useState<EstadisticasAutor | null>(null);
-  const [libros, setLibros] = useState<Libro[]>([]);
   const [biografia, setBiografia] = useState<string>('');
   const [bioExpanded, setBioExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -98,21 +84,12 @@ const DetalleAutor = () => {
         setEstadisticas(statsData);
       }
 
-      // Fetch libros del autor desde la base de datos local
-      const librosRes = await fetch(`http://localhost:3000/api/libro?autor=${id}`);
-      let librosLocales: Libro[] = [];
-      if (librosRes.ok) {
-        const librosData = await librosRes.json();
-        librosLocales = librosData.libros || librosData;
-        setLibros(librosLocales);
-      }
-
       // Fetch biografía de Wikipedia
       const nombreCompleto = `${autorData.nombre} ${autorData.apellido}`;
       fetchBiografia(nombreCompleto);
       
-      // Fetch datos de Google Books (foto y libros adicionales)
-      fetchGoogleBooksData(nombreCompleto, librosLocales);
+      // Fetch datos de Google Books (foto y libros)
+      fetchGoogleBooksData(nombreCompleto);
       
       setLoading(false);
     } catch (err) {
@@ -121,7 +98,7 @@ const DetalleAutor = () => {
     }
   };
 
-  const fetchGoogleBooksData = async (nombreCompleto: string, librosLocales: Libro[]) => {
+  const fetchGoogleBooksData = async (nombreCompleto: string) => {
     try {
       setLoadingGoogle(true);
       
@@ -136,9 +113,8 @@ const DetalleAutor = () => {
       }
       
       if (googleData && googleData.libros) {
-        // Combinar libros locales con los de Google Books para eliminar duplicados
-        const { adicionales } = combinarLibros(librosLocales, googleData.libros);
-        setLibrosAdicionales(adicionales);
+        // Mostrar todos los libros de Google Books
+        setLibrosAdicionales(googleData.libros);
       }
       
       setLoadingGoogle(false);
@@ -425,141 +401,22 @@ const DetalleAutor = () => {
           </div>
         </motion.div>
 
-        {/* Libros más populares */}
-        {estadisticas && estadisticas.estadisticas.librosMasPopulares.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white rounded-3xl shadow-2xl p-8 mb-8"
-          >
-            <div className="flex items-center gap-3 mb-8">
-              <Award className="w-8 h-8 text-yellow-500" />
-              <h2 className="text-3xl font-bold text-gray-800">Libros Más Populares</h2>
-              <TrendingUp className="w-6 h-6 text-green-500" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {estadisticas.estadisticas.librosMasPopulares.map((libro, index) => (
-                <motion.div
-                  key={libro.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  whileHover={{ y: -10, scale: 1.03 }}
-                  className="group cursor-pointer relative"
-                >
-                  <Link to={`/libros/${libro.id}`}>
-                    {/* Badge Popular */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-                      #{index + 1} Popular
-                    </div>
-                    
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all border-2 border-transparent group-hover:border-purple-300">
-                      {libro.imagen ? (
-                        <img
-                          src={libro.imagen}
-                          alt={libro.nombre}
-                          className="w-full h-72 object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-72 flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
-                          <BookOpen className="w-20 h-20 text-purple-300" />
-                        </div>
-                      )}
-                      <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50">
-                        <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 text-sm group-hover:text-purple-600 transition-colors">
-                          {libro.nombre}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-600 bg-white rounded-full px-3 py-1 w-fit">
-                          <MessageCircle className="w-3 h-3" />
-                          <span className="font-semibold">{libro.totalResenas} reseñas</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Todos los libros del autor */}
-        {libros.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-white rounded-3xl shadow-2xl p-8"
-          >
-            <div className="flex items-center gap-3 mb-8">
-              <BookOpen className="w-8 h-8 text-purple-600" />
-              <h2 className="text-3xl font-bold text-gray-800">
-                Todos los Libros 
-                <span className="ml-2 text-purple-600">({libros.length})</span>
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {libros.map((libro, index) => (
-                <motion.div
-                  key={libro.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.9 + index * 0.03 }}
-                  whileHover={{ y: -8, scale: 1.05 }}
-                  className="group cursor-pointer"
-                >
-                  <Link to={`/libros/${libro.id}`}>
-                    <div className="bg-white rounded-xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all border border-gray-100 group-hover:border-purple-300">
-                      {libro.imagen ? (
-                        <div className="relative overflow-hidden">
-                          <img
-                            src={libro.imagen}
-                            alt={libro.nombre}
-                            className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-56 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                          <BookOpen className="w-16 h-16 text-blue-300" />
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[2.5rem]">
-                          {libro.nombre}
-                        </h3>
-                        {libro.fecha_publicacion && (
-                          <p className="text-xs text-gray-500 font-medium bg-gray-100 rounded-full px-2 py-1 w-fit">
-                            {new Date(libro.fecha_publicacion).getFullYear()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Libros Adicionales en Google Books */}
+        {/* Libros de Google Books */}
         {librosAdicionales.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
+            transition={{ delay: 0.6 }}
             className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl shadow-2xl p-8 border-2 border-purple-200"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
-                  <ExternalLink className="w-8 h-8 text-purple-600" />
-                  Más Libros en Google Books
+                  <BookOpen className="w-8 h-8 text-purple-600" />
+                  Libros de {autor?.nombre} {autor?.apellido}
                 </h2>
                 <p className="text-gray-600 mt-2">
-                  Encontramos {librosAdicionales.length} libros adicionales de este autor que no están en nuestra base de datos
+                  {librosAdicionales.length} {librosAdicionales.length === 1 ? 'libro encontrado' : 'libros encontrados'} en Google Books
                 </p>
               </div>
             </div>
@@ -574,10 +431,11 @@ const DetalleAutor = () => {
                   whileHover={{ y: -8, transition: { duration: 0.2 } }}
                   className="group"
                 >
-                  <a
-                    href={libro.infoLink || libro.previewLink || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to={`/libro/${createGoogleBookSlug({
+                      titulo: libro.titulo,
+                      id: libro.id
+                    })}`}
                     className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-400"
                   >
                     {libro.portada ? (
@@ -587,11 +445,7 @@ const DetalleAutor = () => {
                           alt={libro.titulo}
                           className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-full p-2">
-                            <ExternalLink className="w-4 h-4 text-purple-600" />
-                          </div>
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ) : (
                       <div className="w-full h-56 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
@@ -618,7 +472,7 @@ const DetalleAutor = () => {
                         )}
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 </motion.div>
               ))}
             </div>
@@ -639,19 +493,20 @@ const DetalleAutor = () => {
         )}
 
         {/* Sin libros */}
-        {libros.length === 0 && librosAdicionales.length === 0 && !loading && !loadingGoogle && (
+        {librosAdicionales.length === 0 && !loading && !loadingGoogle && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
             className="bg-white rounded-3xl shadow-2xl p-16 text-center"
           >
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <BookOpen className="w-12 h-12 text-gray-300" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Sin libros registrados</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">No se encontraron libros</h3>
             <p className="text-gray-600 max-w-md mx-auto">
-              Este autor aún no tiene libros registrados en la base de datos. 
-              Los libros pueden ser agregados próximamente.
+              No pudimos encontrar libros de este autor en Google Books. 
+              Intenta buscar manualmente o verifica el nombre del autor.
             </p>
           </motion.div>
         )}

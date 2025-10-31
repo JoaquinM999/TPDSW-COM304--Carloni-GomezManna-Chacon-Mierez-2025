@@ -25,6 +25,7 @@ import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
 import LibroImagen from "../componentes/LibroImagen";
+import { LISTA_NOMBRES, LISTA_TIPOS } from "../constants/listas";
 
 interface Libro {
   id: string;
@@ -248,7 +249,7 @@ const DetalleLibro: React.FC = () => {
     }
   };
 
-  const nombresDeListasFijas = ["Ver más tarde", "Pendiente", "Leídos"];
+  const nombresDeListasFijas: string[] = [LISTA_NOMBRES.TO_READ, LISTA_NOMBRES.PENDING, LISTA_NOMBRES.READ];
 
   // Filtra las listas del usuario para mostrar solo las que NO son fijas
   const listasPersonalizadas = listas.filter(l => !nombresDeListasFijas.includes(l.nombre));
@@ -576,38 +577,27 @@ const DetalleLibro: React.FC = () => {
   const handleAddToListByName = async (nombre: string) => {
     if (!libro || !isAuthenticated()) return;
 
+    // Mapeo de nombres a tipos usando las constantes globales
     const tipoMap: { [key: string]: 'read' | 'to_read' | 'pending' | 'custom' } = {
-      "Ver más tarde": 'to_read',
-      "Pendiente": 'pending',
-      "Leído": 'read',
+      [LISTA_NOMBRES.TO_READ]: LISTA_TIPOS.TO_READ,
+      [LISTA_NOMBRES.PENDING]: LISTA_TIPOS.PENDING,
+      [LISTA_NOMBRES.READ]: LISTA_TIPOS.READ,
     };
 
-    const tipo = tipoMap[nombre] || 'custom';
+    const tipo = tipoMap[nombre] || LISTA_TIPOS.CUSTOM;
 
     try {
-      // Primero verificar en el estado local si ya existe
-      let lista = listas.find(l => l.nombre === nombre);
+      // Usar getOrCreateLista para obtener o crear la lista de forma segura
+      const lista = await listaService.getOrCreateLista(nombre, tipo);
       
-      if (!lista) {
-        // Si no está en el estado local, buscar en el servidor
-        const listasUsuario = await listaService.getUserListas();
-        lista = listasUsuario.find(l => l.nombre === nombre);
-        
-        if (!lista) {
-          // Crear la lista solo si realmente no existe en el servidor
-          lista = await listaService.createLista(nombre, tipo);
+      // Actualizar el estado de listas si no existe localmente
+      setListas(prev => {
+        const exists = prev.some(l => l.id === lista.id);
+        if (!exists) {
+          return [...prev, lista];
         }
-        
-        // Actualizar el estado de listas para incluir la nueva o la encontrada
-        setListas(prev => {
-          // Verificar que no esté ya en el array antes de agregarla
-          const exists = prev.some(l => l.id === lista!.id);
-          if (!exists) {
-            return [...prev, lista!];
-          }
-          return prev;
-        });
-      }
+        return prev;
+      });
 
       // Agregar el libro a la lista
       await listaService.addLibroALista(lista.id, libro);
@@ -615,7 +605,7 @@ const DetalleLibro: React.FC = () => {
       // Actualizar listasConLibro para marcar que este libro está en esta lista
       setListasConLibro(prevSet => {
         const newSet = new Set(prevSet);
-        newSet.add(lista!.id);
+        newSet.add(lista.id);
         return newSet;
       });
       
@@ -1106,12 +1096,6 @@ const DetalleLibro: React.FC = () => {
                     <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48 text-left">
                       {/* Opciones predefinidas (siempre se muestran si estás logueado) */}
                       {nombresDeListasFijas.map((nombre) => {
-                        const tipoMap: { [key: string]: 'read' | 'to_read' | 'pending' | 'custom' } = {
-                          "Ver más tarde": 'to_read',
-                          "Pendiente": 'pending',
-                          "Leído": 'read',
-                        };
-                        const tipo = tipoMap[nombre];
                         const listaExistente = listas.find(l => l.nombre === nombre);
                         const estaEnLista = listaExistente ? listasConLibro.has(listaExistente.id) : false;
                         return (

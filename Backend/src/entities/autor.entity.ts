@@ -15,6 +15,9 @@ export class Autor {
   @Index()
   apellido!: string;
 
+  @Property({ length: 500, nullable: true })
+  foto?: string; // URL de la foto del autor
+
   @OneToMany(() => Libro, libro => libro.autor, { cascade: [Cascade.PERSIST, Cascade.REMOVE] })
   libros = new Collection<Libro>(this);
 

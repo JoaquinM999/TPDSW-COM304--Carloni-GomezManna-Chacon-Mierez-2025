@@ -139,11 +139,24 @@ export const createLista = async (req: AuthRequest, res: Response) => {
     const { nombre, tipo } = req.body;
     if (!nombre || !tipo) return res.status(400).json({ error: 'Nombre y tipo requeridos' });
 
-    // Verificar si ya existe una lista con el mismo nombre para este usuario
-    const listaExistente = await orm.em.findOne(Lista, {
-      nombre,
-      usuario: { id: userId }
-    });
+    // Para listas predefinidas (read, to_read, pending), verificar por tipo
+    // Para listas custom, verificar por nombre
+    const esListaPredefinida = ['read', 'to_read', 'pending'].includes(tipo);
+    
+    let listaExistente;
+    if (esListaPredefinida) {
+      // Para listas predefinidas, buscar por tipo (solo puede haber una por usuario)
+      listaExistente = await orm.em.findOne(Lista, {
+        tipo: tipo as TipoLista,
+        usuario: { id: userId }
+      });
+    } else {
+      // Para listas custom, buscar por nombre
+      listaExistente = await orm.em.findOne(Lista, {
+        nombre,
+        usuario: { id: userId }
+      });
+    }
 
     if (listaExistente) {
       return res.status(200).json(listaExistente); // Devolver la lista existente en lugar de error

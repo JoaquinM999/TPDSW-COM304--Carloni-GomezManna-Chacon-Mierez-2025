@@ -18,14 +18,60 @@ export const obtenerLibros = async (req: Request, res: Response) => {
   res.json(libros);
 };
 
+/**
+ * Extrae el ID de Google Books desde un slug
+ * Formato esperado: "titulo-slug-googleId"
+ * Ejemplo: "cien-anos-soledad-abc12345" → "abc12345"
+ */
+const extractGoogleIdFromSlug = (slug: string): string => {
+  const parts = slug.split('-');
+  return parts[parts.length - 1]; // Último segmento
+};
+
+/**
+ * Extrae el título desde un slug para búsqueda
+ * Ejemplo: "cien-anos-soledad-abc12345" → "cien anos soledad"
+ */
+const extractTitleFromSlug = (slug: string): string => {
+  const parts = slug.split('-');
+  return parts.slice(0, -1).join(' '); // Todo excepto el último segmento (ID)
+};
+
 export const obtenerLibroPorId = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!id) return res.status(400).json({ message: 'Falta parámetro id' });
 
-  const libro = await getBookById(id);
-  if (!libro) return res.status(404).json({ message: 'Libro no encontrado' });
+  try {
+    // Intentar primero con el ID directamente
+    let libro = await getBookById(id);
+    
+    // Si no se encuentra y parece un slug (contiene guiones), extraer el ID
+    if (!libro && id.includes('-')) {
+      const googleId = extractGoogleIdFromSlug(id);
+      console.log(`Slug detectado. Intentando con ID extraído: ${googleId}`);
+      libro = await getBookById(googleId);
+      
+      // Si aún no se encuentra, intentar búsqueda por título
+      if (!libro) {
+        const titulo = extractTitleFromSlug(id);
+        console.log(`ID no encontrado. Buscando por título: ${titulo}`);
+        const resultados = await buscarLibro(titulo, 0, 1);
+        
+        if (resultados && resultados.length > 0) {
+          libro = resultados[0];
+        }
+      }
+    }
+    
+    if (!libro) {
+      return res.status(404).json({ message: 'Libro no encontrado' });
+    }
 
-  res.json(libro);
+    res.json(libro);
+  } catch (error) {
+    console.error('Error al obtener libro de Google Books:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
 };
 
 export const addGoogleBook = async (req: AuthRequest, res: Response) => {

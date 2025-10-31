@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Grid, List } from 'lucide-react';
+import { Search, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import AutorCard from '../componentes/AutorCard';
 
 interface Autor {
@@ -19,17 +18,18 @@ const AutoresPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalAutores, setTotalAutores] = useState(0);
 
-  // Búsqueda en BD local
+  // Búsqueda en BD local con paginación
   const fetchAutores = async (searchTerm = '', pageNum = 1) => {
     setLoading(true);
     setError(null);
     
     try {
       const response = await fetch(
-        `http://localhost:3000/api/autores?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
+        `http://localhost:3000/api/autor?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
       );
       
       if (!response.ok) {
@@ -38,21 +38,17 @@ const AutoresPage: React.FC = () => {
       
       const data = await response.json();
       
-      if (pageNum === 1) {
-        // Primera página: reemplazar autores
-        setDisplayedAutores(data.autores);
-      } else {
-        // Páginas siguientes: agregar al final
-        setDisplayedAutores(prev => [...prev, ...data.autores]);
-      }
-      
-      setHasMore(data.hasMore);
+      // Reemplazar autores (no acumular como en infinite scroll)
+      setDisplayedAutores(data.autores);
+      setTotalPages(data.totalPages);
+      setTotalAutores(data.total);
       setPage(pageNum);
+      
+      // Scroll al top al cambiar de página
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
-      if (pageNum === 1) {
-        setDisplayedAutores([]);
-      }
+      setDisplayedAutores([]);
     } finally {
       setLoading(false);
     }
@@ -63,7 +59,7 @@ const AutoresPage: React.FC = () => {
     fetchAutores('', 1);
   }, []);
 
-  // Debounced search
+  // Debounced search - resetear a página 1
   useEffect(() => {
     if (searchTerm.length >= 2) {
       const timer = setTimeout(() => {
@@ -75,11 +71,58 @@ const AutoresPage: React.FC = () => {
     }
   }, [searchTerm]);
 
-  // Cargar más autores (scroll infinito)
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchAutores(searchTerm, page + 1);
+  // Funciones de navegación de páginas
+  const goToPage = (pageNum: number) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      fetchAutores(searchTerm, pageNum);
     }
+  };
+
+  const nextPage = () => {
+    if (page < totalPages) {
+      goToPage(page + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (page > 1) {
+      goToPage(page - 1);
+    }
+  };
+
+  // Generar números de página para mostrar
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 7; // Máximo de números visibles
+    
+    if (totalPages <= maxVisible) {
+      // Mostrar todos
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Mostrar con elipsis
+      if (page <= 4) {
+        // Cerca del inicio
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (page >= totalPages - 3) {
+        // Cerca del final
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+      } else {
+        // En el medio
+        pages.push(1);
+        pages.push('...');
+        for (let i = page - 1; i <= page + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   return (
@@ -124,12 +167,19 @@ const AutoresPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Controles de vista */}
+      {/* Controles de vista e info de paginación */}
       <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4">
         {/* Info de resultados */}
-        <div className="text-sm text-gray-600">
-          {!loading && displayedAutores.length > 0 && (
-            <p>Mostrando {displayedAutores.length} autor{displayedAutores.length !== 1 ? 'es' : ''}</p>
+        <div className="text-sm text-gray-700 font-medium">
+          {!loading && totalAutores > 0 && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <span className="bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200">
+                Total: <strong>{totalAutores}</strong> autores
+              </span>
+              <span className="bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+              </span>
+            </div>
           )}
         </div>
 
@@ -175,23 +225,9 @@ const AutoresPage: React.FC = () => {
         </div>
       )}
 
-      {/* Grid/List de autores con scroll infinito */}
+      {/* Grid/List de autores */}
       {!loading && displayedAutores.length > 0 && (
-        <InfiniteScroll
-          dataLength={displayedAutores.length}
-          next={loadMore}
-          hasMore={hasMore}
-          loader={
-            <div className="text-center py-4">
-              <div className="inline-block w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          }
-          endMessage={
-            <p className="text-center py-4 text-gray-500 text-sm">
-              ✨ Has visto todos los autores disponibles
-            </p>
-          }
-        >
+        <>
           <div className={`max-w-7xl mx-auto ${
             viewMode === 'grid'
               ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
@@ -208,7 +244,61 @@ const AutoresPage: React.FC = () => {
               />
             ))}
           </div>
-        </InfiniteScroll>
+
+          {/* Controles de paginación */}
+          {totalPages > 1 && (
+            <div className="max-w-7xl mx-auto mt-10 mb-6">
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {/* Botón Anterior */}
+                <button
+                  onClick={prevPage}
+                  disabled={page === 1}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200 shadow-sm'
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Anterior</span>
+                </button>
+
+                {/* Números de página */}
+                {getPageNumbers().map((pageNum, index) => (
+                  pageNum === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum as number)}
+                      className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                        page === pageNum
+                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg scale-110'
+                          : 'bg-white text-gray-700 hover:bg-cyan-50 border border-gray-200 shadow-sm'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                ))}
+
+                {/* Botón Siguiente */}
+                <button
+                  onClick={nextPage}
+                  disabled={page === totalPages}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200 shadow-sm'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Siguiente</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Empty state */}

@@ -24,7 +24,7 @@ import CrearSagaAdmin from './paginas/CrearSagaAdmin';
 import PerfilPage from './paginas/PerfilPage';
 import { motion } from 'framer-motion';
 import AutoresPage from './paginas/AutoresPageMejorada';
-import AutorDetallePage from './paginas/AutorDetallePageMejorada';
+import DetalleAutor from './paginas/DetalleAutor';
 import SagasPage from './paginas/SagasPage';
 import SagaDetallePage from './paginas/SagaDetallePage';
 
@@ -134,7 +134,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
 
           {/* Autores */}
           <Route path="/autores" element={<AutoresPage />} />
-          <Route path="/autores/:id" element={<AutorDetallePage />} />
+          <Route path="/autores/:id" element={<DetalleAutor />} />
 
           {/* Sagas */}
           <Route path="/sagas" element={<SagasPage />} />

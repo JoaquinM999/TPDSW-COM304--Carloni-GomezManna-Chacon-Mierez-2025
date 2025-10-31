@@ -3,9 +3,51 @@ import { MikroORM } from '@mikro-orm/core';
 import { Autor } from '../entities/autor.entity';
 
 export const getAutores = async (req: Request, res: Response) => {
-  const orm = req.app.get('orm') as MikroORM;
-  const autores = await orm.em.find(Autor, {});
-  res.json(autores);
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    
+    const { page = '1', limit = '20', search = '' } = req.query;
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const offset = (pageNum - 1) * limitNum;
+    
+    // Construir filtro de búsqueda
+    const where: any = {};
+    if (search && (search as string).trim().length > 0) {
+      const searchTerm = (search as string).trim();
+      where.$or = [
+        { nombre: { $like: `%${searchTerm}%` } },
+        { apellido: { $like: `%${searchTerm}%` } }
+      ];
+    }
+    
+    // Ejecutar query con paginación
+    const autores = await em.find(Autor, where, {
+      limit: limitNum,
+      offset: offset,
+      orderBy: { nombre: 'ASC', apellido: 'ASC' }
+    });
+    
+    const total = await em.count(Autor, where);
+    
+    res.json({
+      autores: autores.map((autor: Autor) => ({
+        id: autor.id.toString(),
+        nombre: autor.nombre,
+        apellido: autor.apellido,
+        name: `${autor.nombre} ${autor.apellido}`.trim(),
+        createdAt: autor.createdAt
+      })),
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      hasMore: pageNum < Math.ceil(total / limitNum)
+    });
+  } catch (error) {
+    console.error('Error en getAutores:', error);
+    res.status(500).json({ error: 'Error al obtener autores' });
+  }
 };
 
 export const getAutorById = async (req: Request, res: Response) => {

@@ -1,7 +1,7 @@
 // src/routes/libro.routes.ts
 import { Router } from 'express';
 import {
-  getLibros, getLibroById, createLibro, updateLibro, deleteLibro,
+  getLibros, getLibroById, getLibroBySlug, createLibro, updateLibro, deleteLibro,
   getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController, searchLibros,
   getListasForLibro, getNuevosLanzamientos // 💡 1. Importa la nueva función del controlador
 } from '../controllers/libro.controller';
@@ -12,6 +12,7 @@ const router = Router();
 router.get('/', getLibros);
 router.get('/search', searchLibros);
 router.get('/nuevos', getNuevosLanzamientos); // Debe ir ANTES de /:id
+router.get('/slug/:slug', getLibroBySlug); // 🆕 Nuevo endpoint para buscar por slug
 router.get('/categoria/:categoriaId', getLibrosByCategoria);
 router.get('/estrellas', getLibrosByEstrellasMinimas);
 

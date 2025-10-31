@@ -6,6 +6,7 @@ const API_URL = 'http://localhost:3000/api/recomendaciones';
 export interface RecomendacionResponse {
   libros: {
     id: number;
+    slug: string;
     titulo: string;
     autores: string[];
     imagen: string | null;

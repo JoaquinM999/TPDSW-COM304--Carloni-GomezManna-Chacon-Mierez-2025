@@ -23,8 +23,8 @@ import { CrearSaga } from './paginas/CrearSaga';
 import CrearSagaAdmin from './paginas/CrearSagaAdmin';
 import PerfilPage from './paginas/PerfilPage';
 import { motion } from 'framer-motion';
-import AutoresPage from './paginas/AutoresPage';
-import AutorDetallePage from './paginas/AutorDetallePage';
+import AutoresPage from './paginas/AutoresPageMejorada';
+import AutorDetallePage from './paginas/AutorDetallePageMejorada';
 import SagasPage from './paginas/SagasPage';
 import SagaDetallePage from './paginas/SagaDetallePage';
 
@@ -32,7 +32,7 @@ import SagaDetallePage from './paginas/SagaDetallePage';
 import NuevosLanzamientos from './paginas/NuevosLanzamientos';
 import LibrosRecomendados from './paginas/LibrosRecomendados';
 import LibrosPopulares from './paginas/LibrosPopulares';
-import DetalleLista from './paginas/DetalleLista';
+import DetalleLista from './paginas/DetalleListaMejorada';
 
 import ConfiguracionUsuario from './paginas/ConfiguracionUsuario';
 import AdminModerationPage from './paginas/AdminModerationPage';
@@ -40,6 +40,8 @@ import AdminActividadPage from './paginas/AdminActividadPage';
 import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
 import { ModerationDashboard } from './paginas/Admin/ModerationDashboard';
+import SiguiendoPage from './paginas/SiguiendoPage';
+import FeedActividadPage from './paginas/FeedActividadPage';
 
 
 interface FooterLink {
@@ -166,6 +168,8 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
           <Route path="/admin/actividad" element={<AdminActividadPage />} />
           <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
           <Route path="/admin/permiso" element={<AdminPermisoPage />} />
+          <Route path="/siguiendo" element={<SiguiendoPage />} />
+          <Route path="/feed" element={<FeedActividadPage />} />
         </Routes>
       </main>
 

@@ -74,6 +74,63 @@ export const getLibroById = async (req: Request, res: Response) => {
   res.json(libro);
 };
 
+/**
+ * Obtener libro por slug con todas sus relaciones
+ * Endpoint: GET /api/libros/slug/:slug
+ * Formato compatible con DetalleLibro.tsx
+ */
+export const getLibroBySlug = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+  
+  try {
+    const { slug } = req.params;
+    
+    const libro = await em.findOne(
+      Libro, 
+      { slug },
+      { populate: ['autor', 'categoria', 'editorial', 'saga'] }
+    );
+    
+    if (!libro) {
+      return res.status(404).json({ error: 'Libro no encontrado' });
+    }
+    
+    // Formatear respuesta compatible con DetalleLibro.tsx
+    const response = {
+      id: libro.id.toString(),
+      titulo: libro.nombre || 'Título desconocido',
+      title: libro.nombre || 'Título desconocido',
+      autores: libro.autor 
+        ? [`${libro.autor.nombre || ''} ${libro.autor.apellido || ''}`.trim()]
+        : ['Autor desconocido'],
+      descripcion: libro.sinopsis || 'No hay descripción disponible.',
+      imagen: libro.imagen || null,
+      coverUrl: libro.imagen || null,
+      enlace: libro.enlace || null,
+      slug: libro.slug || null,
+      categoria: libro.categoria ? {
+        id: libro.categoria.id,
+        nombre: libro.categoria.nombre
+      } : null,
+      editorial: libro.editorial ? {
+        id: libro.editorial.id,
+        nombre: libro.editorial.nombre
+      } : null,
+      saga: libro.saga ? {
+        id: libro.saga.id,
+        nombre: libro.saga.nombre
+      } : null,
+      source: 'local' as const
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error al obtener libro por slug:', error);
+    res.status(500).json({ error: 'Error al obtener el libro' });
+  }
+};
+
 export const createLibro = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();

@@ -24,6 +24,7 @@ import { isAuthenticated, getToken } from "../services/authService";
 import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
+import LibroImagen from "../componentes/LibroImagen";
 
 interface Libro {
   id: string;
@@ -186,7 +187,27 @@ const DetalleLibro: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const from = (location.state as any)?.from || "/libros";
+  
+  // 🔍 Detectar desde dónde vino el usuario de forma inteligente
+  const getBackLocation = () => {
+    // 1. Revisar si hay estado de navegación explícito
+    if ((location.state as any)?.from) {
+      console.log('📍 Usando estado de navegación:', (location.state as any).from);
+      return (location.state as any).from;
+    }
+    
+    // 2. Revisar el referer para detectar si venía de recomendaciones
+    if (document.referrer && document.referrer.includes('/recomendaciones')) {
+      console.log('📍 Detectado desde referer: /recomendaciones');
+      return '/recomendaciones';
+    }
+    
+    // 3. Fallback a libros
+    console.log('📍 Fallback a /libros');
+    return '/libros';
+  };
+  
+  const from = getBackLocation();
 
   const [libro, setLibro] = useState<Libro | null>(null);
   const [loading, setLoading] = useState(true);
@@ -278,55 +299,80 @@ const DetalleLibro: React.FC = () => {
       setError(null);
 
       try {
-        let response = await fetch(`http://localhost:3000/api/hardcover/libro/${slug}`);
+        let response;
         let data: any = null;
 
+        // 🆕 PRIORIDAD 1: Intentar buscar en base de datos local primero
+        response = await fetch(`http://localhost:3000/api/libros/slug/${slug}`);
+        
         if (response.ok) {
+          // ✅ Libro encontrado en base de datos local
           data = await response.json();
           setLibro({
             id: data.id.toString(),
-            titulo: data.title,
-            title: data.title,
-            autores: data.authors?.length ? data.authors : ["Autor desconocido"],
-            descripcion: data.description || "No hay descripción disponible.",
-            imagen: data.coverUrl,
-            coverUrl: data.coverUrl,
-            enlace: null,
+            titulo: data.titulo || data.title,
+            title: data.titulo || data.title,
+            autores: data.autores?.length ? data.autores : ["Autor desconocido"],
+            descripcion: data.descripcion || "No hay descripción disponible.",
+            imagen: data.imagen || data.coverUrl,
+            coverUrl: data.imagen || data.coverUrl,
+            enlace: data.enlace || null,
             slug: data.slug,
             activities_count: data.activities_count,
-            source: "hardcover",
+            source: data.source || "local",
           });
         } else {
-          response = await fetch(`http://localhost:3000/api/google-books/${slug}`);
-          if (!response.ok) {
-            const searchQuery = slug.replace(/-/g, " ");
-            response = await fetch(
-              `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(searchQuery)}&maxResults=1`
-            );
-            if (!response.ok) throw new Error("Libro no encontrado");
-
-            const searchData = await response.json();
-            if (searchData && searchData.length > 0) {
-              const libroGoogle = searchData[0];
-              data = libroGoogle;
-              setLibro({
-                id: libroGoogle.id,
-                titulo: libroGoogle.title || "Título desconocido",
-                title: libroGoogle.title,
-                autores: libroGoogle.autores?.length ? libroGoogle.autores : ["Autor desconocido"],
-                descripcion: libroGoogle.descripcion || "No hay descripción disponible.",
-                imagen: libroGoogle.imagen || null,
-                coverUrl: libroGoogle.imagen || null,
-                enlace: libroGoogle.enlace || null,
-                slug: libroGoogle.slug || undefined,
-                activities_count: libroGoogle.activities_count,
-                source: "google",
-              });
-            } else throw new Error("Libro no encontrado");
+          // 🔄 FALLBACK 1: Intentar Hardcover API
+          response = await fetch(`http://localhost:3000/api/hardcover/libro/${slug}`);
+          
+          if (response.ok) {
+            data = await response.json();
+            setLibro({
+              id: data.id.toString(),
+              titulo: data.title,
+              title: data.title,
+              autores: data.authors?.length ? data.authors : ["Autor desconocido"],
+              descripcion: data.description || "No hay descripción disponible.",
+              imagen: data.coverUrl,
+              coverUrl: data.coverUrl,
+              enlace: null,
+              slug: data.slug,
+              activities_count: data.activities_count,
+              source: "hardcover",
+            });
           } else {
-            const libroData = await response.json();
-            data = libroData;
-            setLibro({ ...libroData, source: "google" });
+            // 🔄 FALLBACK 2: Intentar Google Books API
+            response = await fetch(`http://localhost:3000/api/google-books/${slug}`);
+            if (!response.ok) {
+              const searchQuery = slug.replace(/-/g, " ");
+              response = await fetch(
+                `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(searchQuery)}&maxResults=1`
+              );
+              if (!response.ok) throw new Error("Libro no encontrado");
+
+              const searchData = await response.json();
+              if (searchData && searchData.length > 0) {
+                const libroGoogle = searchData[0];
+                data = libroGoogle;
+                setLibro({
+                  id: libroGoogle.id,
+                  titulo: libroGoogle.title || "Título desconocido",
+                  title: libroGoogle.title,
+                  autores: libroGoogle.autores?.length ? libroGoogle.autores : ["Autor desconocido"],
+                  descripcion: libroGoogle.descripcion || "No hay descripción disponible.",
+                  imagen: libroGoogle.imagen || null,
+                  coverUrl: libroGoogle.imagen || null,
+                  enlace: libroGoogle.enlace || null,
+                  slug: libroGoogle.slug || undefined,
+                  activities_count: libroGoogle.activities_count,
+                  source: "google",
+                });
+              } else throw new Error("Libro no encontrado");
+            } else {
+              const libroData = await response.json();
+              data = libroData;
+              setLibro({ ...libroData, source: "google" });
+            }
           }
         }
 
@@ -997,13 +1043,11 @@ const DetalleLibro: React.FC = () => {
           {/* Cover Section */}
           <div className="flex justify-center">
             <div className="relative group">
-              <img
-                src={libro.coverUrl || libro.imagen || "https://via.placeholder.com/400x600"}
+              <LibroImagen
+                src={libro.coverUrl || libro.imagen}
                 alt={`Portada del libro ${libro.titulo}`}
-                onLoad={() => setImageLoaded(true)}
-                className={`w-48 h-72 sm:w-56 sm:h-80 lg:w-64 lg:h-96 object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:shadow-3xl group-hover:scale-105 ${
-                  imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                }`}
+                titulo={libro.titulo}
+                className="w-48 h-72 sm:w-56 sm:h-80 lg:w-64 lg:h-96 object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:shadow-3xl group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>

@@ -78,7 +78,7 @@ export const CompartirLibro: React.FC<CompartirLibroProps> = ({
                 </h3>
                 <button
                   onClick={() => setAbierto(false)}
-                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
                   aria-label="Cerrar"
                 >
                   <X className="w-5 h-5 text-gray-600" />
@@ -93,7 +93,7 @@ export const CompartirLibro: React.FC<CompartirLibroProps> = ({
 
               {/* Botones de redes sociales */}
               <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-700 mb-3">Compartir en:</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Compartir en:</p>
                 
                 <div className="grid grid-cols-2 gap-3">
                   {/* Facebook */}

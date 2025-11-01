@@ -106,30 +106,30 @@ const UserAvatar: React.FC<{
 const ModerationBadge: React.FC<{ score?: number; autoModerated?: boolean }> = ({ score, autoModerated }) => {
   if (score === undefined) return null;
 
-  let bgColor = "bg-gradient-to-r from-gray-100 to-gray-200";
-  let textColor = "text-gray-700";
+  let bgColor = "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600";
+  let textColor = "text-gray-700 dark:text-gray-300 dark:text-gray-300";
   let icon = <Info className="w-4 h-4" />;
   let label = "Sin analizar";
-  let borderColor = "border-gray-300";
+  let borderColor = "border-gray-300 dark:border-gray-600";
 
   if (score >= 80) {
-    bgColor = "bg-gradient-to-r from-emerald-50 to-green-100";
-    textColor = "text-emerald-700";
+    bgColor = "bg-gradient-to-r from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30";
+    textColor = "text-emerald-700 dark:text-emerald-400";
     icon = <CheckCircle className="w-4 h-4" />;
     label = "Calidad alta";
-    borderColor = "border-emerald-200";
+    borderColor = "border-emerald-200 dark:border-emerald-800";
   } else if (score >= 40) {
-    bgColor = "bg-gradient-to-r from-amber-50 to-yellow-100";
-    textColor = "text-amber-700";
+    bgColor = "bg-gradient-to-r from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30";
+    textColor = "text-amber-700 dark:text-amber-400";
     icon = <AlertTriangle className="w-4 h-4" />;
     label = "Requiere revisión";
-    borderColor = "border-amber-200";
+    borderColor = "border-amber-200 dark:border-amber-800";
   } else {
-    bgColor = "bg-gradient-to-r from-red-50 to-rose-100";
-    textColor = "text-red-700";
+    bgColor = "bg-gradient-to-r from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30";
+    textColor = "text-red-700 dark:text-red-400";
     icon = <Shield className="w-4 h-4" />;
     label = "Contenido problemático";
-    borderColor = "border-red-200";
+    borderColor = "border-red-200 dark:border-red-800";
   }
 
   return (
@@ -242,7 +242,7 @@ const Notice: React.FC<{ type: "success" | "error"; text: string; onClose?: () =
         <button 
           aria-label="Cerrar notificación" 
           onClick={onClose} 
-          className="text-gray-400 hover:text-gray-700 transition-colors p-1 hover:bg-white/50 rounded-lg"
+          className="text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:text-gray-300 transition-colors p-1 hover:bg-white/50 rounded-lg"
         >
           ✕
         </button>
@@ -473,12 +473,12 @@ const AdminModerationPage: React.FC = () => {
 
   /* ---------- RENDER ---------- */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header mejorado */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-lg sticky top-0 z-40"
+        className="bg-white dark:bg-gray-800 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 shadow-lg sticky top-0 z-40"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -491,10 +491,10 @@ const AdminModerationPage: React.FC = () => {
                 <Shield className="w-8 h-8 text-white" />
               </motion.div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
                   Moderación de Reseñas
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">Revisá, aprobá o rechazá reseñas pendientes de la comunidad</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-1">Revisá, aprobá o rechazá reseñas pendientes de la comunidad</p>
               </div>
             </div>
 
@@ -502,10 +502,10 @@ const AdminModerationPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-xl"
                 >
-                  <Clock className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm font-semibold text-indigo-900">
+                  <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
                     {resenas.length} Pendientes
                   </span>
                 </motion.div>
@@ -514,11 +514,11 @@ const AdminModerationPage: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={cargarResenasPendientes}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-indigo-200 rounded-xl shadow-md hover:shadow-lg transition-all hover:border-indigo-300"
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all hover:border-indigo-300 dark:hover:border-indigo-600"
                   aria-label="Actualizar reseñas"
                 >
-                  <RefreshCw className="w-4 h-4 text-indigo-600" />
-                  <span className="hidden sm:inline font-medium text-indigo-900">Actualizar</span>
+                  <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="hidden sm:inline font-medium text-indigo-900 dark:text-indigo-200">Actualizar</span>
                 </motion.button>
               </div>
             )}
@@ -535,22 +535,22 @@ const AdminModerationPage: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="grid place-items-center py-12"
           >
-            <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
+            <div className="w-full max-w-3xl bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 dark:border-gray-700">
               <div className="flex flex-col md:flex-row gap-6 items-center">
                 <motion.div
                   initial={{ rotate: -10 }}
                   animate={{ rotate: 0 }}
                   transition={{ type: "spring", stiffness: 200 }}
-                  className="w-32 h-32 rounded-2xl bg-gradient-to-br from-red-100 via-rose-100 to-orange-100 flex items-center justify-center shadow-lg"
+                  className="w-32 h-32 rounded-2xl bg-gradient-to-br from-red-100 via-rose-100 to-orange-100 dark:from-red-900/40 dark:via-rose-900/40 dark:to-orange-900/40 flex items-center justify-center shadow-lg"
                 >
-                  <Shield className="w-16 h-16 text-red-500" />
+                  <Shield className="w-16 h-16 text-red-500 dark:text-red-400" />
                 </motion.div>
 
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent mb-3">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 dark:from-red-400 dark:to-rose-400 bg-clip-text text-transparent mb-3">
                     Acceso denegado
                   </h2>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-400 leading-relaxed">
                     No tenés permisos para moderar reseñas desde esta cuenta. Si creés que es un error, podés iniciar sesión con otra cuenta o solicitar acceso al equipo de administración.
                   </p>
 
@@ -567,7 +567,7 @@ const AdminModerationPage: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={contactSupport}
-                      className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
+                      className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
                     >
                       <Mail className="w-5 h-5" /> Solicitar acceso
                     </motion.button>
@@ -575,7 +575,7 @@ const AdminModerationPage: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={goHome}
-                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium"
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
                     >
                       <Home className="w-5 h-5" /> Volver al inicio
                     </motion.button>
@@ -597,7 +597,7 @@ const AdminModerationPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-6 shadow-lg flex items-start gap-3"
+            className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-2 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-6 py-4 rounded-2xl mb-6 shadow-lg flex items-start gap-3"
           >
             <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
@@ -616,18 +616,18 @@ const AdminModerationPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="animate-pulse bg-white/70 backdrop-blur rounded-2xl p-6 shadow-lg border border-gray-200"
+                className="animate-pulse bg-white/70 dark:bg-gray-800/70 backdrop-blur rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-full" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 dark:from-indigo-800 dark:to-purple-800 rounded-full" />
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-48" />
-                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-16" />
+                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-48" />
+                      <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-16" />
                     </div>
-                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-full" />
-                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-5/6" />
-                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full w-4/6" />
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-full" />
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-5/6" />
+                    <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full w-4/6" />
                   </div>
                 </div>
               </motion.div>
@@ -642,11 +642,11 @@ const AdminModerationPage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200 p-6 mb-6"
+              className="bg-white dark:bg-gray-800 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
             >
               <div className="flex items-center gap-3 mb-4">
-                <Filter className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Filtros y búsqueda</h3>
+                <Filter className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 dark:text-gray-100">Filtros y búsqueda</h3>
               </div>
 
               <div className="flex flex-col lg:flex-row gap-4">
@@ -661,7 +661,7 @@ const AdminModerationPage: React.FC = () => {
                       setQuery(e.target.value);
                       setPage(1);
                     }}
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-800 focus:border-indigo-400 transition-all bg-white dark:bg-gray-800 dark:bg-gray-900 text-gray-900 dark:text-gray-100 dark:text-gray-100"
                     placeholder="Buscar por comentario, usuario o título del libro..."
                     aria-label="Buscar reseñas"
                   />
@@ -676,7 +676,7 @@ const AdminModerationPage: React.FC = () => {
                       setRatingFilter(v === "all" ? "all" : Number(v));
                       setPage(1);
                     }}
-                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-800 focus:border-indigo-400 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer"
                     aria-label="Filtrar por valoración"
                   >
                     <option value="all">⭐ Todas las valoraciones</option>
@@ -693,7 +693,7 @@ const AdminModerationPage: React.FC = () => {
                       setModerationFilter(e.target.value as any);
                       setPage(1);
                     }}
-                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-800 focus:border-indigo-400 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer"
                     aria-label="Filtrar por calidad de moderación"
                   >
                     <option value="all">🎯 Todas las calidades</option>
@@ -705,7 +705,7 @@ const AdminModerationPage: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white hover:border-gray-300 transition-all cursor-pointer"
+                    className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-800 focus:border-indigo-400 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer"
                     aria-label="Ordenar reseñas"
                   >
                     <option value="fecha_desc">🕐 Más recientes</option>
@@ -722,21 +722,21 @@ const AdminModerationPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5 border-2 border-indigo-200 shadow-md"
+              className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 border-2 border-indigo-200 dark:border-indigo-800 shadow-md"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-indigo-200">
-                    <CheckCircle className="w-4 h-4 text-indigo-600" />
-                    <span className="text-sm font-semibold text-gray-700">
-                      Seleccionadas: <span className="text-indigo-600">{selectedIds.size}</span>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-xl shadow-sm border border-indigo-200 dark:border-indigo-700">
+                    <CheckCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-300">
+                      Seleccionadas: <span className="text-indigo-600 dark:text-indigo-400">{selectedIds.size}</span>
                     </span>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => selectAllOnPage(paginated)}
-                    className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-indigo-300 transition-all"
+                    className="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all"
                   >
                     Seleccionar/Desmarcar página
                   </motion.button>
@@ -744,7 +744,7 @@ const AdminModerationPage: React.FC = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={clearSelection}
-                    className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 hover:border-red-300 transition-all"
+                    className="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-red-300 dark:hover:border-red-600 transition-all"
                   >
                     Limpiar selección
                   </motion.button>
@@ -758,7 +758,7 @@ const AdminModerationPage: React.FC = () => {
                     disabled={selectedIds.size === 0}
                     className={`px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all ${
                       selectedIds.size === 0
-                        ? "bg-gray-300 cursor-not-allowed"
+                        ? "bg-gray-300 dark:bg-gray-600 cursor-not-allowed"
                         : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700"
                     }`}
                   >
@@ -771,7 +771,7 @@ const AdminModerationPage: React.FC = () => {
                     disabled={selectedIds.size === 0}
                     className={`px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-all ${
                       selectedIds.size === 0
-                        ? "bg-gray-300 cursor-not-allowed"
+                        ? "bg-gray-300 dark:bg-gray-600 cursor-not-allowed"
                         : "bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700"
                     }`}
                   >
@@ -786,13 +786,13 @@ const AdminModerationPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white/80 backdrop-blur rounded-2xl shadow-lg p-12 text-center border-2 border-dashed border-gray-300"
+                className="bg-white dark:bg-gray-800 dark:bg-gray-800/80 backdrop-blur rounded-2xl shadow-lg p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-600"
               >
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <CheckCircle className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-700 mb-2">¡Todo al día!</h3>
-                <p className="text-gray-500">No hay reseñas pendientes de moderación en este momento.</p>
+                <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-2">¡Todo al día!</h3>
+                <p className="text-gray-500 dark:text-gray-400">No hay reseñas pendientes de moderación en este momento.</p>
               </motion.div>
             ) : (
               <div className="space-y-3">
@@ -808,8 +808,8 @@ const AdminModerationPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ delay: index * 0.05 }}
-                        className={`bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 transition-all ${
-                          isSelected ? "border-indigo-400 shadow-xl" : "border-gray-200 hover:border-indigo-300"
+                        className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 transition-all ${
+                          isSelected ? "border-indigo-400 dark:border-indigo-600 shadow-xl" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600"
                         } p-6 flex gap-5 hover:shadow-2xl`}
                       >
                         <div className="flex-shrink-0">
@@ -826,25 +826,25 @@ const AdminModerationPage: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <header className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-xl font-bold text-gray-900 truncate">{resena.usuario.nombre}</h3>
-                              <div className="text-sm text-gray-600 mt-1">
-                                <span className="font-semibold text-indigo-600">📚 Libro:</span>{" "}
+                              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 dark:text-gray-100 truncate">{resena.usuario.nombre}</h3>
+                              <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-1">
+                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">📚 Libro:</span>{" "}
                                 <span className="font-medium">{(resena.libro as any).nombre || resena.libro.titulo}</span>
                               </div>
-                              <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
                                 <Mail className="w-3 h-3" />
                                 {resena.usuario.email}
                               </div>
-                              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {formatDate(resena.fechaResena)}
                               </div>
                             </div>
 
                             <div className="flex flex-col items-end gap-2">
-                              <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-xl border border-amber-300 shadow-sm">
-                                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                <span className="text-sm font-bold text-amber-700">{resena.estrellas}/5</span>
+                              <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 rounded-xl border border-amber-300 dark:border-amber-700 shadow-sm">
+                                <Star className="w-4 h-4 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
+                                <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{resena.estrellas}/5</span>
                               </div>
 
                               <label className="inline-flex items-center gap-2 cursor-pointer group">
@@ -852,10 +852,10 @@ const AdminModerationPage: React.FC = () => {
                                   type="checkbox"
                                   checked={isSelected}
                                   onChange={() => toggleSelect(resena.id)}
-                                  className="w-5 h-5 rounded border-2 border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-300 cursor-pointer"
+                                  className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-2 focus:ring-indigo-300 cursor-pointer"
                                   aria-label={`Seleccionar reseña ${resena.id}`}
                                 />
-                                <span className="text-xs font-medium text-gray-500 group-hover:text-indigo-600 transition-colors">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 transition-colors">
                                   Seleccionar
                                 </span>
                               </label>
@@ -867,8 +867,8 @@ const AdminModerationPage: React.FC = () => {
                             <ModerationBadge score={resena.moderationScore} autoModerated={resena.autoModerated} />
                           </div>
 
-                          <div className="mt-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-                            <p className="text-gray-800 leading-relaxed">
+                          <div className="mt-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
                               {isExpanded ? resena.comentario : resena.comentario.slice(0, 300)}
                               {resena.comentario.length > 300 && (
                                 <>
@@ -876,7 +876,7 @@ const AdminModerationPage: React.FC = () => {
                                   <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     onClick={() => toggleExpand(resena.id)}
-                                    className="ml-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                                    className="ml-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline"
                                   >
                                     {isExpanded ? "Mostrar menos ↑" : "Mostrar más ↓"}
                                   </motion.button>
@@ -941,10 +941,10 @@ const AdminModerationPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-8 bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-gray-200 p-5"
+                className="mt-8 bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-5"
               >
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400">
                     <TrendingUp className="w-4 h-4 text-indigo-600" />
                     <span>
                       Mostrando{" "}
@@ -967,7 +967,7 @@ const AdminModerationPage: React.FC = () => {
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all ${
                         currentPage === 1
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-white border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                          : "bg-white dark:bg-gray-800 border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
                       }`}
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -986,7 +986,7 @@ const AdminModerationPage: React.FC = () => {
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all ${
                         currentPage === totalPages
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-white border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                          : "bg-white dark:bg-gray-800 border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
                       }`}
                     >
                       Siguiente
@@ -1015,7 +1015,7 @@ const AdminModerationPage: React.FC = () => {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden"
+              className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden"
             >
               {/* Header */}
               <div className="bg-gradient-to-r from-red-500 to-rose-600 px-8 py-6">
@@ -1035,7 +1035,7 @@ const AdminModerationPage: React.FC = () => {
               {/* Content */}
               <div className="px-8 py-6">
                 <div className="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300">
                     Vas a rechazar{" "}
                     <span className="font-bold text-red-600">{confirmReject.ids.length}</span>{" "}
                     reseña{confirmReject.ids.length > 1 ? "s" : ""}. Podés agregar un comentario opcional que se registre con el rechazo.
@@ -1043,25 +1043,25 @@ const AdminModerationPage: React.FC = () => {
                 </div>
 
                 <div className="mb-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 dark:text-gray-300 mb-2">
                     Comentario del moderador (opcional)
                   </label>
                   <textarea
                     value={confirmReject.comentario}
                     onChange={(e) => setConfirmReject({ ...confirmReject, comentario: e.target.value })}
                     placeholder="Ej: Contiene lenguaje inapropiado, no cumple con las normas de la comunidad..."
-                    className="w-full border-2 border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all min-h-[120px] text-sm"
+                    className="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl p-4 focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all min-h-[120px] text-sm"
                   />
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="bg-gray-50 px-8 py-5 flex gap-3 border-t border-gray-200">
+              <div className="bg-gray-50 dark:bg-gray-700 px-8 py-5 flex gap-3 border-t border-gray-200 dark:border-gray-700">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setConfirmReject(null)}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl font-semibold hover:bg-gray-100 transition-all"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:bg-gray-100 dark:bg-gray-700 transition-all"
                 >
                   Cancelar
                 </motion.button>

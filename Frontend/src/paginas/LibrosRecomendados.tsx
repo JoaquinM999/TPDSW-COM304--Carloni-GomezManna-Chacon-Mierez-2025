@@ -133,17 +133,17 @@ export const LibrosRecomendados: React.FC = () => {
     });
   }, [data, filtros]);  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 p-3 sm:p-6" role="status" aria-live="polite">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-3 sm:p-6 transition-colors duration-300" role="status" aria-live="polite">
         {/* Header mientras carga */}
         <header className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-purple-600 animate-spin" aria-hidden="true" />
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 animate-gradient">
+            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-purple-600 dark:text-purple-400 animate-spin" aria-hidden="true" />
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 dark:from-purple-400 dark:via-pink-400 dark:to-rose-400 animate-gradient">
               Recomendaciones para ti
             </h1>
-            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-pink-600 animate-spin" style={{ animationDirection: 'reverse' }} aria-hidden="true" />
+            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-pink-600 dark:text-pink-400 animate-spin" style={{ animationDirection: 'reverse' }} aria-hidden="true" />
           </div>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             ✨ Generando recomendaciones personalizadas basadas en tus preferencias...
           </p>
         </header>
@@ -156,16 +156,16 @@ export const LibrosRecomendados: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center p-4 sm:p-8" role="alert" aria-live="assertive">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 sm:p-8 transition-colors duration-300" role="alert" aria-live="assertive">
         <div className="max-w-md w-full">
-          <div className="bg-white border-2 border-red-200 rounded-2xl p-6 sm:p-8 text-center shadow-2xl transform animate-shake">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-700 rounded-2xl p-6 sm:p-8 text-center shadow-2xl transform animate-shake">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">¡Ups! Algo salió mal</h3>
-            <p className="text-red-600 text-xs sm:text-sm mb-6">{error}</p>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">¡Ups! Algo salió mal</h3>
+            <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm mb-6">{error}</p>
             <button
               onClick={cargarRecomendaciones}
               className="px-5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-lg font-semibold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
@@ -180,19 +180,19 @@ export const LibrosRecomendados: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 p-3 sm:p-6 animate-fadeIn" role="main">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-3 sm:p-6 animate-fadeIn transition-colors duration-300" role="main">
       {/* Header mejorado con animación */}
       <header className="text-center mb-6 sm:mb-8 animate-slideDown">
         <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 animate-pulse" aria-hidden="true" />
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 dark:text-purple-400 animate-pulse" aria-hidden="true" />
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-700 via-pink-600 to-rose-700 animate-gradient">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-700 via-pink-600 to-rose-700 dark:from-purple-400 dark:via-pink-400 dark:to-rose-400 animate-gradient">
               Recomendaciones para ti
             </span>
           </h1>
-          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-pink-500 animate-pulse" style={{ animationDelay: '0.5s' }} aria-hidden="true" />
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-pink-500 dark:text-pink-400 animate-pulse" style={{ animationDelay: '0.5s' }} aria-hidden="true" />
         </div>
-        <p className="text-sm sm:text-base text-gray-600 font-medium px-4">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 font-medium px-4">
           ✨ Libros seleccionados especialmente según tus gustos ✨
         </p>
       </header>

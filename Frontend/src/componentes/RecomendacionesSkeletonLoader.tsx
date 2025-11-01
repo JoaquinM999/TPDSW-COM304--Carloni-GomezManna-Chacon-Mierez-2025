@@ -31,7 +31,7 @@ export const RecomendacionesSkeletonLoader: React.FC = () => {
           <motion.div
             key={index}
             variants={item}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
           >
             {/* Imagen skeleton */}
             <div className="relative h-72 bg-gradient-to-br from-gray-200 via-gray-300 to-gray-200 animate-pulse">

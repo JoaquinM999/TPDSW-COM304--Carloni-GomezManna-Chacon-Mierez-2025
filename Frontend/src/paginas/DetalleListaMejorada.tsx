@@ -74,7 +74,7 @@ function SortableItem({ contenido, onRemove, navigate }: {
       <div 
         {...attributes} 
         {...listeners}
-        className="flex-shrink-0 flex items-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        className="flex-shrink-0 flex items-center cursor-grab active:cursor-grabbing text-gray-400 dark:text-gray-500 hover:text-gray-600"
       >
         <GripVertical className="w-6 h-6" />
       </div>
@@ -107,7 +107,7 @@ function SortableItem({ contenido, onRemove, navigate }: {
             {contenido.libro.nombre}
           </h3>
         </div>
-        <p className="text-gray-600 mb-2">
+        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
           por {contenido.libro.autores?.[0] || 'Autor desconocido'}
         </p>
         
@@ -133,7 +133,7 @@ function SortableItem({ contenido, onRemove, navigate }: {
           e.stopPropagation();
           onRemove(contenido.libro.id);
         }}
-        className="flex-shrink-0 p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        className="flex-shrink-0 p-3 text-gray-400 dark:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         title="Eliminar de la lista"
       >
         <X className="w-5 h-5" />
@@ -280,7 +280,7 @@ export default function DetalleListaMejorada() {
           </button>
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            className="px-4 py-2 bg-gray-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors font-medium"
           >
             Cancelar
           </button>
@@ -307,7 +307,7 @@ export default function DetalleListaMejorada() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8 dark:from-gray-900 dark:to-gray-800">
         <Toaster position="top-center" />
         <div className="max-w-7xl mx-auto space-y-6">
           <ListHeaderSkeleton />
@@ -320,7 +320,7 @@ export default function DetalleListaMejorada() {
 
   if (error || !lista) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8 dark:from-gray-900 dark:to-gray-800">
         <Toaster position="top-center" />
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
@@ -340,7 +340,7 @@ export default function DetalleListaMejorada() {
   const isDragDropMode = orderBy === 'personalizado' && viewMode === 'list';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8 dark:from-gray-900 dark:to-gray-800">
       <Toaster position="top-center" />
       
       <div className="max-w-7xl mx-auto">
@@ -348,7 +348,7 @@ export default function DetalleListaMejorada() {
         <div className="mb-8">
           <button
             onClick={() => navigate('/perfil')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:text-gray-100 mb-4 transition"
           >
             <ArrowLeft className="w-5 h-5" />
             Volver al perfil
@@ -372,7 +372,7 @@ export default function DetalleListaMejorada() {
                 <button
                   onClick={guardarOrden}
                   disabled={saving}
-                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-lg hover:bg-gray-100 dark:bg-gray-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-5 h-5" />
                   {saving ? 'Guardando...' : 'Guardar orden'}
@@ -383,7 +383,7 @@ export default function DetalleListaMejorada() {
         </div>
 
         {/* Toolbar */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
           {/* Búsqueda */}
           <div className="mb-4">
             <div className="relative">
@@ -393,7 +393,7 @@ export default function DetalleListaMejorada() {
                 placeholder="Buscar en esta lista..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
               />
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function DetalleListaMejorada() {
               <select
                 value={orderBy}
                 onChange={(e) => setOrderBy(e.target.value as OrderBy)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="personalizado">Orden personalizado</option>
                 <option value="alfabetico">Alfabético</option>
@@ -416,11 +416,11 @@ export default function DetalleListaMejorada() {
             </div>
 
             {/* Vista */}
-            <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
+            <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded transition ${
-                  viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100'
                 }`}
                 title="Vista cuadrícula"
               >
@@ -429,7 +429,7 @@ export default function DetalleListaMejorada() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded transition ${
-                  viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100'
                 }`}
                 title="Vista lista"
               >
@@ -441,7 +441,7 @@ export default function DetalleListaMejorada() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-                showFilters ? 'bg-purple-600 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                showFilters ? 'bg-purple-600 text-white' : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50'
               }`}
             >
               <Filter className="w-5 h-5" />
@@ -461,33 +461,33 @@ export default function DetalleListaMejorada() {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Autor</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Autor</label>
                   <input
                     type="text"
                     placeholder="Filtrar por autor..."
                     value={filterAutor}
                     onChange={(e) => setFilterAutor(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
                   <input
                     type="text"
                     placeholder="Filtrar por categoría..."
                     value={filterCategoria}
                     onChange={(e) => setFilterCategoria(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rating mínimo</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rating mínimo</label>
                   <select
                     value={filterRating || ''}
                     onChange={(e) => setFilterRating(e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="">Todos</option>
                     <option value="4">4★ o más</option>
@@ -513,9 +513,9 @@ export default function DetalleListaMejorada() {
         {/* Contenido */}
         {contenidos.length === 0 ? (
           <div className="text-center py-16">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <p className="text-xl text-gray-600">No hay libros en esta lista</p>
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
               {search || filterAutor || filterCategoria || filterRating
                 ? 'Intenta ajustar los filtros'
                 : 'Empieza a agregar libros desde la página de detalle de cada libro'}
@@ -548,7 +548,7 @@ export default function DetalleListaMejorada() {
             {contenidos.map((contenido) => (
               <div
                 key={contenido.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
                 onClick={() => navigate(`/libro/${contenido.libro.id}`)}
               >
                 <div className="relative aspect-[2/3]">
@@ -579,10 +579,10 @@ export default function DetalleListaMejorada() {
                 </div>
 
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-900 line-clamp-2 text-lg mb-1">
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100 line-clamp-2 text-lg mb-1">
                     {contenido.libro.nombre}
                   </h3>
-                  <p className="text-sm text-gray-600 line-clamp-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-1">
                     {contenido.libro.autores?.[0] || 'Autor desconocido'}
                   </p>
                   {contenido.libro.categoria && (
@@ -599,7 +599,7 @@ export default function DetalleListaMejorada() {
             {contenidos.map((contenido) => (
               <div
                 key={contenido.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 flex gap-4 group cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 flex gap-4 group cursor-pointer"
                 onClick={() => navigate(`/libro/${contenido.libro.id}`)}
               >
                 <div className="flex-shrink-0">
@@ -612,10 +612,10 @@ export default function DetalleListaMejorada() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
                     {contenido.libro.nombre}
                   </h3>
-                  <p className="text-gray-600 mb-2">
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
                     por {contenido.libro.autores?.[0] || 'Autor desconocido'}
                   </p>
                   
@@ -640,7 +640,7 @@ export default function DetalleListaMejorada() {
                     e.stopPropagation();
                     handleRemoveLibro(contenido.libro.id);
                   }}
-                  className="flex-shrink-0 p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="flex-shrink-0 p-3 text-gray-400 dark:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   title="Eliminar de la lista"
                 >
                   <X className="w-5 h-5" />

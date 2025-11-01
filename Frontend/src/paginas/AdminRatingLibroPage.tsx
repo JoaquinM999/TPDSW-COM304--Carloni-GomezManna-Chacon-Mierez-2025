@@ -50,9 +50,9 @@ const AdminRatingLibroPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Ratings de Libros</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Ratings de Libros</h1>
           <div className="text-center">Cargando ratings...</div>
         </div>
       </div>
@@ -61,9 +61,9 @@ const AdminRatingLibroPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Ratings de Libros</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Ratings de Libros</h1>
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
@@ -73,30 +73,30 @@ const AdminRatingLibroPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Ratings de Libros</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Ratings de Libros</h1>
 
         {ratings.length === 0 ? (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             No hay ratings de libros registrados.
           </div>
         ) : (
           <div className="space-y-4">
             {ratings.map((rating) => (
-              <div key={rating.id} className="bg-white rounded-lg shadow-md p-6">
+              <div key={rating.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Libro: {rating.libro.titulo}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Rating Promedio: {rating.avgRating.toFixed(1)}/5
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Cantidad de Reseñas: {rating.cantidadResenas}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Última Actualización: {new Date(rating.fechaActualizacion).toLocaleDateString()}
                     </p>
                   </div>

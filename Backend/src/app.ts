@@ -26,6 +26,7 @@ import { actividadRoutes } from './routes/actividad.routes';
 import { permisoRoutes } from './routes/permiso.routes';
 import { ratingLibroRoutes } from './routes/ratingLibro.routes';
 import { feedRoutes } from './routes/feed.routes';
+import { statsRoutes } from './routes/stats.routes';
 
 import { authenticateJWT } from './middleware/auth.middleware';
 
@@ -62,6 +63,7 @@ app.use('/api/actividades', actividadRoutes);
 app.use('/api/permisos', permisoRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/rating-libro', ratingLibroRoutes);
+app.use('/api/stats', statsRoutes); // Stats para HeroSection
 
 // Global error handler middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

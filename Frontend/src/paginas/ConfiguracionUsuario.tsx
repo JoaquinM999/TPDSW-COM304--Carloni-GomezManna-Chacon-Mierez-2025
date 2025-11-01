@@ -178,7 +178,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <DotLottieReact
             src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
@@ -186,16 +186,16 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
             autoplay
             style={{ width: 80, height: 80 }}
           />
-          <p className="text-gray-600 text-lg">Cargando configuración...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">Cargando configuración...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-2xl">
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-700 dark:via-purple-700 dark:to-indigo-700 text-white shadow-2xl">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center space-x-4">
             <Link
@@ -207,7 +207,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
           </div>
           <div className="mt-4">
             <h1 className="text-2xl font-bold tracking-tight">Configuración de Usuario</h1>
-            <p className="text-base text-blue-100 mt-2 opacity-90">
+            <p className="text-base text-blue-100 dark:text-blue-200 mt-2 opacity-90">
               Personaliza tu perfil y preferencias
             </p>
           </div>
@@ -216,12 +216,12 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in duration-500 hover:shadow-3xl transition-shadow duration-500">
+        <div className="bg-gradient-to-br from-white via-gray-50/50 to-blue-50/30 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-800/30 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in duration-500 hover:shadow-3xl transition-shadow duration-500">
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Avatar */}
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <User className="w-6 h-6 mr-2 text-blue-600" /> Avatar
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                <User className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" /> Avatar
               </h2>
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <div className="relative flex-shrink-0">
@@ -262,13 +262,13 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
             {/* Información Básica */}
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <User className="w-6 h-6 mr-2 text-blue-600" /> Información Básica
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                <User className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" /> Información Básica
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Nombre */}
                 <div>
-                  <label className="block text-sm font-semibold mb-3" htmlFor="nombre">
+                  <label className="block text-sm font-semibold mb-3 text-gray-900 dark:text-gray-100" htmlFor="nombre">
                     Nombre Completo
                   </label>
                   <input
@@ -276,15 +276,15 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                     type="text"
                     value={formData.nombre}
                     onChange={(e) => handleInputChange("nombre", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all ${
+                    className={`w-full border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
                       errors.nombre
-                        ? "border-red-400 bg-red-50 focus-visible:ring-red-500/20"
-                        : "border-gray-200 focus:border-blue-400 focus-visible:ring-blue-500/20"
+                        ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20 focus-visible:ring-red-500/20"
+                        : "border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20"
                     }`}
                     placeholder="Tu nombre completo"
                   />
                   {errors.nombre && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center">
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-2" /> {errors.nombre}
                     </p>
                   )}
@@ -293,27 +293,27 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                 {/* Username */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-semibold" htmlFor="username">
+                    <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100" htmlFor="username">
                       Nombre de Usuario *
                     </label>
                     <div className="group relative">
-                      <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
-                      <div className="absolute right-0 top-6 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg">
+                      <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help transition-colors" />
+                      <div className="absolute right-0 top-6 w-64 p-3 bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg border border-gray-700">
                         Tu nombre de usuario debe tener al menos 4 caracteres y puede contener letras, números y guiones bajos.
                       </div>
                     </div>
                   </div>
                   <div className="relative">
-                    <AtSign className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                    <AtSign className="absolute left-4 top-4 w-5 h-5 text-gray-400 dark:text-gray-500" />
                     <input
                       id="username"
                       type="text"
                       value={formData.username}
                       onChange={(e) => handleInputChange("username", e.target.value)}
-                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all ${
+                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
                         errors.username
-                          ? "border-red-400 bg-red-50 focus-visible:ring-red-500/20"
-                          : "border-gray-200 focus:border-blue-400 focus-visible:ring-blue-500/20"
+                          ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20 focus-visible:ring-red-500/20"
+                          : "border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20"
                       }`}
                       placeholder="tu_usuario"
                     />
@@ -327,26 +327,26 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-semibold mb-3" htmlFor="email">
+                  <label className="block text-sm font-semibold mb-3 text-gray-900 dark:text-gray-100" htmlFor="email">
                     Correo Electrónico *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400 dark:text-gray-500" />
                     <input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
-                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all ${
+                      className={`w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
                         errors.email
-                          ? "border-red-400 bg-red-50 focus-visible:ring-red-500/20"
-                          : "border-gray-200 focus:border-blue-400 focus-visible:ring-blue-500/20"
+                          ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20 focus-visible:ring-red-500/20"
+                          : "border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20"
                       }`}
                       placeholder="tu@email.com"
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center">
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-2" /> {errors.email}
                     </p>
                   )}
@@ -354,16 +354,16 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
                 {/* Ubicación */}
                 <div>
-                  <label className="block text-sm font-semibold mb-3" htmlFor="ubicacion">
+                  <label className="block text-sm font-semibold mb-3 text-gray-900 dark:text-gray-100" htmlFor="ubicacion">
                     País
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-gray-400 dark:text-gray-500" />
                     <select
                       id="ubicacion"
                       value={formData.ubicacion}
                       onChange={(e) => handleInputChange("ubicacion", e.target.value)}
-                      className="w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 focus-visible:ring-blue-500/20 border-gray-200 bg-white"
+                      className="w-full pl-12 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">Selecciona tu país</option>
                       {countries.map((country) => (
@@ -378,14 +378,14 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
               {/* Género */}
               <div className="mt-8">
-                <label className="block text-sm font-semibold mb-3" htmlFor="genero">
+                <label className="block text-sm font-semibold mb-3 text-gray-900 dark:text-gray-100" htmlFor="genero">
                   Género
                 </label>
                 <select
                   id="genero"
                   value={formData.genero}
                   onChange={(e) => handleInputChange("genero", e.target.value as any)}
-                  className="w-full md:w-1/2 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 focus-visible:ring-blue-500/20 border-gray-200 bg-white"
+                  className="w-full md:w-1/2 border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="masculino">Masculino</option>
                   <option value="femenino">Femenino</option>
@@ -396,38 +396,38 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
             {/* Biografía */}
             <div className="p-6 pt-0">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <BookOpen className="w-6 h-6 mr-2 text-blue-600" /> Acerca de Ti
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
+                <BookOpen className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" /> Acerca de Ti
               </h2>
               <textarea
                 id="biografia"
                 value={formData.biografia}
                 onChange={(e) => handleInputChange("biografia", e.target.value)}
-                className={`w-full border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all ${
+                className={`w-full border-2 rounded-xl px-4 py-4 focus:outline-none focus-visible:ring-4 transition-all bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
                   errors.biografia
-                    ? "border-red-400 bg-red-50 focus-visible:ring-red-500/20"
-                    : "border-gray-200 focus:border-blue-400 focus-visible:ring-blue-500/20"
+                    ? "border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20 focus-visible:ring-red-500/20"
+                    : "border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 focus-visible:ring-blue-500/20"
                 }`}
                 rows={4}
                 placeholder="Cuéntanos un poco sobre ti..."
               />
               <div className="flex justify-between items-center mt-2">
                 {errors.biografia && (
-                  <p className="text-sm text-red-600 flex items-center">
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" /> {errors.biografia}
                   </p>
                 )}
-                <p className="text-sm text-gray-500 ml-auto">{formData.biografia.length}/500 caracteres</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 ml-auto">{formData.biografia.length}/500 caracteres</p>
               </div>
 
-              <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden mt-1">
+              <div className="h-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
                 <div
                   className={`h-full transition-all ${
                     formData.biografia.length > 450
-                      ? "bg-red-500"
+                      ? "bg-red-500 dark:bg-red-400"
                       : formData.biografia.length > 400
-                      ? "bg-yellow-500"
-                      : "bg-blue-500"
+                      ? "bg-yellow-500 dark:bg-yellow-400"
+                      : "bg-blue-500 dark:bg-blue-400"
                   }`}
                   style={{ width: `${(formData.biografia.length / 500) * 100}%` }}
                 />
@@ -438,7 +438,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
             <div className="pt-8 flex flex-col sm:flex-row gap-6 justify-end p-6">
               <Link
                 to="/perfil"
-                className="px-8 py-4 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-semibold"
+                className="px-8 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold text-gray-900 dark:text-gray-100 transition-colors"
               >
                 Cancelar
               </Link>
@@ -448,7 +448,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
                 className={`px-8 py-4 rounded-xl font-semibold flex items-center justify-center shadow-lg transition-all ${
                   hasChanges && !saving
                     ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:scale-105"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                 }`}
               >
                 {saving ? (

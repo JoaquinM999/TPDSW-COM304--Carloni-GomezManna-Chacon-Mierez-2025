@@ -420,24 +420,24 @@ export const FavoritosPage: React.FC = () => {
   // ✅ Pantalla de carga completa con el pollito de Lottie
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center transition-colors duration-300">
         <DotLottieReact
           src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
           loop
           autoplay
           style={{ width: '300px', height: '300px' }}
         />
-        <h3 className="text-2xl font-bold text-gray-700 mt-4">Cargando tus favoritos...</h3>
-        <p className="text-gray-500 mt-2">El pollito está buscando tus libros 🐣</p>
+        <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mt-4">Cargando tus favoritos...</h3>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">El pollito está buscando tus libros 🐣</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <Toaster position="top-center" />
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -446,11 +446,11 @@ export const FavoritosPage: React.FC = () => {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
                   Mis Favoritos
                 </span>
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
                 Gestiona tus libros, autores y categorías favoritas con estilo
               </p>
             </motion.div>
@@ -461,7 +461,7 @@ export const FavoritosPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
         <motion.div
-          className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-2xl mb-8 max-w-md mx-auto shadow-lg border border-white/20"
+          className="flex space-x-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-1 rounded-2xl mb-8 max-w-md mx-auto shadow-lg border border-white/20 dark:border-gray-700/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -470,8 +470,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('libros')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'libros'
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
-                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-500 dark:to-indigo-600 text-white shadow-lg'
+                : 'text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -483,8 +483,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('autores')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'autores'
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
-                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-500 dark:to-indigo-600 text-white shadow-lg'
+                : 'text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -496,8 +496,8 @@ export const FavoritosPage: React.FC = () => {
             onClick={() => setActiveTab('categorias')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
               activeTab === 'categorias'
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg'
-                : 'text-gray-600 hover:text-indigo-700 hover:bg-white/50'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-500 dark:to-indigo-600 text-white shadow-lg'
+                : 'text-gray-600 dark:text-gray-300 hover:text-indigo-700 dark:hover:text-indigo-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -586,9 +586,9 @@ export const FavoritosPage: React.FC = () => {
             {/* Libros Grid */}
             {librosFiltrados.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No hay libros en esta categoría</h3>
-                <p className="text-gray-500">Intenta con otro filtro o agrega más libros a tus listas</p>
+                <Book className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">No hay libros en esta categoría</h3>
+                <p className="text-gray-500 dark:text-gray-400">Intenta con otro filtro o agrega más libros a tus listas</p>
               </div>
             ) : (
               <motion.div
@@ -600,7 +600,7 @@ export const FavoritosPage: React.FC = () => {
                 {librosFiltrados.map((libro) => (
                 <motion.div
                   key={libro.id}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 dark:border-gray-700/20"
                   variants={cardVariants}
                   whileHover={{
                     scale: 1.03,
@@ -628,14 +628,14 @@ export const FavoritosPage: React.FC = () => {
                   </div>
                   <div className="p-6">
                     <Link to={`/libro/${libro.externalId || libro.id}`} className="block group">
-                      <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300 text-lg leading-tight truncate">
+                      <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 text-lg leading-tight truncate">
                         {libro.titulo}
                       </h3>
                     </Link>
 
 
-                    <div className="flex items-center text-sm text-gray-600 mb-3 font-medium">
-                      <User className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 mb-3 font-medium">
+                      <User className="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                       <span className="truncate">{libro.autores.join(', ')}</span>
                     </div>
                     
@@ -734,7 +734,7 @@ export const FavoritosPage: React.FC = () => {
             {autoresFavoritos.length > 0 ? autoresFavoritos.map((autor) => (
               <motion.div
                 key={autor.id}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20"
+                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 dark:border-gray-700/20"
                 variants={cardVariants}
                 whileHover={{
                   scale: 1.03,
@@ -745,8 +745,8 @@ export const FavoritosPage: React.FC = () => {
               >
                 <div className="relative group">
                   {/* Placeholder sin imagen predeterminada */}
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <User className="w-24 h-24 text-purple-300" />
+                  <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center">
+                    <User className="w-24 h-24 text-purple-300 dark:text-purple-600" />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <motion.div
@@ -754,25 +754,25 @@ export const FavoritosPage: React.FC = () => {
                     whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
                   >
-                    <Heart className="w-7 h-7 text-red-500 drop-shadow-lg" fill="currentColor" />
+                    <Heart className="w-7 h-7 text-red-500 dark:text-red-400 drop-shadow-lg" fill="currentColor" />
                   </motion.div>
                 </div>
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">
+                      <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 text-lg leading-tight">
                         {autor.nombre}
                       </h3>
-                      <p className="text-gray-600 text-sm font-medium">{autor.libros} libro{autor.libros !== 1 ? 's' : ''} en tu colección</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">{autor.libros} libro{autor.libros !== 1 ? 's' : ''} en tu colección</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       Agregado el {new Date(autor.fechaAgregado).toLocaleDateString('es-ES')}
                     </span>
                     <Link
                       to={`/autores`}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
                     >
                       Ver más
                     </Link>
@@ -781,9 +781,9 @@ export const FavoritosPage: React.FC = () => {
               </motion.div>
             )) : (
               <div className="col-span-full text-center py-12">
-                <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No tienes autores favoritos aún</h3>
-                <p className="text-gray-500 mb-6">Agrega libros a tus listas para ver aquí a tus autores favoritos</p>
+                <User className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">No tienes autores favoritos aún</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Agrega libros a tus listas para ver aquí a tus autores favoritos</p>
                 <Link
                   to="/libros"
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-2xl hover:shadow-lg transition-all duration-300"
@@ -811,7 +811,7 @@ export const FavoritosPage: React.FC = () => {
                 className="block"
               >
                 <motion.div
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 cursor-pointer"
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 dark:border-gray-700/20 cursor-pointer"
                   variants={cardVariants}
                   whileHover={{
                     scale: 1.03,
@@ -831,13 +831,13 @@ export const FavoritosPage: React.FC = () => {
                     </motion.div>
                   </div>
                   <div className="p-6">
-                    <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
-                    <p className="text-gray-600 text-sm mb-4 font-medium">{categoria.librosCount} libro{categoria.librosCount !== 1 ? 's' : ''} en tu colección</p>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 font-medium">{categoria.librosCount} libro{categoria.librosCount !== 1 ? 's' : ''} en tu colección</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         Agregado el {new Date(categoria.fechaAgregado).toLocaleDateString('es-ES')}
                       </span>
-                      <span className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                      <span className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
                         Ver libros →
                       </span>
                     </div>
@@ -846,9 +846,9 @@ export const FavoritosPage: React.FC = () => {
               </Link>
             )) : (
               <div className="col-span-full text-center py-12">
-                <Tag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No tienes categorías favoritas aún</h3>
-                <p className="text-gray-500 mb-6">Agrega libros a tus listas para ver aquí tus categorías favoritas</p>
+                <Tag className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">No tienes categorías favoritas aún</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Agrega libros a tus listas para ver aquí tus categorías favoritas</p>
                 <Link
                   to="/libros"
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-2xl hover:shadow-lg transition-all duration-300"

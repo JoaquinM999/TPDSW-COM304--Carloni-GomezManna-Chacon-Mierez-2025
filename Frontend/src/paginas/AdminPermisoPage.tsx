@@ -112,9 +112,9 @@ const AdminPermisoPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Permisos</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Permisos</h1>
           <div className="text-center">Cargando...</div>
         </div>
       </div>
@@ -123,9 +123,9 @@ const AdminPermisoPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Permisos</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Permisos</h1>
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
@@ -135,30 +135,30 @@ const AdminPermisoPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Permisos</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Permisos</h1>
 
         {/* Crear Nuevo Permiso */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Crear Nuevo Permiso</h2>
           <form onSubmit={handleCreatePermiso} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Tipo</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
               <input
                 type="text"
                 value={nuevoPermiso.tipo}
                 onChange={(e) => setNuevoPermiso({ ...nuevoPermiso, tipo: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Descripción</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
               <textarea
                 value={nuevoPermiso.descripcion}
                 onChange={(e) => setNuevoPermiso({ ...nuevoPermiso, descripcion: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
                 required
               />
             </div>
@@ -175,14 +175,14 @@ const AdminPermisoPage: React.FC = () => {
         <div className="space-y-4 mb-8">
           <h2 className="text-xl font-semibold">Lista de Permisos</h2>
           {permisos.length === 0 ? (
-            <div className="text-center text-gray-500">No hay permisos registrados.</div>
+            <div className="text-center text-gray-500 dark:text-gray-400">No hay permisos registrados.</div>
           ) : (
             permisos.map((permiso) => (
-              <div key={permiso.id} className="bg-white rounded-lg shadow-md p-6">
+              <div key={permiso.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{permiso.tipo}</h3>
-                    <p className="text-gray-600">{permiso.descripcion}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{permiso.tipo}</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{permiso.descripcion}</p>
                   </div>
                   <div className="space-x-2">
                     <button
@@ -205,18 +205,18 @@ const AdminPermisoPage: React.FC = () => {
         </div>
 
         {/* Gestión de Permisos de Usuario */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Asignar Permiso a Usuario</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Seleccionar Permiso</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar Permiso</label>
               <select
                 value={selectedPermiso?.id || ''}
                 onChange={(e) => {
                   const permiso = permisos.find(p => p.id === parseInt(e.target.value));
                   setSelectedPermiso(permiso || null);
                 }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
               >
                 <option value="">-- Seleccionar Permiso --</option>
                 {permisos.map(p => (
@@ -225,11 +225,11 @@ const AdminPermisoPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Seleccionar Usuario</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar Usuario</label>
               <select
                 value={selectedUsuario || ''}
                 onChange={(e) => setSelectedUsuario(parseInt(e.target.value))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
               >
                 <option value="">-- Seleccionar Usuario --</option>
                 {usuarios.map(u => (
@@ -250,20 +250,20 @@ const AdminPermisoPage: React.FC = () => {
         {/* Modal para Editar (simple inline for simplicity) */}
         {selectedPermiso && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold mb-4">Editar Permiso</h3>
               <div className="space-y-4">
                 <input
                   type="text"
                   value={selectedPermiso.tipo}
                   onChange={(e) => setSelectedPermiso({ ...selectedPermiso, tipo: e.target.value })}
-                  className="w-full rounded-md border-gray-300 shadow-sm"
+                  className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
                   placeholder="Tipo"
                 />
                 <textarea
                   value={selectedPermiso.descripcion}
                   onChange={(e) => setSelectedPermiso({ ...selectedPermiso, descripcion: e.target.value })}
-                  className="w-full rounded-md border-gray-300 shadow-sm"
+                  className="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm"
                   placeholder="Descripción"
                 />
               </div>

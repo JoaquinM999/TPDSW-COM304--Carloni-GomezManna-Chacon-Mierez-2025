@@ -120,26 +120,26 @@ export const CrearSaga: React.FC = () => {
 
   if (userRole !== 'admin' && userRole !== 'autor') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600">No tienes permisos para crear sagas.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
+          <p className="text-gray-600 dark:text-gray-400">No tienes permisos para crear sagas.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <BookOpen className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Crear Nueva Saga</h1>
+            <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Crear Nueva Saga</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Crea una nueva saga de libros para organizar series y colecciones
           </p>
         </div>
@@ -147,13 +147,13 @@ export const CrearSaga: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Información Básica */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Información Básica</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Información Básica</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Nombre */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nombre de la Saga *
                 </label>
                 <input
@@ -161,40 +161,40 @@ export const CrearSaga: React.FC = () => {
                   name="nombre"
                   value={sagaData.nombre}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.nombre ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+                    errors.nombre ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Ej: Harry Potter, El Señor de los Anillos..."
                 />
-                {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
+                {errors.nombre && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.nombre}</p>}
               </div>
 
               {/* Autor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Autor *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                    <User className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                   </div>
                   <input
                     type="text"
                     name="autor"
                     value={sagaData.autor}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.autor ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+                      errors.autor ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="Nombre del autor"
                   />
                 </div>
-                {errors.autor && <p className="text-red-500 text-sm mt-1">{errors.autor}</p>}
+                {errors.autor && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.autor}</p>}
               </div>
 
               {/* Número de Libros */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Número de Libros Planeados
                 </label>
                 <input
@@ -203,19 +203,19 @@ export const CrearSaga: React.FC = () => {
                   value={sagaData.numeroLibros || ''}
                   onChange={handleInputChange}
                   min="1"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   placeholder="Ej: 7, 3, 5..."
                 />
               </div>
 
               {/* Año de Inicio */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Año de Inicio
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                   </div>
                   <input
                     type="number"
@@ -224,7 +224,7 @@ export const CrearSaga: React.FC = () => {
                     onChange={handleInputChange}
                     min="1000"
                     max={new Date().getFullYear() + 5}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="Año del primer libro"
                   />
                 </div>
@@ -232,7 +232,7 @@ export const CrearSaga: React.FC = () => {
 
               {/* Año de Fin */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Año de Finalización
                 </label>
                 <input
@@ -242,24 +242,24 @@ export const CrearSaga: React.FC = () => {
                   onChange={handleInputChange}
                   min="1000"
                   max={new Date().getFullYear() + 10}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.añoFin ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+                    errors.añoFin ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Año del último libro (opcional)"
                 />
-                {errors.añoFin && <p className="text-red-500 text-sm mt-1">{errors.añoFin}</p>}
+                {errors.añoFin && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.añoFin}</p>}
               </div>
 
               {/* Estado */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estado de la Saga
                 </label>
                 <select
                   name="estado"
                   value={sagaData.estado}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="en_progreso">En Progreso</option>
                   <option value="completada">Completada</option>
@@ -270,7 +270,7 @@ export const CrearSaga: React.FC = () => {
 
             {/* Descripción */}
             <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Descripción *
               </label>
               <textarea
@@ -278,25 +278,25 @@ export const CrearSaga: React.FC = () => {
                 value={sagaData.descripcion}
                 onChange={handleInputChange}
                 rows={4}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.descripcion ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+                  errors.descripcion ? 'border-red-500 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Describe la saga, su trama general, personajes principales..."
               />
-              {errors.descripcion && <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>}
+              {errors.descripcion && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.descripcion}</p>}
             </div>
           </div>
 
           {/* Imagen de la Saga */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Imagen de la Saga</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Imagen de la Saga</h2>
             
             <div className="flex items-start space-x-6">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Subir Imagen Representativa
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
                   <input
                     type="file"
                     accept="image/*"
@@ -305,16 +305,16 @@ export const CrearSaga: React.FC = () => {
                     id="imagen-upload"
                   />
                   <label htmlFor="imagen-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Haz clic para subir una imagen</p>
-                    <p className="text-sm text-gray-500">PNG, JPG hasta 5MB</p>
+                    <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-2">Haz clic para subir una imagen</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">PNG, JPG hasta 5MB</p>
                   </label>
                 </div>
               </div>
               
               {imagenPreview && (
                 <div className="flex-shrink-0">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Vista Previa</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista Previa</p>
                   <img
                     src={imagenPreview}
                     alt="Vista previa"
@@ -330,14 +330,14 @@ export const CrearSaga: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/sagas')}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+              className="px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
             >
               {loading ? (
                 <DotLottieReact

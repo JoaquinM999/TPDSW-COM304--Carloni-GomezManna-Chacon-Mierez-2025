@@ -105,11 +105,11 @@ export const CrearCategoria: React.FC = () => {
 
   if (userRole !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Tag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600">Solo los administradores pueden crear categorías.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
+          <p className="text-gray-600 dark:text-gray-400">Solo los administradores pueden crear categorías.</p>
         </div>
       </div>
     );
@@ -118,27 +118,27 @@ export const CrearCategoria: React.FC = () => {
   const colorSeleccionado = coloresDisponibles.find(c => c.valor === categoriaData.color);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center space-x-3 mb-4">
             <Tag className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Crear Nueva Categoría</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Crear Nueva Categoría</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Crea una nueva categoría para organizar los libros en la plataforma
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Información de la Categoría</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Información de la Categoría</h2>
             
             {/* Nombre */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nombre de la Categoría *
               </label>
               <input
@@ -156,7 +156,7 @@ export const CrearCategoria: React.FC = () => {
 
             {/* Descripción */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Descripción *
               </label>
               <textarea
@@ -174,7 +174,7 @@ export const CrearCategoria: React.FC = () => {
 
             {/* Color */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                 Color de la Categoría
               </label>
               <div className="grid grid-cols-5 gap-3 mb-4">
@@ -203,10 +203,10 @@ export const CrearCategoria: React.FC = () => {
           </div>
 
           {/* Preview */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Vista Previa</h2>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="bg-white rounded-xl shadow-md overflow-hidden max-w-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Vista Previa</h2>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden max-w-sm">
                 <div 
                   className="h-32 flex items-center justify-center"
                   style={{ backgroundColor: categoriaData.color }}
@@ -217,7 +217,7 @@ export const CrearCategoria: React.FC = () => {
                   <h3 className="font-bold text-lg text-gray-900 mb-2">
                     {categoriaData.nombre || 'Nombre de la categoría'}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
                     {categoriaData.descripcion || 'Descripción de la categoría'}
                   </p>
                   <div className="text-blue-600 font-medium text-sm">
@@ -233,7 +233,7 @@ export const CrearCategoria: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/categorias')}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Cancelar
             </button>

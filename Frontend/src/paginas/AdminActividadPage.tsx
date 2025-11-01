@@ -57,9 +57,9 @@ const AdminActividadPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Actividades</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Actividades</h1>
           <div className="text-center">Cargando actividades...</div>
         </div>
       </div>
@@ -68,9 +68,9 @@ const AdminActividadPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Actividades</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Actividades</h1>
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
           </div>
@@ -80,36 +80,36 @@ const AdminActividadPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Administrar Actividades</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Administrar Actividades</h1>
 
         {actividades.length === 0 ? (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             No hay actividades registradas.
           </div>
         ) : (
           <div className="space-y-4">
             {actividades.map((actividad) => (
-              <div key={actividad.id} className="bg-white rounded-lg shadow-md p-6">
+              <div key={actividad.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Actividad: {actividad.tipo}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Usuario: {actividad.usuario.nombre} ({actividad.usuario.email})
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Fecha: {new Date(actividad.fecha).toLocaleDateString()}
                     </p>
                     {actividad.libro && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         Libro: {actividad.libro.titulo}
                       </p>
                     )}
                     {actividad.resena && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         Reseña: {actividad.resena.comentario.substring(0, 50)}...
                       </p>
                     )}

@@ -245,7 +245,7 @@ const AutorDetallePageMejorada: React.FC = () => {
           />
           
           <div className="flex-1">
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-3">{author.name}</h1>
+            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-3">{author.name}</h1>
             
             {/* Badges informativos */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -282,7 +282,7 @@ const AutorDetallePageMejorada: React.FC = () => {
             {/* Biografía de Wikipedia (con HTML sanitizado) */}
             {wikipediaData?.extract && (
               <div 
-                className="text-gray-700 mb-4 prose max-w-none"
+                className="text-gray-700 dark:text-gray-300 mb-4 prose max-w-none"
                 dangerouslySetInnerHTML={{ 
                   __html: DOMPurify.sanitize(wikipediaData.extractHtml || wikipediaData.extract) 
                 }}
@@ -333,9 +333,9 @@ const AutorDetallePageMejorada: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl p-6 shadow-lg mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg mb-8"
         >
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-cyan-600" />
             Estadísticas de Obras
           </h2>
@@ -344,7 +344,7 @@ const AutorDetallePageMejorada: React.FC = () => {
             {/* Gráfico de obras por década */}
             {decadeData.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Obras por Década</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Obras por Década</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={decadeData}>
                     <XAxis dataKey="decade" />
@@ -359,7 +359,7 @@ const AutorDetallePageMejorada: React.FC = () => {
             {/* Gráfico de géneros */}
             {genreData.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Géneros Principales</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Géneros Principales</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -415,7 +415,7 @@ const AutorDetallePageMejorada: React.FC = () => {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <BookOpen className="w-6 h-6 text-cyan-600" />
               Obras ({sortedWorks.length})
             </h2>
@@ -423,7 +423,7 @@ const AutorDetallePageMejorada: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="relevance">Relevancia</option>
               <option value="date">Más recientes</option>
@@ -432,7 +432,7 @@ const AutorDetallePageMejorada: React.FC = () => {
           </div>
 
           {sortedWorks.length === 0 ? (
-            <div className="bg-white rounded-lg p-8 shadow text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow text-center">
               <p className="text-gray-600">No hay obras disponibles para este autor.</p>
             </div>
           ) : (
@@ -443,7 +443,7 @@ const AutorDetallePageMejorada: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition p-4 flex gap-4"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition p-4 flex gap-4"
                 >
                   <img
                     src={work.thumbnail || 'https://via.placeholder.com/128x193?text=No+Cover'}
@@ -456,7 +456,7 @@ const AutorDetallePageMejorada: React.FC = () => {
 
                   <div className="flex-1 flex flex-col">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-md font-semibold text-gray-800 line-clamp-2">{work.title}</h3>
+                      <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200 line-clamp-2">{work.title}</h3>
                       
                       {/* Badge de fuente */}
                       <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
@@ -469,11 +469,11 @@ const AutorDetallePageMejorada: React.FC = () => {
                     </div>
 
                     {work.publisher && (
-                      <p className="text-xs text-gray-500 mb-1">{work.publisher}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-1">{work.publisher}</p>
                     )}
 
                     {work.publishedDate && (
-                      <p className="text-xs text-gray-400 mb-2">{work.publishedDate}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{work.publishedDate}</p>
                     )}
 
                     {work.rating && (
@@ -481,13 +481,13 @@ const AutorDetallePageMejorada: React.FC = () => {
                         <span className="text-yellow-500">⭐</span>
                         <span className="font-semibold">{work.rating}</span>
                         {work.ratingsCount && (
-                          <span className="text-gray-500 text-xs">({work.ratingsCount} ratings)</span>
+                          <span className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-xs">({work.ratingsCount} ratings)</span>
                         )}
                       </div>
                     )}
 
                     {work.description && (
-                      <p className="text-xs text-gray-600 line-clamp-2 mb-3">{work.description}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 line-clamp-2 mb-3">{work.description}</p>
                     )}
 
                     <div className="mt-auto flex items-center gap-2">

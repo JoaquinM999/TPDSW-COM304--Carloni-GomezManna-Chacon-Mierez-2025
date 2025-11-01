@@ -24,7 +24,7 @@ interface AuthorDetails {
 }
 
 const SkeletonCard: React.FC = () => (
-  <div className="bg-white rounded-lg shadow p-4 animate-pulse">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 animate-pulse">
     <div className="flex gap-4">
       <div className="w-20 h-28 bg-gray-200 rounded" />
       <div className="flex-1">
@@ -42,7 +42,7 @@ const BookCard: React.FC<{ work: AuthorDetails['works'][0] }> = ({ work }) => {
   const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
 
   return (
-    <article className="bg-white rounded-2xl shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition p-4 flex gap-4">
+    <article className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transform hover:-translate-y-1 transition p-4 flex gap-4">
       <img
         src={thumbnail}
         alt={title}
@@ -70,13 +70,13 @@ const BookCard: React.FC<{ work: AuthorDetails['works'][0] }> = ({ work }) => {
           </div>
         </div>
 
-        <div className="mt-1 text-sm text-gray-500 flex items-center gap-3">
+        <div className="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 flex items-center gap-3">
           {googleBooks.publisher && <span className="inline-block truncate">{googleBooks.publisher}</span>}
           {googleBooks.publishedDate && <span className="text-xs">• {googleBooks.publishedDate}</span>}
         </div>
 
         {googleBooks.description ? (
-          <p className="mt-3 text-sm text-gray-700 line-clamp-3">{googleBooks.description}</p>
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300 line-clamp-3">{googleBooks.description}</p>
         ) : (
           <p className="mt-3 text-sm text-gray-400">Descripción no disponible.</p>
         )}
@@ -185,7 +185,7 @@ const AutorDetallePage: React.FC = () => {
           </p>
 
           {author.bio && (
-            <p className="mt-4 text-gray-700 max-w-prose">{author.bio}</p>
+            <p className="mt-4 text-gray-700 dark:text-gray-300 max-w-prose">{author.bio}</p>
           )}
 
           <div className="mt-4 flex items-center gap-3">

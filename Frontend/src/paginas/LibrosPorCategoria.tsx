@@ -51,7 +51,7 @@ export default function LibrosPorCategoria() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6 dark:from-gray-900 dark:to-gray-800">
       <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
         Libros por Categoría
       </h2>

@@ -197,7 +197,7 @@ const FeedActividadPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-black py-12 px-4 transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -205,10 +205,10 @@ const FeedActividadPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:to-blue-500 mb-2">
             Feed de Actividad
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Últimas actividades de usuarios que sigues
           </p>
         </motion.div>
@@ -233,7 +233,7 @@ const FeedActividadPage: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 filtroTipo === filtro.value
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'
-                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700 hover:text-white'
+                  : 'bg-white dark:bg-gray-800/50 text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-transparent'
               }`}
             >
               {filtro.label}
@@ -248,9 +248,9 @@ const FeedActividadPage: React.FC = () => {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <div className="bg-gray-800/30 rounded-lg p-12 border border-gray-700">
+            <div className="bg-white dark:bg-gray-800/30 rounded-lg p-12 border border-gray-200 dark:border-gray-700">
               <svg
-                className="w-24 h-24 mx-auto mb-4 text-gray-600"
+                className="w-24 h-24 mx-auto mb-4 text-gray-400 dark:text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -262,10 +262,10 @@ const FeedActividadPage: React.FC = () => {
                   d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
                 />
               </svg>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-2">
                 No hay actividad reciente
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-600 dark:text-gray-500 mb-6">
                 Las actividades de los usuarios que sigues aparecerán aquí
               </p>
               <Link
@@ -284,7 +284,7 @@ const FeedActividadPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-cyan-500/30 transition-all"
+                className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-cyan-500/30 transition-all"
               >
                 <div className="flex gap-4">
                   {/* Avatar + icono de actividad */}

@@ -5,6 +5,7 @@ import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle, 
 import { motion, AnimatePresence } from "framer-motion";
 import { isAuthenticated, logoutUser } from "../services/authService";
 import { isAdmin } from "../utils/jwtUtils";
+import { ThemeToggle } from "./ThemeToggle";
 
 // Tipos
 interface HeaderProps {
@@ -77,7 +78,7 @@ function useIsMobileOrTablet() {
 // Componente Dropdown reutilizable
 const DropdownMenu: React.FC<{ items: { name: string; href: string }[] }> = ({ items }) => (
   <motion.div
-    className="absolute top-full left-0 bg-white rounded shadow-md p-2 min-w-[180px] z-50"
+    className="absolute top-full left-0 bg-white dark:bg-gray-800 rounded shadow-md dark:shadow-gray-900/50 p-2 min-w-[180px] z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
     initial={{ opacity: 0, y: -10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
@@ -86,7 +87,7 @@ const DropdownMenu: React.FC<{ items: { name: string; href: string }[] }> = ({ i
       <Link
         key={subitem.name}
         to={subitem.href}
-        className="block px-3 py-2 text-gray-700 rounded hover:bg-green-100 hover:text-green-700 transition-colors duration-200"
+        className="block px-3 py-2 text-gray-700 dark:text-gray-300 rounded hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 transition-colors duration-200"
       >
         {subitem.name}
       </Link>
@@ -156,13 +157,13 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header ref={headerRef} className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
+    <header ref={headerRef} className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 relative">
           {/* Logo */}
           <div className="flex items-center z-10">
             <Link to="/">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600">{siteName}</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">{siteName}</h1>
             </Link>
           </div>
 
@@ -173,7 +174,7 @@ export const Header: React.FC<HeaderProps> = ({
               .map((item) => (
                 <div
                   key={item.name}
-                  className="relative flex items-center px-2 py-2 cursor-pointer text-gray-700 hover:text-green-600"
+                  className="relative flex items-center px-2 py-2 cursor-pointer text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
                   onMouseEnter={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: item.name }))}
                   onMouseLeave={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: null }))}
                   onClick={() =>
@@ -216,7 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
                     transition={{ duration: 0.3 }}
                     className="absolute right-0"
                   >
-                    <Search className="w-5 h-5 text-gray-600 hover:text-green-600 transition-transform duration-200 hover:scale-110" />
+                    <Search className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -230,7 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
                     transition={{ duration: 0.3 }}
                     type="text"
                     placeholder="Buscar..."
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-9 px-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 shadow-sm"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-9 px-3 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500 shadow-sm transition-colors duration-200"
                     onFocus={() => setIsSearchFocused(true)}
                     onBlur={() => {
                       setIsSearchFocused(false);
@@ -248,26 +249,26 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() =>
                     setMenuState((prev) => ({ ...prev, notifications: !prev.notifications, user: false }))
                   }
-                  className="relative p-1 rounded-full hover:bg-gray-100 focus:outline-none"
+                  className="relative p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none transition-colors duration-200"
                 >
                   <motion.div
                     className="inline-block relative"
                     whileHover={{ rotate: [0, -10, 10, -7, 7, -5, 5, 0] }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                   >
-                    <Bell className="w-5 h-5 text-gray-600 hover:text-green-600" />
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200" />
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
                   </motion.div>
                 </button>
                 <AnimatePresence>
                   {menuState.notifications && (
                     <motion.div
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50"
+                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 p-4 z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                     >
-                      <div className="flex items-center gap-2 text-gray-500">
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                         <AlertCircle className="w-5 h-5" />
                         <span>No hay notificaciones recientes</span>
                       </div>
@@ -284,34 +285,34 @@ export const Header: React.FC<HeaderProps> = ({
                 className="focus:outline-none"
               >
                 <motion.div className="inline-block" whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                  <User className="w-6 h-6 text-gray-600 hover:text-green-600" />
+                  <User className="w-6 h-6 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200" />
                 </motion.div>
               </button>
               <AnimatePresence>
                 {menuState.user && (
                   <motion.div
-                    className="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg z-50"
+                    className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded shadow-lg dark:shadow-gray-900/50 z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                   >
                     {isAuth ? (
                       <>
-                        <Link to="/perfil" className="block px-4 py-2 hover:bg-green-100">
+                        <Link to="/perfil" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                           Perfil
                         </Link>
-                        <Link to="/favoritos" className="block px-4 py-2 hover:bg-green-100">
+                        <Link to="/favoritos" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                           Mis Favoritos
                         </Link>
-                        <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100">
+                        <Link to="/configuracion" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                           Configuración
                         </Link>
                         {isAdmin() && (
                           <>
-                            <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100">
+                            <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                               Moderación
                             </Link>
-                            <Link to="/admin/crear-saga" className="block px-4 py-2 hover:bg-green-100">
+                            <Link to="/admin/crear-saga" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                               Crear Saga
                             </Link>
                           </>
@@ -322,17 +323,17 @@ export const Header: React.FC<HeaderProps> = ({
                             navigate('/');
                             setMenuState(prev => ({ ...prev, user: false }));
                           }}
-                          className="block w-full text-left px-4 py-2 hover:bg-green-100"
+                          className="block w-full text-left px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200"
                         >
                           Cerrar sesión
                         </button>
                       </>
                     ) : (
                       <>
-                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100">
+                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                           Iniciar sesión
                         </Link>
-                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100">
+                        <Link to="/LoginPage" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                           Registrarse
                         </Link>
                       </>
@@ -344,17 +345,23 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Mobile Menu Button */}
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden focus:outline-none">
-              {isMobileMenuOpen ? <X className="w-6 h-6 text-gray-600" /> : <Menu className="w-6 h-6 text-gray-600" />}
+              {isMobileMenuOpen ? <X className="w-6 h-6 text-gray-600 dark:text-gray-400" /> : <Menu className="w-6 h-6 text-gray-600 dark:text-gray-400" />}
             </button>
+
+            {/* Theme Toggle - Pegado al borde derecho absoluto */}
+            <div className="ml-auto mr-4">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>
+
 
       {/* Mobile menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.nav
-            className="lg:hidden bg-white border-t border-gray-200"
+            className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -365,7 +372,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <li key={item.name}>
                   <Link
                     to={item.href}
-                    className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
+                    className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 text-gray-700 dark:text-gray-300 transition-colors duration-200"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.icon && <item.icon className="w-5 h-5" />}
@@ -378,7 +385,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <li>
                     <Link
                       to="/favoritos"
-                      className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
+                      className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 text-gray-700 dark:text-gray-300 transition-colors duration-200"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Star className="w-5 h-5" />

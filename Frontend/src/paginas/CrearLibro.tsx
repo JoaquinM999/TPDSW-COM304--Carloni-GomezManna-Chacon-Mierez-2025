@@ -190,39 +190,39 @@ export const CrearLibro: React.FC = () => {
 
   if (userRole !== 'admin' && userRole !== 'autor') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <Book className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600">No tienes permisos para crear libros.</p>
+          <Book className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
+          <p className="text-gray-600 dark:text-gray-400">No tienes permisos para crear libros.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <Book className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Crear Nuevo Libro</h1>
+            <Book className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Crear Nuevo Libro</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Completa la información del libro para agregarlo a la plataforma
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Información Básica</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 dark:text-gray-100 mb-6">Información Básica</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Título */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Título *
                 </label>
                 <input
@@ -240,7 +240,7 @@ export const CrearLibro: React.FC = () => {
 
               {/* Autor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Autor *
                 </label>
                 <input
@@ -258,7 +258,7 @@ export const CrearLibro: React.FC = () => {
 
               {/* ISBN */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   ISBN *
                 </label>
                 <input
@@ -276,7 +276,7 @@ export const CrearLibro: React.FC = () => {
 
               {/* Año */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Año de Publicación
                 </label>
                 <input
@@ -286,13 +286,13 @@ export const CrearLibro: React.FC = () => {
                   onChange={handleInputChange}
                   min="1000"
                   max={new Date().getFullYear() + 5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               {/* Páginas */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Número de Páginas *
                 </label>
                 <input
@@ -312,7 +312,7 @@ export const CrearLibro: React.FC = () => {
 
             {/* Sinopsis */}
             <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sinopsis *
               </label>
               <textarea
@@ -330,13 +330,13 @@ export const CrearLibro: React.FC = () => {
           </div>
 
           {/* Clasificación */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Clasificación</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Clasificación</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Editorial */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Editorial *
                 </label>
                 <select
@@ -359,7 +359,7 @@ export const CrearLibro: React.FC = () => {
 
               {/* Categoría */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Categoría *
                 </label>
                 <select
@@ -382,14 +382,14 @@ export const CrearLibro: React.FC = () => {
 
               {/* Saga (opcional) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Saga (opcional)
                 </label>
                 <select
                   name="sagaId"
                   value={libroData.sagaId}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">No pertenece a una saga</option>
                   {sagas.map(saga => (
@@ -403,7 +403,7 @@ export const CrearLibro: React.FC = () => {
               {/* Número en saga */}
               {libroData.sagaId && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Número en la Saga
                   </label>
                   <input
@@ -412,7 +412,7 @@ export const CrearLibro: React.FC = () => {
                     value={libroData.numeroEnSaga}
                     onChange={handleInputChange}
                     min="1"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Ej: 1, 2, 3..."
                   />
                 </div>
@@ -421,8 +421,8 @@ export const CrearLibro: React.FC = () => {
           </div>
 
           {/* Idiomas */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Idiomas Disponibles *</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Idiomas Disponibles *</h2>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {idiomasDisponibles.map(idioma => (
@@ -445,15 +445,15 @@ export const CrearLibro: React.FC = () => {
           </div>
 
           {/* Portada */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Portada del Libro</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Portada del Libro</h2>
             
             <div className="flex items-start space-x-6">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Subir Imagen de Portada
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
                   <input
                     type="file"
                     accept="image/*"
@@ -487,7 +487,7 @@ export const CrearLibro: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/libros')}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Cancelar
             </button>

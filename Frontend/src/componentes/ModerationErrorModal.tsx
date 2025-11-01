@@ -64,7 +64,7 @@ export const ModerationErrorModal: React.FC<ModerationErrorModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-t-2xl relative">
           <button
@@ -126,11 +126,11 @@ export const ModerationErrorModal: React.FC<ModerationErrorModalProps> = ({
             </h3>
             <div className="space-y-4">
               {normas.map((norma, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   {norma.icon}
                   <div>
                     <h4 className="font-semibold text-gray-800">{norma.titulo}</h4>
-                    <p className="text-gray-600 text-sm mt-1">{norma.descripcion}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{norma.descripcion}</p>
                   </div>
                 </div>
               ))}
@@ -164,7 +164,7 @@ export const ModerationErrorModal: React.FC<ModerationErrorModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 p-6 rounded-b-2xl flex gap-3">
+        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-b-2xl flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"

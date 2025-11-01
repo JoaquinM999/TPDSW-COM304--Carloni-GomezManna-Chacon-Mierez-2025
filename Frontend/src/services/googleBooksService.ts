@@ -132,25 +132,36 @@ export const getBookById = async (volumeId: string): Promise<GoogleBooksVolume |
 /**
  * Obtiene libros destacados/populares de Google Books
  * Busca bestsellers y libros con alta calificación
+ * @param maxResults Cantidad máxima de resultados (default: 10)
+ * @param categoryQuery Query específico de categoría (opcional)
  */
-export const getFeaturedBooks = async (maxResults: number = 10): Promise<GoogleBooksVolume[]> => {
+export const getFeaturedBooks = async (
+  maxResults: number = 10, 
+  categoryQuery?: string
+): Promise<GoogleBooksVolume[]> => {
   try {
-    // Buscar libros populares con diferentes queries
-    const queries = [
-      'subject:fiction',
-      'subject:bestseller',
-      'subject:psychology',
-      'subject:science'
-    ];
-
-    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+    let query: string;
+    
+    if (categoryQuery) {
+      // Usar la categoría específica
+      query = categoryQuery;
+    } else {
+      // Buscar libros populares con diferentes queries
+      const queries = [
+        'fiction+bestseller',
+        'science+popular',
+        'history+bestseller',
+        'fantasy+novel'
+      ];
+      query = queries[Math.floor(Math.random() * queries.length)];
+    }
     
     const params = new URLSearchParams({
-      q: randomQuery,
-      maxResults: maxResults.toString(),
+      q: query,
+      maxResults: Math.min(maxResults * 2, 40).toString(), // Pedir más para filtrar
       orderBy: 'relevance',
       printType: 'books',
-      langRestrict: 'es'  // Preferencia por libros en español
+      langRestrict: 'en' // Cambiar a inglés para más resultados
     });
 
     const response = await fetch(`${GOOGLE_BOOKS_API_BASE}/volumes?${params}`);
@@ -161,10 +172,21 @@ export const getFeaturedBooks = async (maxResults: number = 10): Promise<GoogleB
 
     const data: GoogleBooksSearchResult = await response.json();
     
+    // Si no hay resultados en inglés, intentar en español
+    if (!data.items || data.items.length === 0) {
+      params.set('langRestrict', 'es');
+      const spanishResponse = await fetch(`${GOOGLE_BOOKS_API_BASE}/volumes?${params}`);
+      if (spanishResponse.ok) {
+        const spanishData: GoogleBooksSearchResult = await spanishResponse.json();
+        if (spanishData.items) {
+          data.items = spanishData.items;
+        }
+      }
+    }
+    
     // Filtrar libros con imágenes y buena información
     const filteredBooks = (data.items || []).filter(book => 
       book.volumeInfo.imageLinks?.thumbnail &&
-      book.volumeInfo.description &&
       book.volumeInfo.authors?.length
     );
 

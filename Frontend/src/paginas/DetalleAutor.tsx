@@ -201,14 +201,14 @@ const DetalleAutor = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+            className="w-16 h-16 border-4 border-purple-500 dark:border-purple-400 border-t-transparent rounded-full mx-auto mb-4"
           />
-          <p className="text-gray-600 font-medium">Cargando información del autor...</p>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">Cargando información del autor...</p>
         </div>
       </div>
     );
@@ -216,20 +216,20 @@ const DetalleAutor = () => {
 
   if (error || !autor) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-300">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center bg-white p-8 rounded-2xl shadow-xl max-w-md"
+          className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl max-w-md"
         >
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserCircle className="w-10 h-10 text-red-600" />
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <UserCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Autor no encontrado</h2>
-          <p className="text-gray-600 mb-6">{error || 'No pudimos encontrar este autor en la base de datos.'}</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Autor no encontrado</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'No pudimos encontrar este autor en la base de datos.'}</p>
           <button
             onClick={() => navigate('/autores')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium shadow-lg hover:shadow-xl"
+            className="px-6 py-3 bg-purple-600 dark:bg-purple-500 text-white rounded-xl hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-medium shadow-lg hover:shadow-xl"
           >
             Volver a Autores
           </button>
@@ -243,14 +243,14 @@ const DetalleAutor = () => {
   const displayBio = bioExpanded || !bioTruncated ? biografia : biografia.substring(0, 300) + '...';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4 transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         {/* Header con botón volver */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate('/autores')}
-          className="flex items-center gap-2 text-purple-600 hover:text-purple-800 mb-8 group transition-colors"
+          className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 mb-8 group transition-colors"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="font-semibold">Volver a Autores</span>
@@ -260,7 +260,7 @@ const DetalleAutor = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8"
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden mb-8"
         >
           <div className="md:flex">
             {/* Foto del autor */}
@@ -268,11 +268,11 @@ const DetalleAutor = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="md:w-1/3 bg-gradient-to-br from-purple-100 via-pink-100 to-purple-200 flex items-center justify-center p-12 relative overflow-hidden"
+              className="md:w-1/3 bg-gradient-to-br from-purple-100 via-pink-100 to-purple-200 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-purple-900/30 flex items-center justify-center p-12 relative overflow-hidden"
             >
               {/* Decorative circles */}
-              <div className="absolute top-0 left-0 w-32 h-32 bg-purple-200 rounded-full -translate-x-1/2 -translate-y-1/2 opacity-50"></div>
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-200 rounded-full translate-x-1/3 translate-y-1/3 opacity-50"></div>
+              <div className="absolute top-0 left-0 w-32 h-32 bg-purple-200 dark:bg-purple-700/30 rounded-full -translate-x-1/2 -translate-y-1/2 opacity-50"></div>
+              <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-200 dark:bg-pink-700/30 rounded-full translate-x-1/3 translate-y-1/3 opacity-50"></div>
               
               <motion.img
                 whileHover={{ scale: 1.05 }}
@@ -289,7 +289,7 @@ const DetalleAutor = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-6">
                   {nombreCompleto}
                 </h1>
               </motion.div>
@@ -358,28 +358,28 @@ const DetalleAutor = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200"
+                className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-600"
               >
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <BookOpen className="w-6 h-6 text-purple-600" />
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+                  <BookOpen className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   Biografía
                 </h2>
                 {loadingBio ? (
-                  <div className="flex items-center gap-3 text-gray-500">
+                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-purple-500 dark:border-purple-400 border-t-transparent rounded-full"
                     />
                     <span>Cargando biografía desde Wikipedia...</span>
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-700 leading-relaxed text-base">{displayBio}</p>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base">{displayBio}</p>
                     {bioTruncated && (
                       <button
                         onClick={() => setBioExpanded(!bioExpanded)}
-                        className="mt-3 flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium transition-colors text-sm"
+                        className="mt-3 flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium transition-colors text-sm"
                       >
                         {bioExpanded ? (
                           <>
@@ -407,15 +407,15 @@ const DetalleAutor = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl shadow-2xl p-8 border-2 border-purple-200"
+            className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800/90 rounded-3xl shadow-2xl p-8 border-2 border-purple-200 dark:border-purple-700/50"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
-                  <BookOpen className="w-8 h-8 text-purple-600" />
+                <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+                  <BookOpen className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                   Libros de {autor?.nombre} {autor?.apellido}
                 </h2>
-                <p className="text-gray-600 mt-2">
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
                   {librosAdicionales.length} {librosAdicionales.length === 1 ? 'libro encontrado' : 'libros encontrados'} en Google Books
                 </p>
               </div>
@@ -436,7 +436,7 @@ const DetalleAutor = () => {
                       titulo: libro.titulo,
                       id: libro.id
                     })}`}
-                    className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-400"
+                    className="block bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-400 dark:hover:border-purple-500"
                   >
                     {libro.portada ? (
                       <div className="relative overflow-hidden">
@@ -448,24 +448,24 @@ const DetalleAutor = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ) : (
-                      <div className="w-full h-56 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                        <BookOpen className="w-16 h-16 text-blue-300" />
+                      <div className="w-full h-56 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30">
+                        <BookOpen className="w-16 h-16 text-blue-300 dark:text-blue-400" />
                       </div>
                     )}
                     <div className="p-3">
-                      <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[2.5rem]">
+                      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm mb-1 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors min-h-[2.5rem]">
                         {libro.titulo}
                       </h3>
                       <div className="flex items-center gap-2">
                         {libro.fechaPublicacion && (
-                          <p className="text-xs text-gray-500 font-medium bg-gray-100 rounded-full px-2 py-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium bg-gray-100 dark:bg-gray-600 rounded-full px-2 py-1">
                             {new Date(libro.fechaPublicacion).getFullYear()}
                           </p>
                         )}
                         {libro.calificacion && (
                           <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs text-gray-600 font-semibold">
+                            <span className="text-xs text-gray-600 dark:text-gray-300 font-semibold">
                               {libro.calificacion.toFixed(1)}
                             </span>
                           </div>
@@ -482,9 +482,9 @@ const DetalleAutor = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mt-6">
                 {[...Array(12)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="bg-gray-200 h-56 rounded-xl mb-2" />
-                    <div className="bg-gray-200 h-4 rounded mb-1" />
-                    <div className="bg-gray-200 h-3 rounded w-2/3" />
+                    <div className="bg-gray-200 dark:bg-gray-600 h-56 rounded-xl mb-2" />
+                    <div className="bg-gray-200 dark:bg-gray-600 h-4 rounded mb-1" />
+                    <div className="bg-gray-200 dark:bg-gray-600 h-3 rounded w-2/3" />
                   </div>
                 ))}
               </div>
@@ -498,13 +498,13 @@ const DetalleAutor = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-3xl shadow-2xl p-16 text-center"
+            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-16 text-center"
           >
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <BookOpen className="w-12 h-12 text-gray-300" />
+            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <BookOpen className="w-12 h-12 text-gray-300 dark:text-gray-500" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">No se encontraron libros</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">No se encontraron libros</h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               No pudimos encontrar libros de este autor en Google Books. 
               Intenta buscar manualmente o verifica el nombre del autor.
             </p>

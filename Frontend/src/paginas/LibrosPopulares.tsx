@@ -62,13 +62,13 @@ export default function LibrosPopulares() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
       <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
           Libros populares
         </span>
       </h2>
-      <p className="text-center text-sm text-gray-600 mb-14">
+      <p className="text-center text-sm text-gray-600 dark:text-gray-300 mb-14">
         Descubre los libros más leídos y trending
       </p>
 
@@ -86,7 +86,7 @@ export default function LibrosPopulares() {
 
       {/* Error */}
       {errorTrending && (
-        <p className="text-red-500 text-center text-lg">Error: {errorTrending}</p>
+        <p className="text-red-500 dark:text-red-400 text-center text-lg">Error: {errorTrending}</p>
       )}
 
       {/* Contenido */}
@@ -94,7 +94,7 @@ export default function LibrosPopulares() {
         <>
           {/* Top 5 */}
           <section className="mb-16">
-            <h3 className="text-3xl font-bold text-slate-800 mb-10 text-center flex items-center justify-center gap-2">
+            <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-10 text-center flex items-center justify-center gap-2">
               Los 5 más leídos
             </h3>
             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">

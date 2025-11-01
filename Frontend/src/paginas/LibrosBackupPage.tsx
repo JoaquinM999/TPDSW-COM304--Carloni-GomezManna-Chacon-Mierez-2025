@@ -95,7 +95,7 @@ export default function TodosLosLibros() {
   const librosMostrados = libros.slice(inicio, inicio + librosPorPagina);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6 dark:from-gray-900 dark:to-gray-800">
       {/* Google Books */}
       <h2 className="flex justify-center items-center gap-3 text-4xl font-bold text-cyan-800 mb-8">
         Biblioteca de Libros (Google)
@@ -127,9 +127,9 @@ export default function TodosLosLibros() {
               return (
                 <div
                   key={libro.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
                 >
-                  <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
+                  <div className="w-full h-64 bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
                     {imagenValida ? (
                       <img
                         src={libro.imagen ?? undefined}
@@ -147,7 +147,7 @@ export default function TodosLosLibros() {
 
                   <div className="p-4 flex flex-col flex-grow">
                     <h3 className="text-lg font-semibold mb-1">{libro.titulo}</h3>
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-3">
                       {libro.autores?.length
                         ? libro.autores.join(", ")
                         : "Autor desconocido"}
@@ -232,9 +232,9 @@ export default function TodosLosLibros() {
           {trending.map((libro) => (
             <div
               key={libro.id}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transform hover:-translate-y-1 transition duration-300 flex flex-col"
             >
-              <div className="w-full h-64 bg-gray-50 flex items-center justify-center">
+              <div className="w-full h-64 bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
                 {libro.coverUrl ? (
                   <img
                     src={libro.coverUrl}
@@ -251,7 +251,7 @@ export default function TodosLosLibros() {
               </div>
               <div className="p-4 flex flex-col flex-grow">
                 <h3 className="text-lg font-semibold mb-1">{libro.title}</h3>
-                <p className="text-sm text-gray-500 mb-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-2">
                   Actividad: {libro.activities_count}
                 </p>
                 <a

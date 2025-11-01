@@ -244,14 +244,14 @@ const CrearSagaAdmin: React.FC = () => {
         <div className="text-center">
           <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-red-600 mb-2">Acceso Denegado</h1>
-          <p className="text-gray-600">Solo los administradores pueden crear sagas.</p>
+          <p className="text-gray-600 dark:text-gray-400">Solo los administradores pueden crear sagas.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -260,11 +260,11 @@ const CrearSagaAdmin: React.FC = () => {
           className="text-center mb-8"
         >
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
               Crear Nueva Saga
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Selecciona libros para agruparlos en una nueva saga
           </p>
         </motion.div>
@@ -274,11 +274,11 @@ const CrearSagaAdmin: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-xl p-6 mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8"
         >
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nombre de la Saga
               </label>
               <input
@@ -286,7 +286,7 @@ const CrearSagaAdmin: React.FC = () => {
                 value={sagaName}
                 onChange={(e) => setSagaName(e.target.value)}
                 placeholder="Ej: Harry Potter, El Señor de los Anillos..."
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 disabled={loading}
               />
             </div>
@@ -317,7 +317,7 @@ const CrearSagaAdmin: React.FC = () => {
           </div>
 
           {/* Selected Books Count */}
-          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <BookOpen className="w-4 h-4" />
             <span>{selectedLibros.size + selectedGoogleBooks.size} libro{(selectedLibros.size + selectedGoogleBooks.size) !== 1 ? "s" : ""} seleccionado{(selectedLibros.size + selectedGoogleBooks.size) !== 1 ? "s" : ""}</span>
           </div>
@@ -328,10 +328,10 @@ const CrearSagaAdmin: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-3"
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6 flex items-center gap-3"
           >
-            <X className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <p className="text-red-700">{error}</p>
+            <X className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <p className="text-red-700 dark:text-red-300">{error}</p>
           </motion.div>
         )}
 
@@ -339,10 +339,10 @@ const CrearSagaAdmin: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center gap-3"
+            className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6 flex items-center gap-3"
           >
-            <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <p className="text-green-700">{success}</p>
+            <Check className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0" />
+            <p className="text-green-700 dark:text-green-300">{success}</p>
           </motion.div>
         )}
 
@@ -359,7 +359,7 @@ const CrearSagaAdmin: React.FC = () => {
                 <select
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="px-4 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 font-medium min-w-[120px]"
+                  className="px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-800 focus:border-cyan-400 transition-all duration-300 text-gray-700 dark:text-gray-300 font-medium min-w-[120px]"
                 >
                   <option value="todos">Todos</option>
                   <option value="titulo">Título</option>
@@ -382,16 +382,16 @@ const CrearSagaAdmin: React.FC = () => {
                   placeholder="Buscar libros (ej: tolkien, subject:fantasy, 978014...)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 placeholder-gray-400"
+                  className="w-full pl-12 pr-12 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-800 focus:border-cyan-400 transition-all duration-300 text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
                 />
 
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
                     title="Limpiar búsqueda"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 transition-colors duration-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
-                    <svg className="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-4 h-4 text-slate-600 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -405,7 +405,7 @@ const CrearSagaAdmin: React.FC = () => {
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   searchSource === 'local'
                     ? 'bg-cyan-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 <BookOpen className="w-4 h-4 inline mr-2" />
@@ -416,7 +416,7 @@ const CrearSagaAdmin: React.FC = () => {
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   searchSource === 'google'
                     ? 'bg-cyan-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 <Globe className="w-4 h-4 inline mr-2" />
@@ -519,8 +519,8 @@ const CrearSagaAdmin: React.FC = () => {
 
         {filteredLibros.length === 0 && filteredGoogleBooks.length === 0 && searchTerm && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">No se encontraron libros que coincidan con tu búsqueda.</p>
+            <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 text-lg">No se encontraron libros que coincidan con tu búsqueda.</p>
           </div>
         )}
       </div>

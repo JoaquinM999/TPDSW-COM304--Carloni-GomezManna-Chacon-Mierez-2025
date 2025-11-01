@@ -41,15 +41,15 @@ const ObrasTimeline: React.FC<ObrasTimelineProps> = ({ works, authorName }) => {
 
   if (timelineItems.length === 0) {
     return (
-      <div className="bg-white rounded-lg p-8 shadow text-center">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow text-center">
         <p className="text-gray-600">No hay información de fechas de publicación disponible para crear un timeline.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg">
-      <h3 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
         📚 Línea de tiempo de obras de {authorName}
       </h3>
       

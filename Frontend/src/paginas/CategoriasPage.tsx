@@ -57,9 +57,9 @@ export const CategoriasPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <motion.div
@@ -68,11 +68,11 @@ export const CategoriasPage: React.FC = () => {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
                   Categorías
                 </span>
               </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
                 Descubre libros organizados por categorías
               </p>
             </motion.div>
@@ -94,7 +94,7 @@ export const CategoriasPage: React.FC = () => {
               className="block"
             >
               <motion.div
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 h-full flex flex-col"
+                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 dark:border-gray-700/20 h-full flex flex-col"
                 variants={cardVariants}
                 whileHover={{
                   scale: 1.03,
@@ -123,12 +123,12 @@ export const CategoriasPage: React.FC = () => {
                 </div>
                 <div className="p-6 flex-grow flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 text-lg leading-tight">{categoria.nombre}</h3>
                     {categoria.descripcion && (
-                      <p className="text-gray-600 text-sm mb-4 font-medium line-clamp-2">{categoria.descripcion}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 font-medium line-clamp-2">{categoria.descripcion}</p>
                     )}
                   </div>
-                  <span className="text-blue-600 text-sm font-medium mt-2">
+                  <span className="text-blue-600 dark:text-blue-400 text-sm font-medium mt-2">
                     Explorar categoría →
                   </span>
                 </div>

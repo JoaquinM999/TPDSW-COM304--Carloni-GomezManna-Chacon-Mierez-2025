@@ -96,26 +96,26 @@ export const CrearEditorial: React.FC = () => {
 
   if (userRole !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600">Solo los administradores pueden crear editoriales.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
+          <p className="text-gray-600 dark:text-gray-400">Solo los administradores pueden crear editoriales.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center space-x-3 mb-4">
             <Building className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Crear Nueva Editorial</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Crear Nueva Editorial</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Registra una nueva editorial en la plataforma
           </p>
         </div>
@@ -123,13 +123,13 @@ export const CrearEditorial: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Información Básica */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Información Básica</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Información Básica</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Nombre */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nombre de la Editorial *
                 </label>
                 <input
@@ -147,7 +147,7 @@ export const CrearEditorial: React.FC = () => {
 
               {/* Año de Fundación */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Año de Fundación
                 </label>
                 <input
@@ -157,14 +157,14 @@ export const CrearEditorial: React.FC = () => {
                   onChange={handleInputChange}
                   min="1400"
                   max={new Date().getFullYear()}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   placeholder="Ej: 1927"
                 />
               </div>
 
               {/* Sitio Web */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sitio Web
                 </label>
                 <div className="relative">
@@ -188,7 +188,7 @@ export const CrearEditorial: React.FC = () => {
 
             {/* Descripción */}
             <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Descripción *
               </label>
               <textarea
@@ -206,13 +206,13 @@ export const CrearEditorial: React.FC = () => {
           </div>
 
           {/* Información de Contacto */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Información de Contacto</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Información de Contacto</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* País */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   País
                 </label>
                 <div className="relative">
@@ -224,7 +224,7 @@ export const CrearEditorial: React.FC = () => {
                     name="pais"
                     value={editorialData.pais}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="Ej: España, Argentina, México..."
                   />
                 </div>
@@ -232,7 +232,7 @@ export const CrearEditorial: React.FC = () => {
 
               {/* Ciudad */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Ciudad
                 </label>
                 <input
@@ -240,14 +240,14 @@ export const CrearEditorial: React.FC = () => {
                   name="ciudad"
                   value={editorialData.ciudad}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   placeholder="Ej: Madrid, Buenos Aires, Ciudad de México..."
                 />
               </div>
 
               {/* Teléfono */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Teléfono
                 </label>
                 <div className="relative">
@@ -259,7 +259,7 @@ export const CrearEditorial: React.FC = () => {
                     name="telefono"
                     value={editorialData.telefono}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="+34 900 123 456"
                   />
                 </div>
@@ -267,7 +267,7 @@ export const CrearEditorial: React.FC = () => {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email de Contacto
                 </label>
                 <div className="relative">
@@ -295,7 +295,7 @@ export const CrearEditorial: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/admin/editoriales')}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Cancelar
             </button>

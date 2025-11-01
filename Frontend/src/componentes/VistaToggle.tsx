@@ -17,7 +17,7 @@ export const VistaToggle: React.FC<VistaToggleProps> = ({ vista, onVistaChange }
         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
           vista === 'grid'
             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-            : 'text-gray-600 hover:bg-gray-100'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100'
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -32,7 +32,7 @@ export const VistaToggle: React.FC<VistaToggleProps> = ({ vista, onVistaChange }
         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
           vista === 'lista'
             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-            : 'text-gray-600 hover:bg-gray-100'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100'
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

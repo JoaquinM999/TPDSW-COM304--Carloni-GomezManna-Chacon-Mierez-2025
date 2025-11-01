@@ -250,15 +250,15 @@ export default function TodosLosLibros() {
   const totalPages = totalItems ? Math.ceil(totalItems / librosPorPagina) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
       <header className="max-w-5xl mx-auto mb-6">
         <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
             Explorador de Libros
           </span>
         </h2>
-        <p className="text-center text-sm text-gray-600">
-          Buscar por título, autor, ISBN o queries (ej: <code className="bg-white px-1 rounded">subject:fantasy</code>).
+        <p className="text-center text-sm text-gray-600 dark:text-gray-300">
+          Buscar por título, autor, ISBN o queries (ej: <code className="bg-white dark:bg-gray-700 dark:text-gray-200 px-1 rounded">subject:fantasy</code>).
         </p>
 
         <div className="mt-6 flex items-center justify-center gap-4">
@@ -266,7 +266,7 @@ export default function TodosLosLibros() {
             <select
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="px-4 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 font-medium min-w-[120px]"
+              className="px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium min-w-[120px]"
             >
               <option value="todos">Todos</option>
               <option value="titulo">Título</option>
@@ -280,7 +280,7 @@ export default function TodosLosLibros() {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'relevance' | 'rating_high_to_low')}
-              className="px-4 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 font-medium min-w-[140px]"
+              className="px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium min-w-[140px]"
             >
               <option value="relevance">Relevancia</option>
               <option value="rating_high_to_low">Mejor Calificado</option>
@@ -289,7 +289,7 @@ export default function TodosLosLibros() {
 
           <div className="w-full max-w-2xl relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-              <svg className="w-5 h-5 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg className="w-5 h-5 text-cyan-500 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
                 <circle cx="11" cy="11" r="6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -300,16 +300,16 @@ export default function TodosLosLibros() {
               placeholder="Buscar libros (ej: tolkien, subject:fantasy, 978014...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-12 py-4 rounded-3xl border border-slate-200 shadow-lg bg-white focus:outline-none focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 transition-all duration-300 text-gray-700 placeholder-gray-400"
+              className="w-full pl-12 pr-12 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
             />
 
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
                 title="Limpiar búsqueda"
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 transition-colors duration-200"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors duration-200"
               >
-                <svg className="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-4 h-4 text-slate-600 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -332,18 +332,18 @@ export default function TodosLosLibros() {
 
         {error && (
           <div className="text-center py-12">
-            <p className="text-red-500 text-xl font-semibold mb-2">¡Oops! Algo salió mal</p>
-            <p className="text-gray-600 text-lg">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-xl font-semibold mb-2">¡Oops! Algo salió mal</p>
+            <p className="text-gray-600 dark:text-gray-300 text-lg">{error}</p>
           </div>
         )}
 
         {!loading && !error && libros.length === 0 && (
           <div className="text-center py-16">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <p className="text-gray-700 text-xl font-semibold mb-2">No se encontraron libros</p>
-            <p className="text-gray-500 text-lg">Intenta con otra búsqueda o términos diferentes</p>
+            <p className="text-gray-700 dark:text-gray-200 text-xl font-semibold mb-2">No se encontraron libros</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">Intenta con otra búsqueda o términos diferentes</p>
           </div>
         )}
 
@@ -370,15 +370,15 @@ export default function TodosLosLibros() {
                   disabled={loadingMore}
                   className={`px-8 py-4 rounded-2xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${
                     loadingMore
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+                      ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
+                      : "bg-gradient-to-r from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 hover:from-cyan-600 hover:to-blue-700 dark:hover:from-cyan-700 dark:hover:to-blue-800"
                   }`}
                 >
                   {loadingMore ? "Cargando más..." : "Cargar más libros"}
                 </button>
               )}
 
-              <div className="text-base text-gray-700 font-medium">
+              <div className="text-base text-gray-700 dark:text-gray-300 font-medium">
                 {totalItems !== null ? (
                   <span>{totalItems.toLocaleString()} resultados totales</span>
                 ) : (

@@ -207,7 +207,7 @@ const AutoresPage: React.FC = () => {
       <span>
         {parts.map((part, i) => 
           part.toLowerCase() === query.toLowerCase() ? (
-            <mark key={i} className="bg-yellow-200 text-gray-900 font-semibold">{part}</mark>
+            <mark key={i} className="bg-yellow-200 dark:bg-yellow-600 text-gray-900 dark:text-gray-100 font-semibold">{part}</mark>
           ) : (
             <span key={i}>{part}</span>
           )
@@ -217,13 +217,13 @@ const AutoresPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
       <h1 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
           Autores
         </span>
       </h1>
-      <p className="text-center text-sm text-gray-600 mb-8">
+      <p className="text-center text-sm text-gray-600 dark:text-gray-300 mb-8">
         Descubre y explora autores de libros
       </p>
       <div className="max-w-4xl mx-auto mb-8">
@@ -235,11 +235,11 @@ const AutoresPage: React.FC = () => {
             onChange={handleSearchChange}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
-            className="w-full px-6 py-3 pl-12 pr-4 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-md bg-white transition-all"
+            className="w-full px-6 py-3 pl-12 pr-4 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-600 shadow-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
             autoComplete="off"
           />
           <svg
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -251,40 +251,40 @@ const AutoresPage: React.FC = () => {
           {/* Indicador de carga en el input */}
           {loading && searchTerm && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-cyan-500 dark:border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
           
           {/* Dropdown de sugerencias */}
           {mostrarSugerencias && sugerencias.length > 0 && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="max-h-96 overflow-y-auto">
                 {sugerencias.map((autor) => (
                   <button
                     key={autor.id}
                     onClick={() => handleSugerenciaClick(autor)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 text-left group"
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-b-0 text-left group"
                   >
                     <img
                       src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=40&background=${autor.esPopular ? 'f59e0b' : '0ea5e9'}&color=fff&format=png&bold=true`}
                       alt={autor.name}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 group-hover:ring-cyan-400 transition-all"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 group-hover:ring-cyan-400 dark:group-hover:ring-cyan-500 transition-all"
                     />
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-800 group-hover:text-cyan-600 transition-colors">
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                         {highlightText(autor.name, searchTerm)}
                       </p>
                       {autor.esPopular && (
-                        <p className="text-xs text-yellow-600 font-medium">⭐ Popular</p>
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">⭐ Popular</p>
                       )}
                     </div>
-                    <svg className="w-4 h-4 text-gray-400 group-hover:text-cyan-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 ))}
               </div>
-              <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500 text-center border-t border-gray-200">
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 text-xs text-gray-500 dark:text-gray-400 text-center border-t border-gray-200 dark:border-gray-700">
                 Presiona Enter para ver todos los resultados
               </div>
             </div>
@@ -292,9 +292,9 @@ const AutoresPage: React.FC = () => {
           
           {/* Historial de búsqueda */}
           {!searchTerm && searchHistory.length > 0 && mostrarSugerencias && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Búsquedas recientes</p>
+            <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Búsquedas recientes</p>
               </div>
               <div className="max-h-64 overflow-y-auto">
                 {searchHistory.map((historyItem, index) => (
@@ -305,13 +305,13 @@ const AutoresPage: React.FC = () => {
                       fetchAutores(historyItem, 1, limit);
                       setMostrarSugerencias(false);
                     }}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 text-left group"
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-b-0 text-left group"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="flex-1 text-sm text-gray-700 group-hover:text-cyan-600 transition-colors">{historyItem}</p>
-                    <svg className="w-4 h-4 text-gray-400 group-hover:text-cyan-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <p className="flex-1 text-sm text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{historyItem}</p>
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -323,19 +323,19 @@ const AutoresPage: React.FC = () => {
         
         {/* Mensaje informativo */}
         {!searchTerm && autores.length > 0 && (
-          <p className="text-center text-sm text-gray-500 mt-3">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
             ⭐ Los autores populares con muchos libros en Google Books aparecen primero
           </p>
         )}
         
         {searchTerm && !loading && autores.length > 0 && (
-          <p className="text-center text-sm text-gray-600 mt-3">
-            Se encontraron <span className="font-bold text-cyan-600">{total}</span> autores
+          <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-3">
+            Se encontraron <span className="font-bold text-cyan-600 dark:text-cyan-400">{total}</span> autores
           </p>
         )}
         
         {searchTerm && !loading && autores.length === 0 && (
-          <p className="text-center text-sm text-gray-500 mt-3">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
             No se encontraron autores para "{searchTerm}"
           </p>
         )}
@@ -350,18 +350,18 @@ const AutoresPage: React.FC = () => {
           />
         </div>
       )}
-      {error && <p className="text-center text-red-500 text-lg">{error}</p>}
+      {error && <p className="text-center text-red-500 dark:text-red-400 text-lg">{error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
         {autores.map((autor) => (
           <div
             key={autor.id}
-            className={`bg-white shadow-lg rounded-2xl p-6 border ${
-              autor.esPopular ? 'border-yellow-400 ring-2 ring-yellow-300' : 'border-gray-100'
+            className={`bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border ${
+              autor.esPopular ? 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-300 dark:ring-yellow-600' : 'border-gray-100 dark:border-gray-700'
             } hover:shadow-2xl hover:scale-105 transition-all duration-300 group relative`}
           >
             {/* Badge de Popular */}
             {autor.esPopular && (
-              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-yellow-500 dark:to-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
@@ -373,17 +373,17 @@ const AutoresPage: React.FC = () => {
               <img
                 src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=64&background=${autor.esPopular ? 'f59e0b' : '0ea5e9'}&color=fff&format=png&bold=true`}
                 alt={autor.name}
-                className="w-16 h-16 rounded-full mr-4 object-cover ring-2 ring-gray-200"
+                className="w-16 h-16 rounded-full mr-4 object-cover ring-2 ring-gray-200 dark:ring-gray-600"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=64&background=0ea5e9&color=fff&format=png`;
                 }}
               />
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-800 group-hover:text-cyan-600 transition-colors">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                   {autor.name}
                 </h2>
                 {autor.esPopular && (
-                  <p className="text-xs text-yellow-600 font-semibold mt-1">
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold mt-1">
                     ⭐ Muchos libros disponibles
                   </p>
                 )}
@@ -391,7 +391,7 @@ const AutoresPage: React.FC = () => {
             </div>
             <Link
               to={`/autores/${autor.id}`}
-              className="inline-flex items-center text-cyan-600 hover:text-cyan-800 font-medium transition-colors group-hover:translate-x-1 transform duration-200"
+              className="inline-flex items-center text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 font-medium transition-colors group-hover:translate-x-1 transform duration-200"
             >
               Ver detalles
               <svg
@@ -420,7 +420,7 @@ const AutoresPage: React.FC = () => {
                 }
               }}
               disabled={page === 1}
-              className="px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 bg-cyan-600 dark:bg-cyan-700 text-white rounded-md hover:bg-cyan-700 dark:hover:bg-cyan-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Anterior
             </button>
@@ -430,7 +430,7 @@ const AutoresPage: React.FC = () => {
               {getPaginationNumbers().map((pageNum, index) => (
                 <React.Fragment key={index}>
                   {pageNum === '...' ? (
-                    <span className="px-3 py-2 text-gray-500">...</span>
+                    <span className="px-3 py-2 text-gray-500 dark:text-gray-400">...</span>
                   ) : (
                     <button
                       onClick={() => {
@@ -440,8 +440,8 @@ const AutoresPage: React.FC = () => {
                       }}
                       className={`px-3 py-2 rounded-md transition-colors ${
                         page === pageNum
-                          ? 'bg-cyan-600 text-white'
-                          : 'bg-white text-cyan-600 border border-cyan-600 hover:bg-cyan-50'
+                          ? 'bg-cyan-600 dark:bg-cyan-700 text-white'
+                          : 'bg-white dark:bg-gray-800 text-cyan-600 dark:text-cyan-400 border border-cyan-600 dark:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       {pageNum}
@@ -461,7 +461,7 @@ const AutoresPage: React.FC = () => {
                 }
               }}
               disabled={page === totalPages}
-              className="px-3 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 bg-cyan-600 dark:bg-cyan-700 text-white rounded-md hover:bg-cyan-700 dark:hover:bg-cyan-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Siguiente
             </button>

@@ -100,7 +100,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
 
               {/* Rating mínimo */}
               <div className="mb-4 pb-4 border-b border-gray-200">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Rating mínimo
                 </label>
                 <div className="flex gap-2">
@@ -111,7 +111,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                       className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${
                         filtros.ratingMinimo === rating
                           ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-md scale-110'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                       }`}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -135,7 +135,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                 <div className="mb-4 pb-4 border-b border-gray-200">
                   <button
                     onClick={() => setSeccionAbierta(seccionAbierta === 'categorias' ? null : 'categorias')}
-                    className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-2"
+                    className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
                   >
                     <span>Categorías ({filtros.categorias.length})</span>
                     {seccionAbierta === 'categorias' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -155,7 +155,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                               filtros.categorias.includes(categoria)
                                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                             }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -174,7 +174,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                 <div>
                   <button
                     onClick={() => setSeccionAbierta(seccionAbierta === 'autores' ? null : 'autores')}
-                    className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 mb-2"
+                    className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
                   >
                     <span>Autores ({filtros.autores.length})</span>
                     {seccionAbierta === 'autores' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -194,7 +194,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                               filtros.autores.includes(autor)
                                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                             }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

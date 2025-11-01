@@ -23,7 +23,7 @@ export const CardSkeleton: React.FC = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-white rounded-2xl shadow-lg overflow-hidden"
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden"
     >
       <div className="animate-pulse">
         {/* Imagen skeleton */}

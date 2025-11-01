@@ -7,6 +7,7 @@ import { Footer } from './componentes/Footer';
 import LoginModal from './componentes/LoginModal';
 import axios from 'axios';
 import { setupAxiosInterceptors } from './services/authService';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 import LoginPage from './paginas/LoginPage';
 import RegistrationPage from './paginas/RegistrationPage';
@@ -210,9 +211,11 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Layout showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Layout showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
+      </Router>
+    </ThemeProvider>
   );
 }
 

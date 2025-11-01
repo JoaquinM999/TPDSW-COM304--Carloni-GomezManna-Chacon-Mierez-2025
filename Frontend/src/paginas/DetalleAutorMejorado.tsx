@@ -185,14 +185,14 @@ const DetalleAutor = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
           />
-          <p className="text-gray-600 font-medium">Cargando información del autor...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 font-medium">Cargando información del autor...</p>
         </div>
       </div>
     );
@@ -200,7 +200,7 @@ const DetalleAutor = () => {
 
   if (error || !autor) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center p-4 dark:from-gray-900 dark:to-gray-800">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -209,8 +209,8 @@ const DetalleAutor = () => {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <UserCircle className="w-10 h-10 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Autor no encontrado</h2>
-          <p className="text-gray-600 mb-6">{error || 'No pudimos encontrar este autor en la base de datos.'}</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Autor no encontrado</h2>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">{error || 'No pudimos encontrar este autor en la base de datos.'}</p>
           <button
             onClick={() => navigate('/autores')}
             className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium shadow-lg hover:shadow-xl"
@@ -227,7 +227,7 @@ const DetalleAutor = () => {
   const displayBio = bioExpanded || !bioTruncated ? biografia : biografia.substring(0, 300) + '...';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 py-8 px-4 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto">
         {/* Header con botón volver */}
         <motion.button
@@ -244,7 +244,7 @@ const DetalleAutor = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8"
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden mb-8"
         >
           <div className="md:flex">
             {/* Foto del autor */}
@@ -282,7 +282,7 @@ const DetalleAutor = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-200 mb-6">
                   {nombreCompleto}
                 </h1>
               </motion.div>
@@ -348,7 +348,7 @@ const DetalleAutor = () => {
                 transition={{ delay: 0.5 }}
                 className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200"
               >
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-purple-600" />
                   Biografía
                 </h2>
@@ -363,7 +363,7 @@ const DetalleAutor = () => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-700 leading-relaxed text-base">{displayBio}</p>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base">{displayBio}</p>
                     {bioTruncated && (
                       <button
                         onClick={() => setBioExpanded(!bioExpanded)}
@@ -395,7 +395,7 @@ const DetalleAutor = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-3xl shadow-2xl p-8 mb-8"
+            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mb-8"
           >
             <div className="flex items-center gap-3 mb-8">
               <Award className="w-8 h-8 text-yellow-500" />
@@ -418,7 +418,7 @@ const DetalleAutor = () => {
                       #{index + 1} Popular
                     </div>
                     
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all border-2 border-transparent group-hover:border-purple-300">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all border-2 border-transparent group-hover:border-purple-300">
                       {libro.imagen ? (
                         <img
                           src={libro.imagen}
@@ -432,10 +432,10 @@ const DetalleAutor = () => {
                         </div>
                       )}
                       <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50">
-                        <h3 className="font-bold text-gray-800 mb-2 line-clamp-2 text-sm group-hover:text-purple-600 transition-colors">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2 text-sm group-hover:text-purple-600 transition-colors">
                           {libro.nombre}
                         </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-600 bg-white rounded-full px-3 py-1 w-fit">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 bg-white rounded-full px-3 py-1 w-fit">
                           <MessageCircle className="w-3 h-3" />
                           <span className="font-semibold">{libro.totalResenas} reseñas</span>
                         </div>
@@ -454,7 +454,7 @@ const DetalleAutor = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="bg-white rounded-3xl shadow-2xl p-8"
+            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8"
           >
             <div className="flex items-center gap-3 mb-8">
               <BookOpen className="w-8 h-8 text-purple-600" />
@@ -474,7 +474,7 @@ const DetalleAutor = () => {
                   className="group cursor-pointer"
                 >
                   <Link to={`/libros/${libro.id}`}>
-                    <div className="bg-white rounded-xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all border border-gray-100 group-hover:border-purple-300">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md group-hover:shadow-2xl transition-all border border-gray-100 group-hover:border-purple-300">
                       {libro.imagen ? (
                         <div className="relative overflow-hidden">
                           <img
@@ -491,11 +491,11 @@ const DetalleAutor = () => {
                         </div>
                       )}
                       <div className="p-3">
-                        <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[2.5rem]">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-200 text-sm mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors min-h-[2.5rem]">
                           {libro.nombre}
                         </h3>
                         {libro.fecha_publicacion && (
-                          <p className="text-xs text-gray-500 font-medium bg-gray-100 rounded-full px-2 py-1 w-fit">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 font-medium bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1 w-fit">
                             {new Date(libro.fecha_publicacion).getFullYear()}
                           </p>
                         )}
@@ -513,13 +513,13 @@ const DetalleAutor = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl shadow-2xl p-16 text-center"
+            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-16 text-center"
           >
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
               <BookOpen className="w-12 h-12 text-gray-300" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Sin libros registrados</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Sin libros registrados</h3>
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 max-w-md mx-auto">
               Este autor aún no tiene libros registrados en la base de datos. 
               Los libros pueden ser agregados próximamente.
             </p>

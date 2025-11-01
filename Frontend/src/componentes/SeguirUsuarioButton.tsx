@@ -113,7 +113,7 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
     return (
       <button
         disabled
-        className={`px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed ${className}`}
+        className={`px-4 py-2 rounded-lg bg-gray-200 text-gray-500 dark:text-gray-400 cursor-not-allowed ${className}`}
       >
         <span className="inline-block animate-pulse">Cargando...</span>
       </button>
@@ -130,7 +130,7 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
         className={`
           px-4 py-2 rounded-lg font-semibold transition-all
           ${isSiguiendo 
-            ? 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-600' 
+            ? 'bg-gray-200 text-gray-700 dark:text-gray-300 hover:bg-red-100 hover:text-red-600' 
             : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700'
           }
           ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}

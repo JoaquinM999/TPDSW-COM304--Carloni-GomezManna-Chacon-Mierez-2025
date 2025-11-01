@@ -126,7 +126,7 @@ const AutoresPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -135,11 +135,11 @@ const AutoresPage: React.FC = () => {
         className="text-center mb-8"
       >
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
             Autores
           </span>
         </h1>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Descubre biografías enriquecidas con Wikipedia y obras indexadas en Google Books
         </p>
       </motion.div>
@@ -152,14 +152,14 @@ const AutoresPage: React.FC = () => {
             placeholder="Buscar autores por nombre... (ej: García Márquez)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-6 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-md bg-white"
+            className="w-full px-6 py-3 pl-12 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-600 shadow-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               ✕
             </button>
@@ -170,13 +170,13 @@ const AutoresPage: React.FC = () => {
       {/* Controles de vista e info de paginación */}
       <div className="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4">
         {/* Info de resultados */}
-        <div className="text-sm text-gray-700 font-medium">
+        <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
           {!loading && totalAutores > 0 && (
             <div className="flex flex-col sm:flex-row gap-2">
-              <span className="bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200">
+              <span className="bg-cyan-50 dark:bg-cyan-900/30 px-3 py-1 rounded-full border border-cyan-200 dark:border-cyan-700">
                 Total: <strong>{totalAutores}</strong> autores
               </span>
-              <span className="bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+              <span className="bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-700">
                 Página <strong>{page}</strong> de <strong>{totalPages}</strong>
               </span>
             </div>
@@ -184,11 +184,11 @@ const AutoresPage: React.FC = () => {
         </div>
 
         {/* Toggle vista */}
-        <div className="flex items-center gap-2 bg-white rounded-full p-1 shadow-md">
+        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-full transition-colors ${
-              viewMode === 'grid' ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              viewMode === 'grid' ? 'bg-cyan-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
             title="Vista grid"
           >
@@ -197,7 +197,7 @@ const AutoresPage: React.FC = () => {
           <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-full transition-colors ${
-              viewMode === 'list' ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              viewMode === 'list' ? 'bg-cyan-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
             title="Vista lista"
           >
@@ -221,7 +221,7 @@ const AutoresPage: React.FC = () => {
       {/* Error state */}
       {error && (
         <div className="max-w-4xl mx-auto text-center py-8">
-          <p className="text-red-500 text-lg">{error}</p>
+          <p className="text-red-500 dark:text-red-400 text-lg">{error}</p>
         </div>
       )}
 
@@ -255,8 +255,8 @@ const AutoresPage: React.FC = () => {
                   disabled={page === 1}
                   className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-all ${
                     page === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200 shadow-sm'
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'bg-white dark:bg-gray-800 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-gray-700 border border-cyan-200 dark:border-cyan-700 shadow-sm'
                   }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -266,15 +266,15 @@ const AutoresPage: React.FC = () => {
                 {/* Números de página */}
                 {getPageNumbers().map((pageNum, index) => (
                   pageNum === '...' ? (
-                    <span key={`ellipsis-${index}`} className="px-2 text-gray-400">...</span>
+                    <span key={`ellipsis-${index}`} className="px-2 text-gray-400 dark:text-gray-600">...</span>
                   ) : (
                     <button
                       key={pageNum}
                       onClick={() => goToPage(pageNum as number)}
                       className={`w-10 h-10 rounded-lg font-semibold transition-all ${
                         page === pageNum
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg scale-110'
-                          : 'bg-white text-gray-700 hover:bg-cyan-50 border border-gray-200 shadow-sm'
+                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-500 dark:to-blue-500 text-white shadow-lg scale-110'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-cyan-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 shadow-sm'
                       }`}
                     >
                       {pageNum}
@@ -288,8 +288,8 @@ const AutoresPage: React.FC = () => {
                   disabled={page === totalPages}
                   className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-all ${
                     page === totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200 shadow-sm'
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                      : 'bg-white dark:bg-gray-800 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-gray-700 border border-cyan-200 dark:border-cyan-700 shadow-sm'
                   }`}
                 >
                   <span className="hidden sm:inline">Siguiente</span>
@@ -304,10 +304,10 @@ const AutoresPage: React.FC = () => {
       {/* Empty state */}
       {!loading && displayedAutores.length === 0 && searchTerm && (
         <div className="max-w-4xl mx-auto text-center py-12">
-          <p className="text-gray-600 text-lg mb-4">
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
             No se encontraron autores para "{searchTerm}"
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Intenta con otro nombre o explora nuestras categorías destacadas
           </p>
         </div>

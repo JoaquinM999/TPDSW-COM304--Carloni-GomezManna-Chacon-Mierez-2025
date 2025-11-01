@@ -206,7 +206,7 @@ export const PerfilUsuario: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <DotLottieReact
             src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
@@ -222,10 +222,10 @@ export const PerfilUsuario: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <User className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar perfil</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Error al cargar perfil</h2>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -234,10 +234,10 @@ export const PerfilUsuario: React.FC = () => {
 
   if (!usuario) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Usuario no encontrado</h2>
+          <User className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Usuario no encontrado</h2>
           <p className="text-gray-600">El perfil que buscas no existe o ha sido eliminado.</p>
         </div>
       </div>
@@ -245,9 +245,9 @@ export const PerfilUsuario: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 dark:bg-gray-900">
       {/* Profile Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
             {/* Avatar */}
@@ -259,15 +259,15 @@ export const PerfilUsuario: React.FC = () => {
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{usuario.nombre}</h1>
-                  <p className="text-gray-600 mb-2">@{usuario.username}</p>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{usuario.nombre}</h1>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">@{usuario.username}</p>
                   {usuario.ubicacion && (
-                    <div className="flex items-center text-gray-500 text-sm mb-2">
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm mb-2">
                       <MapPin className="w-4 h-4 mr-1" />
                       <span>{usuario.ubicacion}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-gray-500 text-sm">
+                  <div className="flex items-center text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm">
                     <Calendar className="w-4 h-4 mr-1" />
                     <span>Miembro desde {formatDate(usuario.fechaRegistro)}</span>
                   </div>
@@ -279,7 +279,7 @@ export const PerfilUsuario: React.FC = () => {
                     onClick={handleSeguir}
                     className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
                       usuario.esSeguido
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
@@ -300,7 +300,7 @@ export const PerfilUsuario: React.FC = () => {
 
               {/* Biography */}
               {usuario.biografia && (
-                <p className="text-gray-700 mb-6 max-w-2xl">{usuario.biografia}</p>
+                <p className="text-gray-700 dark:text-gray-300 mb-6 max-w-2xl">{usuario.biografia}</p>
               )}
 
               {/* Stats */}
@@ -334,13 +334,13 @@ export const PerfilUsuario: React.FC = () => {
       {/* Content Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-8 max-w-md">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl mb-8 max-w-md">
           <button
             onClick={() => setActiveTab('reseñas')}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
               activeTab === 'reseñas'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-900'
             }`}
           >
             <MessageCircle className="w-5 h-5" />
@@ -351,7 +351,7 @@ export const PerfilUsuario: React.FC = () => {
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
               activeTab === 'listas'
                 ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:text-gray-900'
             }`}
           >
             <List className="w-5 h-5" />
@@ -363,7 +363,7 @@ export const PerfilUsuario: React.FC = () => {
         {activeTab === 'reseñas' && (
           <div className="space-y-6">
             {reseñas.map((reseña) => (
-              <div key={reseña.id} className="bg-white rounded-xl shadow-lg p-6">
+              <div key={reseña.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div className="flex items-start space-x-4">
                   <Link to={`/libro/${reseña.libroId}`}>
                     <img
@@ -377,11 +377,11 @@ export const PerfilUsuario: React.FC = () => {
                       <div>
                         <Link 
                           to={`/libro/${reseña.libroId}`}
-                          className="font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200"
+                          className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 transition-colors duration-200"
                         >
                           {reseña.libroTitulo}
                         </Link>
-                        <p className="text-gray-600 text-sm">por {reseña.libroAutor}</p>
+                        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm">por {reseña.libroAutor}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="flex items-center space-x-1">
@@ -397,8 +397,8 @@ export const PerfilUsuario: React.FC = () => {
                       </div>
                     </div>
                     
-                    <h4 className="font-medium text-gray-900 mb-2">{reseña.titulo}</h4>
-                    <p className="text-gray-700 mb-4 leading-relaxed">{reseña.comentario}</p>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{reseña.titulo}</h4>
+                    <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">{reseña.comentario}</p>
                     
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>{formatDate(reseña.fecha)}</span>
@@ -414,8 +414,8 @@ export const PerfilUsuario: React.FC = () => {
 
             {reseñas.length === 0 && (
               <div className="text-center py-12">
-                <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay reseñas aún</h3>
+                <MessageCircle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No hay reseñas aún</h3>
                 <p className="text-gray-600">
                   {usuario.esPerfilPropio 
                     ? 'Comienza escribiendo tu primera reseña' 
@@ -431,7 +431,7 @@ export const PerfilUsuario: React.FC = () => {
         {activeTab === 'listas' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {listas.map((lista) => (
-              <div key={lista.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+              <div key={lista.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
                 {/* Book covers preview */}
                 <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-500 relative overflow-hidden">
                   {lista.librosPortada.length > 0 ? (
@@ -461,10 +461,10 @@ export const PerfilUsuario: React.FC = () => {
                 </div>
 
                 <div className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{lista.titulo}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{lista.descripcion}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">{lista.titulo}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-sm mb-4 line-clamp-2">{lista.descripcion}</p>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-4">
                     <span>{lista.librosCount} libros</span>
                     {lista.esPublica && (
                       <div className="flex items-center space-x-1">
@@ -483,8 +483,8 @@ export const PerfilUsuario: React.FC = () => {
 
             {listas.length === 0 && (
               <div className="col-span-full text-center py-12">
-                <List className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay listas aún</h3>
+                <List className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No hay listas aún</h3>
                 <p className="text-gray-600">
                   {usuario.esPerfilPropio 
                     ? 'Crea tu primera lista de libros' 

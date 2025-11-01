@@ -104,7 +104,7 @@ const Step1: React.FC<Step1Props> = ({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Username
           </label>
           <div className="relative">
@@ -118,14 +118,14 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.username}
               onChange={(e) => updateData({ username: e.target.value })}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
               placeholder="Tu username"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Correo electrónico
           </label>
           <div className="relative">
@@ -139,14 +139,14 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.email}
               onChange={(e) => updateData({ email: e.target.value })}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
               placeholder="tu@email.com"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Contraseña
           </label>
           <div className="relative">
@@ -160,7 +160,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.password}
               onChange={(e) => updateData({ password: e.target.value })}
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
               placeholder="Mínimo 6 caracteres"
             />
             <button
@@ -179,7 +179,7 @@ const Step1: React.FC<Step1Props> = ({
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Confirmar contraseña
           </label>
           <div className="relative">
@@ -193,7 +193,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.confirmPassword}
               onChange={(e) => updateData({ confirmPassword: e.target.value })}
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
               placeholder="Confirma tu contraseña"
             />
             <button
@@ -219,7 +219,7 @@ const Step1: React.FC<Step1Props> = ({
             required
             checked={data.acceptTerms}
             onChange={(e) => updateData({ acceptTerms: e.target.checked })}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
           />
           <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-700">
             Acepto los{' '}

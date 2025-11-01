@@ -947,20 +947,20 @@ const DetalleLibro: React.FC = () => {
     return (
       <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tu calificación</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tu calificación</label>
           <StarsInput value={estrellas} onChange={setEstrellas} sizeClass="w-7 h-7" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tu reseña</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tu reseña</label>
           <textarea
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
             rows={6}
-            className="w-full min-h-[8rem] resize-y rounded-lg border border-gray-200 p-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-lg"
+            className="w-full min-h-[8rem] resize-y rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 text-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             placeholder="Escribe tu reseña: qué te gustó, qué no, para quién recomendarías este libro..."
           />
-          <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+          <div className="flex justify-between items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
             <div>{comentario.length} caracteres</div>
             <div>
               <button
@@ -992,10 +992,10 @@ const DetalleLibro: React.FC = () => {
 
   if (error || !libro)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
+      <div className="min-h-screen flex items-center justify-center bg-red-50 dark:bg-red-950">
         <div className="text-center">
-          <BookOpen className="w-12 h-12 mx-auto text-red-600 mb-4" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">{error || "Libro no encontrado"}</h2>
+          <BookOpen className="w-12 h-12 mx-auto text-red-600 dark:text-red-400 mb-4" />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">{error || "Libro no encontrado"}</h2>
           <button
             onClick={() => navigate(from)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
@@ -1019,11 +1019,11 @@ const DetalleLibro: React.FC = () => {
         moderationDetails={moderationError?.details}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
           <button
           onClick={() => navigate(from)}
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors duration-200 group mb-6"
+          className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-200 group mb-6"
           aria-label="Volver a la página anterior"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" /> Volver
@@ -1046,14 +1046,14 @@ const DetalleLibro: React.FC = () => {
           {/* Info Section */}
           <div className="space-y-6 text-center">
             <div className="space-y-4">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">{libro.titulo}</h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{libro.titulo}</h1>
 
               <div className="flex flex-wrap gap-2 justify-center">
                 {libro.autores.map((a, i) => (
                   <Link
                     key={i}
                     to={`/autores/${encodeURIComponent(a)}`}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md text-sm font-medium text-gray-700 hover:text-indigo-700 transition-all duration-200 border border-gray-100"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-indigo-700 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-100 dark:border-gray-700"
                   >
                     <User className="w-4 h-4" />
                     {a}
@@ -1062,7 +1062,7 @@ const DetalleLibro: React.FC = () => {
               </div>
 
               {libro.source && (
-                <span className="inline-block text-sm text-gray-600 bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200">
+                <span className="inline-block text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
                   Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
                 </span>
               )}
@@ -1073,8 +1073,8 @@ const DetalleLibro: React.FC = () => {
                 onClick={toggleFavorito}
                 className={`p-3 rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${
                   esFavorito
-                    ? "bg-red-100 text-red-500 hover:bg-red-200"
-                    : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"
+                    ? "bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
+                    : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                 }`}
                 aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
               >
@@ -1085,7 +1085,7 @@ const DetalleLibro: React.FC = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowListaDropdown(!showListaDropdown)}
-                    className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 border border-gray-200"
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 border border-gray-200 dark:border-gray-700"
                     aria-label="Agregar a una lista"
                   >
                     <Plus className="w-5 h-5" />
@@ -1093,7 +1093,7 @@ const DetalleLibro: React.FC = () => {
                   </button>
 
                   {showListaDropdown && (
-                    <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48 text-left">
+                    <div className="absolute top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 w-48 text-left">
                       {/* Opciones predefinidas (siempre se muestran si estás logueado) */}
                       {nombresDeListasFijas.map((nombre) => {
                         const listaExistente = listas.find(l => l.nombre === nombre);
@@ -1128,11 +1128,11 @@ const DetalleLibro: React.FC = () => {
                                 <button
                                   key={lista.id}
                                   onClick={() => estaEnLista ? null : handleAddToList(lista.id)}
-                                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${estaEnLista ? 'text-gray-500' : ''}`}
+                                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between ${estaEnLista ? 'text-gray-500 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
                                   disabled={estaEnLista}
                                 >
                                   <span>{lista.nombre}</span>
-                                  {estaEnLista && <span className="text-green-500">✓</span>}
+                                  {estaEnLista && <span className="text-green-500 dark:text-green-400">✓</span>}
                                 </button>
                               );
                             })}
@@ -1150,18 +1150,18 @@ const DetalleLibro: React.FC = () => {
 
       {/* Sinopsis */}
       <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="bg-white/90 rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+            <MessageCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             Sinopsis
           </h2>
-          <p className={`text-gray-700 leading-relaxed ${!mostrarSinopsis ? "line-clamp-4" : ""}`}>
+          <p className={`text-gray-700 dark:text-gray-300 leading-relaxed ${!mostrarSinopsis ? "line-clamp-4" : ""}`}>
             {renderSinopsis(libro.descripcion)}
           </p>
           {libro.descripcion && plainTextLength(libro.descripcion) > 200 && (
             <button
               onClick={() => setMostrarSinopsis(!mostrarSinopsis)}
-              className="mt-3 text-indigo-600 flex items-center gap-1 hover:underline"
+              className="mt-3 text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline"
             >
               {mostrarSinopsis ? (
                 <>
@@ -1179,28 +1179,28 @@ const DetalleLibro: React.FC = () => {
 
       {/* Rating */}
       <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="bg-white/90 rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Award className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+            <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             Rating
           </h2>
           <div className="flex items-center gap-4">
-            <div className="text-lg text-gray-600">
+            <div className="text-lg text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-1">
                 <div className="flex items-center gap-1">{renderStars(reviewState.averageRating || 0, "w-6 h-6")}</div>
-                <span className="ml-2 font-medium text-xl">{(reviewState.averageRating || 0).toFixed(1)}/5</span>
+                <span className="ml-2 font-medium text-xl text-gray-900 dark:text-gray-100">{(reviewState.averageRating || 0).toFixed(1)}/5</span>
                 {reviewState.reseñas.length === 0 && (
-                  <span className="ml-2 text-gray-400 text-sm">Libro sin reseñas</span>
+                  <span className="ml-2 text-gray-400 dark:text-gray-500 text-sm">Libro sin reseñas</span>
                 )}
               </div>
-              <div className="mt-2 font-semibold">{reviewState.reseñas.length} reseñas</div>
+              <div className="mt-2 font-semibold text-gray-900 dark:text-gray-100">{reviewState.reseñas.length} reseñas</div>
             </div>
           </div>
 
           {/* Rating Distribution */}
           {reviewState.reseñas.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Resumen de calificaciones</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Resumen de calificaciones</h3>
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = ratingDistribution[star as keyof typeof ratingDistribution];
@@ -1208,16 +1208,16 @@ const DetalleLibro: React.FC = () => {
                   return (
                     <div key={star} className="flex items-center gap-3">
                       <div className="flex items-center gap-1 w-12">
-                        <span className="text-sm font-medium">{star}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{star}</span>
                         <Star className="w-4 h-4 text-amber-400 fill-current" />
                       </div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-amber-400 h-2 rounded-full transition-all duration-300"
+                          className="bg-amber-400 dark:bg-amber-500 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm text-gray-600 w-8 text-right">{count}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 w-8 text-right">{count}</span>
                     </div>
                   );
                 })}
@@ -1230,31 +1230,31 @@ const DetalleLibro: React.FC = () => {
       {/* Reseñas mejoradas */}
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <MessageCircle className="w-6 h-6 text-purple-600" /> Reseñas
+          <h2 className="text-3xl font-bold flex items-center gap-3 text-gray-900 dark:text-gray-100">
+            <MessageCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" /> Reseñas
           </h2>
 
           <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600 text-right">
+            <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
               <div className="font-semibold">{reviewState.reseñas.length} reseñas</div>
             </div>
 
-            <div className="flex items-center gap-2 bg-white rounded-lg shadow px-3 py-2">
+            <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg shadow px-3 py-2 border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_recientes' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
               >
                 Más recientes
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mejor_valoradas' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
               >
                 Mejor valoradas
               </button>
               <button
                 onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_populares' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 ${reviewState.sortOrder === 'mas_populares' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`text-sm px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 ${reviewState.sortOrder === 'mas_populares' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
               >
                 <Heart className="w-3.5 h-3.5" />
                 Más populares
@@ -1264,8 +1264,8 @@ const DetalleLibro: React.FC = () => {
         </div>
 
         {isAuthenticated() && (
-          <div className="bg-white rounded-xl shadow p-6 mb-8">
-            <h3 className="text-xl font-semibold mb-4">Agregar una reseña</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Agregar una reseña</h3>
             <NewReviewForm
               libroId={libro.id}
               onAdded={refreshResenas}
@@ -1276,17 +1276,18 @@ const DetalleLibro: React.FC = () => {
 
         <div className="space-y-6">
           {reviewState.reviewsLoading ? (
-            <div className="flex items-center justify-center p-8 bg-white rounded-xl shadow">
-              <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600" /> Cargando reseñas...
+            <div className="flex items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow">
+              <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600 dark:text-indigo-400" /> 
+              <span className="text-gray-900 dark:text-gray-100">Cargando reseñas...</span>
             </div>
           ) : sortedResenas().length === 0 ? (
-            <div className="bg-white rounded-xl shadow p-8 text-center">
-              <MessageCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">Aún no hay reseñas disponibles para este libro. ¡Sé el primero en comentar!</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
+              <MessageCircle className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">Aún no hay reseñas disponibles para este libro. ¡Sé el primero en comentar!</p>
             </div>
           ) : (
             sortedResenas().map((r) => (
-              <article key={r.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition">
+              <article key={r.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition border border-transparent dark:border-gray-700">
                 <div className="flex gap-4">
                   <UserAvatar usuario={r.usuario} />
 
@@ -1294,31 +1295,31 @@ const DetalleLibro: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-lg">{r.usuario.nombre || r.usuario.username}</h4>
+                          <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{r.usuario.nombre || r.usuario.username}</h4>
                           {r.estado === "PENDING" && (
-                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+                            <span className="inline-block bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs px-2 py-1 rounded-full font-medium">
                               Pendiente de moderación
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
                           <span className="flex items-center gap-1">
                             {renderStars(r.estrellas, "w-4 h-4")} <span className="ml-2">{r.estrellas}/5</span>
                           </span>
                         </div>
                       </div>
 
-                      <div className="text-xs text-gray-400 flex items-center gap-2">
+                      <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
                         <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(r.fechaResena)}</span>
-                        <button className="p-1 rounded hover:bg-gray-100" title="Más opciones"><MoreHorizontal className="w-4 h-4" /></button>
+                        <button className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Más opciones"><MoreHorizontal className="w-4 h-4" /></button>
                       </div>
                     </div>
 
-                    <div className="mt-3 text-gray-700">
+                    <div className="mt-3 text-gray-700 dark:text-gray-300">
                       {/* bloque de comentario más grande: text-lg y mayor line-height */}
                       <p className={`${reviewState.expandedReviewIds[r.id] ? '' : 'line-clamp-5'} text-lg leading-relaxed`}>{r.comentario}</p>
                       {r.comentario && r.comentario.length > 300 && (
-                        <button onClick={() => toggleExpand(r.id)} className="mt-2 text-sm text-indigo-600 hover:underline flex items-center gap-1">
+                        <button onClick={() => toggleExpand(r.id)} className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
                           {reviewState.expandedReviewIds[r.id] ? <><ChevronUp className="w-4 h-4"/> Ver menos</> : <><ChevronDown className="w-4 h-4"/> Ver más</>}
                         </button>
                       )}
@@ -1326,7 +1327,7 @@ const DetalleLibro: React.FC = () => {
 
                     {/* Contadores de reacciones */}
                     {r.reaccionesCount && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                         <ReaccionContadores reaccionesCount={r.reaccionesCount} />
                       </div>
                     )}
@@ -1334,7 +1335,7 @@ const DetalleLibro: React.FC = () => {
                     <div className="flex gap-6 mt-4 text-sm items-center">
                       <button
                         onClick={() => handleToggleLike(r.id)}
-                        className={`flex items-center gap-2 ${reviewState.likedByUser[r.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600 transition-colors`}
+                        className={`flex items-center gap-2 ${reviewState.likedByUser[r.id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
                       >
                         <ThumbsUp className="w-4 h-4" />
                         <span className="font-medium">Me gusta</span>
@@ -1342,7 +1343,7 @@ const DetalleLibro: React.FC = () => {
 
                       <button
                         onClick={() => toggleReplyForm(r.id)}
-                        className="text-gray-600 hover:text-indigo-600 transition-colors"
+                        className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
                         Responder
                       </button>
@@ -1350,28 +1351,28 @@ const DetalleLibro: React.FC = () => {
                       {(r.respuestas && r.respuestas.length > 1) && (
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_EXPAND_REPLIES', payload: r.id.toString() })}
-                          className="text-gray-600 hover:text-indigo-600 flex items-center gap-1"
+                          className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1"
                         >
                           {reviewState.expandedReplies[r.id.toString()] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           {reviewState.expandedReplies[r.id.toString()] ? "Ver menos" : `Ver más respuestas (${(r.respuestas ? r.respuestas.length - 1 : 0)})`}
                         </button>
                       )}
 
-                      <span className="ml-auto text-xs text-gray-400">ID: {r.id}</span>
+                      <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {r.id}</span>
                     </div>
 
                     {reviewState.replyForms[r.id] && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tu respuesta</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tu respuesta</label>
                             <textarea
                               value={reviewState.replyForms[r.id]!.comentario}
                               onChange={(e) =>
                                 dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: { ...reviewState.replyForms[r.id]!, comentario: e.target.value } } })
                               }
                               rows={3}
-                              className="w-full resize-y rounded border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              className="w-full resize-y rounded border border-gray-300 dark:border-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                               placeholder="Escribe tu respuesta..."
                             />
                           </div>
@@ -1380,7 +1381,7 @@ const DetalleLibro: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: null } })}
-                              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                              className="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                             >
                               Cancelar
                             </button>
@@ -1400,7 +1401,7 @@ const DetalleLibro: React.FC = () => {
                           </div>
 
                           {reviewState.replyForms[r.id]!.error && (
-                            <p className="text-sm text-red-600">{reviewState.replyForms[r.id]!.error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-400">{reviewState.replyForms[r.id]!.error}</p>
                           )}
                         </div>
                       </div>
@@ -1408,9 +1409,9 @@ const DetalleLibro: React.FC = () => {
 
                     {/* Display replies */}
                     {r.respuestas && r.respuestas.length > 0 && (
-                      <div className="mt-6 space-y-4 border-l-2 border-gray-200 pl-6">
+                      <div className="mt-6 space-y-4 border-l-2 border-gray-200 dark:border-gray-700 pl-6">
                         {/* Always show the first reply */}
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
                           <div className="flex gap-3">
                             {r.respuestas[0].usuario.avatar ? (
                               <img
@@ -1432,9 +1433,9 @@ const DetalleLibro: React.FC = () => {
                               <div className="flex justify-between items-start">
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <h5 className="font-semibold text-base">{r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}</h5>
+                                    <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}</h5>
                                     {r.respuestas[0].resenaPadre && (
-                                      <span className="text-sm text-gray-500">
+                                      <span className="text-sm text-gray-500 dark:text-gray-400">
                                         respondiendo a {r.respuestas[0].resenaPadre.usuario.nombre || r.respuestas[0].resenaPadre.usuario.username}
                                       </span>
                                     )}
@@ -1442,18 +1443,18 @@ const DetalleLibro: React.FC = () => {
 
                                 </div>
 
-                                <div className="text-xs text-gray-400 flex items-center gap-2">
+                                <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
                                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(r.respuestas[0].fechaResena)}</span>
                                 </div>
                               </div>
 
-                              <div className="mt-2 text-gray-700">
+                              <div className="mt-2 text-gray-700 dark:text-gray-300">
                                 <p className="text-base leading-relaxed">{r.respuestas[0].comentario}</p>
                               </div>
 
                               {/* Contadores de reacciones en respuesta */}
                               {r.respuestas[0].reaccionesCount && (
-                                <div className="mt-2 pt-2 border-t border-gray-100">
+                                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                                   <ReaccionContadores reaccionesCount={r.respuestas[0].reaccionesCount} />
                                 </div>
                               )}
@@ -1461,14 +1462,14 @@ const DetalleLibro: React.FC = () => {
                               <div className="flex gap-4 mt-3 text-sm items-center">
                                 <button
                                   onClick={() => r.respuestas && r.respuestas[0] && handleToggleLike(r.respuestas[0].id)}
-                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600 transition-colors`}
+                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
                                   disabled={!r.respuestas || !r.respuestas[0]}
                                 >
                                   <ThumbsUp className="w-3 h-3" />
                                   <span className="text-xs">Me gusta</span>
                                 </button>
 
-                                <span className="ml-auto text-xs text-gray-400">ID: {r.respuestas[0].id}</span>
+                                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {r.respuestas[0].id}</span>
                               </div>
                             </div>
                           </div>
@@ -1476,7 +1477,7 @@ const DetalleLibro: React.FC = () => {
 
                         {/* Show additional replies only if expanded */}
                         {reviewState.expandedReplies[r.id.toString()] && r.respuestas.slice(1).map((reply) => (
-                          <div key={reply.id} className="bg-gray-50 rounded-lg p-4">
+                          <div key={reply.id} className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
                             <div className="flex gap-3">
                               {reply.usuario.avatar ? (
                                 <img
@@ -1498,9 +1499,9 @@ const DetalleLibro: React.FC = () => {
                                 <div className="flex justify-between items-start">
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <h5 className="font-semibold text-base">{reply.usuario.nombre || reply.usuario.username}</h5>
+                                      <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{reply.usuario.nombre || reply.usuario.username}</h5>
                                       {reply.resenaPadre && (
-                                        <span className="text-sm text-gray-500">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">
                                           respondiendo a {reply.resenaPadre.usuario.nombre || reply.resenaPadre.usuario.username}
                                         </span>
                                       )}
@@ -1508,18 +1509,18 @@ const DetalleLibro: React.FC = () => {
 
                                   </div>
 
-                                  <div className="text-xs text-gray-400 flex items-center gap-2">
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(reply.fechaResena)}</span>
                                   </div>
                                 </div>
 
-                                <div className="mt-2 text-gray-700">
+                                <div className="mt-2 text-gray-700 dark:text-gray-300">
                                   <p className="text-base leading-relaxed">{reply.comentario}</p>
                                 </div>
 
                                 {/* Contadores de reacciones en respuesta */}
                                 {reply.reaccionesCount && (
-                                  <div className="mt-2 pt-2 border-t border-gray-100">
+                                  <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                                     <ReaccionContadores reaccionesCount={reply.reaccionesCount} />
                                   </div>
                                 )}
@@ -1527,13 +1528,13 @@ const DetalleLibro: React.FC = () => {
                                 <div className="flex gap-4 mt-3 text-sm items-center">
                                   <button
                                     onClick={() => handleToggleLike(reply.id)}
-                                    className={`flex items-center gap-1 ${reviewState.likedByUser[reply.id] ? "text-indigo-600" : "text-gray-600"} hover:text-indigo-600 transition-colors`}
+                                    className={`flex items-center gap-1 ${reviewState.likedByUser[reply.id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
                                   >
                                     <ThumbsUp className="w-3 h-3" />
                                     <span className="text-xs">Me gusta</span>
                                   </button>
 
-                                  <span className="ml-auto text-xs text-gray-400">ID: {reply.id}</span>
+                                  <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {reply.id}</span>
                                 </div>
                               </div>
                             </div>

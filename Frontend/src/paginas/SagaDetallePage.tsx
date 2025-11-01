@@ -63,14 +63,14 @@ const SagaDetallePage: React.FC = () => {
 
   if (error || !saga) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
             {error || 'Saga no encontrada'}
           </h1>
           <Link
             to="/sagas"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a Sagas
@@ -81,9 +81,9 @@ const SagaDetallePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg shadow-lg border-b border-gray-200">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -92,17 +92,17 @@ const SagaDetallePage: React.FC = () => {
           >
             <Link
               to="/sagas"
-              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+              className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 mb-4 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               Volver a Sagas
             </Link>
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
                 {saga.nombre}
               </span>
             </h1>
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <BookOpen className="w-5 h-5" />
               <span className="text-lg">{saga.libros.length} libro{saga.libros.length !== 1 ? 's' : ''} en esta saga</span>
             </div>
@@ -114,8 +114,8 @@ const SagaDetallePage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {saga.libros.length === 0 ? (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">Esta saga no tiene libros asociados aún.</p>
+            <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Esta saga no tiene libros asociados aún.</p>
           </div>
         ) : (
           <motion.div

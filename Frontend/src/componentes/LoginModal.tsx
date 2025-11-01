@@ -106,7 +106,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
         {/* Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-6" noValidate>
           <div>
-            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Correo electrónico
             </label>
             <div className="relative">
@@ -120,14 +120,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.email}
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
                 placeholder="tu@email.com"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Contraseña
             </label>
             <div className="relative">
@@ -141,7 +141,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.password}
                 onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
                 placeholder="Tu contraseña"
               />
               <button

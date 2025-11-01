@@ -1,22 +1,24 @@
 # 📋 TODO List - Mejoras HeroSection & FeaturedContent
 
-## Estado: 8/40 completadas ✅ (Quick Wins implementados!)
+## Estado: 16/40 completadas ✅ (40% completado!)
+
+> 🌙 **NOTA:** Dark Mode está siendo implementado. Ver `DARK_MODE_TODO.md`, `DARK_MODE_RESUMEN.md` y `DARK_MODE_IMPLEMENTACION_SESION.md` para detalles completos.
 
 ---
 
 ## 🔴 ALTA PRIORIDAD (15 tareas)
 
 ### Backend & Data
-- [ ] 1. 🔌 Conectar HeroSection con estadísticas reales del backend (2-3h)
-- [ ] 2. 📚 Integrar Google Books API en FeaturedContent (3-4h)
-- [ ] 8. ⚡ Lazy load del componente Spline (1h)
+- [x] 1. 🔌 Conectar HeroSection con estadísticas reales del backend (2-3h) ✅
+- [x] 2. 📚 Integrar Google Books API en FeaturedContent (3-4h) ✅
+- [x] 8. ⚡ Lazy load del componente Spline (1h) ✅
 
 ### UX Core
 - [x] 3. 🔗 Hacer clickeable las cards de libros (1h) ✅
 - [x] 4. 🎯 Agregar CTAs en HeroSection (1-2h) ✅
 - [x] 7. 🎨 Agregar skeleton loaders (1-2h) ✅ (Componente creado)
-- [ ] 10. 🔍 Mejorar SearchBar con sugerencias (4-5h)
-- [ ] 13. 📱 Mejorar responsive en móvil (2-3h)
+- [x] 10. 🔍 Mejorar SearchBar con sugerencias (4-5h) ✅
+- [x] 13. 📱 Mejorar responsive en móvil (2-3h) ✅
 
 ### Features Carrusel
 - [x] 5. 🔄 Auto-play en carrusel (2h) ✅
@@ -26,8 +28,8 @@
 - [x] 14. ❤️ Botón de favoritos en cards (2-3h) ✅
 
 ### Visual & Animations
-- [ ] 9. 📊 Contador animado para estadísticas (2h)
-- [ ] 15. 🌙 Implementar modo oscuro (4-6h)
+- [x] 9. 📊 Contador animado para estadísticas (2h) ✅
+- [x] 15. 🌙 Implementar modo oscuro (4-6h) ✅
 
 **Subtotal**: ~35-45 horas
 
@@ -37,8 +39,8 @@
 
 ### Notificaciones & Feedback
 - [ ] 16. 🔔 Notificaciones de nuevos libros (2-3h)
-- [ ] 17. 🎯 Progress bar en carrusel (1h)
-- [ ] 25. 🔐 Manejo de error del Spline (1h)
+- [x] 17. 🎯 Progress bar en carrusel (1h) ✅
+- [x] 25. 🔐 Manejo de error del Spline (1h) ✅
 
 ### UI Enhancements
 - [ ] 18. 📖 Vista previa expandida de libro (3-4h)
@@ -145,6 +147,26 @@
 
 ---
 
+## 📚 TODO Lists Relacionados
+
+### MEJORAS_FEATURED_CONTENT.md (Nuevo!)
+**25 tareas adicionales** específicas para la sección de Libros Destacados:
+- ✅ 3/25 completadas
+- 🔴 8 tareas de alta prioridad (filtros, animaciones, votación)
+- 🟡 8 tareas de media prioridad (modals, recomendaciones, drag & drop)
+- 🟢 6 tareas de baja prioridad (colecciones, calendario, gráficos)
+- 💡 10 ideas creativas (gamificación, IA, social features)
+
+**Ver archivo completo**: `MEJORAS_FEATURED_CONTENT.md`
+
+### Resumen Total del Proyecto
+- **TODOLIST_RESUMEN.md**: 13/40 tareas completadas (32%)
+- **MEJORAS_FEATURED_CONTENT.md**: 3/25 tareas completadas (12%)
+- **Total combinado**: 16/65 tareas (25%)
+- **Horas estimadas restantes**: ~140-180h
+
+---
+
 **Creado**: 1 de noviembre de 2025  
 **Última actualización**: 1 de noviembre de 2025  
-**Versión**: 1.0
+**Versión**: 1.1

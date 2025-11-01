@@ -64,7 +64,7 @@ const SiguiendoPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
@@ -76,7 +76,7 @@ const SiguiendoPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-6xl mx-auto">
           <div className="bg-red-500/10 border border-red-500 rounded-lg p-6 text-center">
             <h2 className="text-xl font-bold text-red-500 mb-2">Error</h2>
@@ -88,7 +88,7 @@ const SiguiendoPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
@@ -161,7 +161,7 @@ const SiguiendoPage: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-300 mb-2">
                 {filtro ? 'No se encontraron usuarios' : 'No sigues a nadie aún'}
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-6">
                 {filtro 
                   ? 'Intenta con otro término de búsqueda' 
                   : 'Explora perfiles de usuarios y comienza a seguir a otros lectores'
@@ -208,13 +208,13 @@ const SiguiendoPage: React.FC = () => {
                     >
                       {usuario.nombre} {usuario.apellido}
                     </Link>
-                    <p className="text-sm text-gray-400 truncate">@{usuario.username}</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 truncate">@{usuario.username}</p>
                   </div>
                 </div>
 
                 {/* Bio */}
                 {usuario.bio && (
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mb-4 line-clamp-2">
                     {usuario.bio}
                   </p>
                 )}

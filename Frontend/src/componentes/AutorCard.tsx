@@ -76,7 +76,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:scale-105 transition-all duration-300 group relative"
+      className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:scale-105 transition-all duration-300 group relative"
       onMouseEnter={() => setShowBio(true)}
       onMouseLeave={() => setShowBio(false)}
     >
@@ -142,7 +142,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
 
           {/* Estadísticas de Google Books */}
           {statistics && statistics.totalBooks > 0 && (
-            <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+            <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-3">
               <span className="flex items-center gap-1">
                 <BookOpen className="w-4 h-4" />
                 <strong>{statistics.totalBooks}</strong> {statistics.totalBooks === 1 ? 'libro' : 'libros'}
@@ -161,7 +161,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="text-xs text-gray-600 line-clamp-3 mb-3 italic"
+              className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3 mb-3 italic"
             >
               {enrichedData.extract.split('.')[0]}.
             </motion.p>

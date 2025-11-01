@@ -130,6 +130,52 @@ export const getBookById = async (volumeId: string): Promise<GoogleBooksVolume |
 };
 
 /**
+ * Obtiene libros destacados/populares de Google Books
+ * Busca bestsellers y libros con alta calificación
+ */
+export const getFeaturedBooks = async (maxResults: number = 10): Promise<GoogleBooksVolume[]> => {
+  try {
+    // Buscar libros populares con diferentes queries
+    const queries = [
+      'subject:fiction',
+      'subject:bestseller',
+      'subject:psychology',
+      'subject:science'
+    ];
+
+    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+    
+    const params = new URLSearchParams({
+      q: randomQuery,
+      maxResults: maxResults.toString(),
+      orderBy: 'relevance',
+      printType: 'books',
+      langRestrict: 'es'  // Preferencia por libros en español
+    });
+
+    const response = await fetch(`${GOOGLE_BOOKS_API_BASE}/volumes?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`Google Books API error: ${response.status}`);
+    }
+
+    const data: GoogleBooksSearchResult = await response.json();
+    
+    // Filtrar libros con imágenes y buena información
+    const filteredBooks = (data.items || []).filter(book => 
+      book.volumeInfo.imageLinks?.thumbnail &&
+      book.volumeInfo.description &&
+      book.volumeInfo.authors?.length
+    );
+
+    return filteredBooks.slice(0, maxResults);
+  } catch (error) {
+    console.error('Error fetching featured books:', error);
+    return [];
+  }
+};
+
+/**
  * Busca libros con autocompletado (para búsqueda en tiempo real)
  */
 export const searchBooksAutocomplete = async (

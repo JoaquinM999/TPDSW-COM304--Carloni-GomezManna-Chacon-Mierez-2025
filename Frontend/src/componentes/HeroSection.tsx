@@ -1,8 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { SearchBar } from './SearchBar';
-import { Star, Users, BookOpen, Heart } from 'lucide-react';
+import { Star, Users, BookOpen, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Spline from '@splinetool/react-spline';
+import { useNavigate } from 'react-router-dom';
+import { SplineErrorBoundary } from './SplineErrorBoundary';
+import { AnimatedCounter } from './AnimatedCounter';
+
+// Lazy load del componente Spline
+const Spline = lazy(() => import('@splinetool/react-spline'));
+
+// Skeleton/Placeholder para Spline mientras carga
+const SplineSkeleton: React.FC = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 rounded-3xl"
+  >
+    <div className="text-center space-y-4">
+      <div className="animate-pulse">
+        <div className="w-32 h-32 mx-auto bg-white/50 rounded-full"></div>
+        <div className="mt-4 h-3 bg-white/30 rounded w-24 mx-auto"></div>
+      </div>
+      <p className="text-sm text-gray-500 animate-pulse">Cargando...</p>
+    </div>
+  </motion.div>
+);
 
 // Componente del pollito con animación al aparecer
 const PollitoSpline: React.FC = () => {
@@ -24,24 +46,37 @@ const PollitoSpline: React.FC = () => {
   if (!showSpline) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      style={{ width: '100%', height: '100%' }}
-    >
-      <Spline scene="https://prod.spline.design/mwDSVm4wBNVQVDdz/scene.splinecode" />
-    </motion.div>
+    <SplineErrorBoundary>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <Suspense fallback={<SplineSkeleton />}>
+          <Spline scene="https://prod.spline.design/mwDSVm4wBNVQVDdz/scene.splinecode" />
+        </Suspense>
+      </motion.div>
+    </SplineErrorBoundary>
   );
 };
 
 export const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
+  
   const stats = [
-    { icon: BookOpen, label: 'Libros Reseñados', value: '50,000+', color: '#14F0FF' },
-    { icon: Star, label: 'Reseñas Totales', value: '250,000+', color: '#FFD700' },
-    { icon: Users, label: 'Lectores Activos', value: '15,000+', color: '#7B68EE' },
-    { icon: Heart, label: 'Libros Favoritos', value: '180,000+', color: '#FF6FAF' },
+    { icon: BookOpen, label: 'Libros Reseñados', value: 50000, color: '#14F0FF' },
+    { icon: Star, label: 'Reseñas Totales', value: 250000, color: '#FFD700' },
+    { icon: Users, label: 'Lectores Activos', value: 15000, color: '#7B68EE' },
+    { icon: Heart, label: 'Libros Favoritos', value: 180000, color: '#FF6FAF' },
   ];
+
+  const scrollToFeatured = () => {
+    const featuredSection = document.querySelector('[aria-label="Libros destacados"]');
+    if (featuredSection) {
+      featuredSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const iconVariants = {
     hover: {
@@ -117,13 +152,42 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.9 }}
-            className="max-w-xl mx-auto lg:mx-0"
+            className="max-w-xl mx-auto lg:mx-0 mb-8"
           >
             <SearchBar
               placeholder="Buscar libros, autores..."
               aria-label="Buscar libros, autores"
               className="shadow-lg hover:shadow-xl transition-shadow duration-300"
             />
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.1 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+          >
+            <motion.button
+              onClick={() => navigate('/registro')}
+              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 group"
+            >
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              Comenzar ahora
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.button>
+            
+            <motion.button
+              onClick={scrollToFeatured}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-center gap-2 px-8 py-4 border-2 border-blue-600 text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 group backdrop-blur-sm"
+            >
+              Ver libros destacados
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </motion.button>
           </motion.div>
         </div>
       </div>
@@ -158,9 +222,9 @@ export const HeroSection: React.FC = () => {
               <Icon className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true" />
             </motion.div>
 
-            {/* Valor */}
+            {/* Valor con contador animado */}
             <p className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-gray-900 drop-shadow-sm">
-              {value}
+              <AnimatedCounter end={value} suffix="+" duration={2000} />
             </p>
 
             {/* Etiqueta */}

@@ -6,6 +6,7 @@ import { Sparkles, Calendar, Star, BookOpen, Loader2 } from 'lucide-react';
 
 interface Libro {
   id: string;
+  slug?: string;
   titulo: string;
   autores: string[];
   imagen: string | null;
@@ -40,8 +41,10 @@ export default function NuevosLanzamientos() {
     }
   };
 
-  const handleLibroClick = (libroId: string) => {
-    navigate(`/libro/${libroId}`);
+  const handleLibroClick = (libro: Libro) => {
+    // Usar slug si está disponible, sino usar id
+    const identifier = libro.slug || libro.id;
+    navigate(`/libro/${identifier}`);
   };
 
   if (loading) {
@@ -102,7 +105,7 @@ export default function NuevosLanzamientos() {
             {libros.map((libro) => (
               <div
                 key={libro.id}
-                onClick={() => handleLibroClick(libro.id)}
+                onClick={() => handleLibroClick(libro)}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
               >
                 {/* Badge de nuevo */}

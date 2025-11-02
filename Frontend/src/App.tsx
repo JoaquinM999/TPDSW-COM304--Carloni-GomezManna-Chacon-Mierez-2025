@@ -4,6 +4,7 @@ import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
+import { ScrollToTop } from './componentes/ScrollToTop';
 import LoginModal from './componentes/LoginModal';
 import axios from 'axios';
 import { setupAxiosInterceptors } from './services/authService';
@@ -109,6 +110,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ScrollToTop />
       {!hideLayout && (
         <Header siteName="BookCode" showNotifications={true} userAuthenticated={false} />
       )}

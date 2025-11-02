@@ -96,9 +96,10 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
     
+    // Buscar por slug o por externalId (para libros de Google Books)
     const libro = await em.findOne(
       Libro, 
-      { slug },
+      { $or: [{ slug }, { externalId: slug }] },
       { populate: ['autor', 'categoria', 'editorial', 'saga'] }
     );
     
@@ -416,6 +417,7 @@ export const getNuevosLanzamientos = async (req: Request, res: Response) => {
 
       return {
         id: libro.externalId || libro.id.toString(),
+        slug: libro.externalId || libro.id.toString(),
         titulo: libro.nombre,
         autores,
         imagen: libro.imagen,

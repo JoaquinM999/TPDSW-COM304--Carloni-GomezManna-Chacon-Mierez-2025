@@ -189,26 +189,16 @@ const DetalleLibro: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // 🔍 Detectar desde dónde vino el usuario de forma inteligente
-  const getBackLocation = () => {
-    // 1. Revisar si hay estado de navegación explícito
-    if ((location.state as any)?.from) {
-      console.log('📍 Usando estado de navegación:', (location.state as any).from);
-      return (location.state as any).from;
+  // � Función para volver a la página anterior
+  const handleGoBack = () => {
+    // Si hay historial previo en el navegador, usar navigate(-1)
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback si no hay historial
+      navigate('/libros');
     }
-    
-    // 2. Revisar el referer para detectar si venía de recomendaciones
-    if (document.referrer && document.referrer.includes('/recomendaciones')) {
-      console.log('📍 Detectado desde referer: /recomendaciones');
-      return '/recomendaciones';
-    }
-    
-    // 3. Fallback a libros
-    console.log('📍 Fallback a /libros');
-    return '/libros';
   };
-  
-  const from = getBackLocation();
 
   const [libro, setLibro] = useState<Libro | null>(null);
   const [loading, setLoading] = useState(true);
@@ -304,7 +294,7 @@ const DetalleLibro: React.FC = () => {
         let data: any = null;
 
         // 🆕 PRIORIDAD 1: Intentar buscar en base de datos local primero
-        response = await fetch(`http://localhost:3000/api/libros/slug/${slug}`);
+        response = await fetch(`http://localhost:3000/api/libro/slug/${slug}`);
         
         if (response.ok) {
           // ✅ Libro encontrado en base de datos local
@@ -997,7 +987,7 @@ const DetalleLibro: React.FC = () => {
           <BookOpen className="w-12 h-12 mx-auto text-red-600 dark:text-red-400 mb-4" />
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">{error || "Libro no encontrado"}</h2>
           <button
-            onClick={() => navigate(from)}
+            onClick={handleGoBack}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
           >
             <ArrowLeft className="w-4 h-4" /> Volver
@@ -1022,7 +1012,7 @@ const DetalleLibro: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
           <button
-          onClick={() => navigate(from)}
+          onClick={handleGoBack}
           className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-200 group mb-6"
           aria-label="Volver a la página anterior"
         >

@@ -43,10 +43,14 @@ interface CombinedWork {
 
 const COLORS = ['#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#84cc16'];
 
+/**
+ * @deprecated Este componente usa el endpoint antiguo /api/external-authors
+ * Usar DetalleAutor.tsx en su lugar, que usa /api/autor/${id}
+ */
 const AutorDetallePageMejorada: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [authorDetails, setAuthorDetails] = useState<AuthorDetails | null>(null);
-  const [googleBooksWorks, setGoogleBooksWorks] = useState<GoogleBooksVolume[]>([]);
+  const [authorDetails, setAuthorDetails] = useState<any>(null);
+  const [googleBooksWorks, setGoogleBooksWorks] = useState<any[]>([]);
   const [wikipediaData, setWikipediaData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

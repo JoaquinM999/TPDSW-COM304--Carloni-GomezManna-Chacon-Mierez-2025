@@ -3,11 +3,15 @@ import { motion } from 'framer-motion';
 import { Search, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import AutorCard from '../componentes/AutorCard';
+import { searchAutores as searchAutoresAPI } from '../services/autorService';
 
 interface Autor {
   id: string;
   name: string;
   photo?: string;
+  biografia?: string;
+  googleBooksId?: string;
+  openLibraryKey?: string;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -21,27 +25,70 @@ const AutoresPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalAutores, setTotalAutores] = useState(0);
+  const [includeExternal, setIncludeExternal] = useState(false);
 
-  // Búsqueda en BD local con paginación
+  // Búsqueda híbrida (local + APIs externas)
   const fetchAutores = async (searchTerm = '', pageNum = 1) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/autor?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar autores');
+      let autores;
+      let total;
+      let totalPagesCount;
+
+      // Si hay término de búsqueda y quiere APIs externas, usar búsqueda híbrida
+      if (searchTerm.trim().length >= 2 && includeExternal) {
+        console.log('🌐 Búsqueda híbrida con APIs externas:', searchTerm);
+        const response = await fetch(
+          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(searchTerm)}&includeExternal=true`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Error al buscar autores (híbrido)');
+        }
+        
+        const rawData = await response.json();
+        // Mapear formato del backend al formato esperado por el frontend
+        autores = (rawData || []).map((autor: any) => ({
+          id: String(autor.id),
+          name: `${autor.nombre} ${autor.apellido}`.trim(),
+          photo: autor.foto,
+          biografia: autor.biografia,
+          googleBooksId: autor.googleBooksId,
+          openLibraryKey: autor.openLibraryKey
+        }));
+        total = autores.length;
+        totalPagesCount = 1; // Búsqueda híbrida no tiene paginación
+      } else {
+        // Sin búsqueda externa o texto corto, usar endpoint paginado normal
+        console.log('📚 Búsqueda local:', searchTerm);
+        const response = await fetch(
+          `http://localhost:3000/api/autor?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar autores');
+        }
+        
+        const data = await response.json();
+        // Mapear formato del backend al formato esperado por el frontend
+        autores = (data.autores || []).map((autor: any) => ({
+          id: String(autor.id),
+          name: `${autor.nombre} ${autor.apellido}`.trim(),
+          photo: autor.foto,
+          biografia: autor.biografia,
+          googleBooksId: autor.googleBooksId,
+          openLibraryKey: autor.openLibraryKey
+        }));
+        total = data.total || 0;
+        totalPagesCount = data.totalPages || 1;
       }
       
-      const data = await response.json();
-      
       // Reemplazar autores (no acumular como en infinite scroll)
-      setDisplayedAutores(data.autores);
-      setTotalPages(data.totalPages);
-      setTotalAutores(data.total);
+      setDisplayedAutores(autores);
+      setTotalPages(totalPagesCount);
+      setTotalAutores(total);
       setPage(pageNum);
       
       // Scroll al top al cambiar de página
@@ -70,6 +117,14 @@ const AutoresPage: React.FC = () => {
       fetchAutores('', 1);
     }
   }, [searchTerm]);
+
+  // Recargar búsqueda cuando cambia includeExternal
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      fetchAutores(searchTerm, 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includeExternal]);
 
   // Funciones de navegación de páginas
   const goToPage = (pageNum: number) => {
@@ -152,18 +207,26 @@ const AutoresPage: React.FC = () => {
             placeholder="Buscar autores por nombre... (ej: García Márquez)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-6 py-3 pl-12 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-600 shadow-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+            className="w-full px-6 py-3 pl-12 pr-48 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-600 shadow-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all"
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
           
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              ✕
-            </button>
-          )}
+          {/* Toggle para búsqueda externa */}
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-3">
+            {loading && (
+              <div className="w-5 h-5 border-2 border-cyan-500 dark:border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            )}
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeExternal}
+                onChange={(e) => setIncludeExternal(e.target.checked)}
+                className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 dark:focus:ring-cyan-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <span className="hidden md:inline whitespace-nowrap">Buscar en Google Books y OpenLibrary</span>
+              <span className="md:hidden" title="Buscar también en Google Books y OpenLibrary">🌐</span>
+            </label>
+          </div>
         </div>
       </div>
 

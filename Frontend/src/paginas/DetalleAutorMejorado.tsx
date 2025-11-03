@@ -18,6 +18,9 @@ interface AutorDetalle {
   nombre: string;
   apellido: string;
   foto?: string;
+  biografia?: string; // Nueva: biografía de APIs externas
+  googleBooksId?: string; // Nueva: ID de Google Books
+  openLibraryKey?: string; // Nueva: Key de OpenLibrary
   createdAt: string;
   updatedAt?: string;
 }
@@ -79,6 +82,15 @@ const DetalleAutor = () => {
       const autorData = await autorRes.json();
       setAutor(autorData);
 
+      // Si el autor tiene biografía de las APIs, usarla directamente
+      if (autorData.biografia) {
+        setBiografia(autorData.biografia);
+        setLoadingBio(false);
+      } else {
+        // Fetch biografía de Wikipedia como fallback
+        fetchBiografia(`${autorData.nombre} ${autorData.apellido}`);
+      }
+
       // Fetch estadísticas
       const statsRes = await fetch(`http://localhost:3000/api/autor/${id}/stats`);
       if (statsRes.ok) {
@@ -92,9 +104,6 @@ const DetalleAutor = () => {
         const librosData = await librosRes.json();
         setLibros(librosData.libros || librosData);
       }
-
-      // Fetch biografía de Wikipedia
-      fetchBiografia(`${autorData.nombre} ${autorData.apellido}`);
       
       setLoading(false);
     } catch (err) {

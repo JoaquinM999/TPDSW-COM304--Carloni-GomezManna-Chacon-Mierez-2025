@@ -1,8 +1,9 @@
 // src/entities/autor.entity.ts
-import { Entity, PrimaryKey, Property, OneToMany, Collection, Index, Cascade } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OneToMany, Collection, Index, Cascade, Unique } from '@mikro-orm/core';
 import { Libro } from './libro.entity';
 
 @Entity()
+@Unique({ properties: ['nombre', 'apellido'] })
 export class Autor {
   @PrimaryKey()
   id!: number;
@@ -17,6 +18,18 @@ export class Autor {
 
   @Property({ length: 500, nullable: true })
   foto?: string; // URL de la foto del autor
+
+  // --- Campos para IDs externos (evitar duplicados) ---
+  @Property({ nullable: true, unique: true })
+  @Index()
+  googleBooksId?: string; // ID del autor en Google Books
+
+  @Property({ nullable: true, unique: true })
+  @Index()
+  openLibraryKey?: string; // Key del autor en OpenLibrary (ej: /authors/OL23919A)
+
+  @Property({ type: 'text', nullable: true })
+  biografia?: string; // Biografía del autor (puede venir de las APIs)
 
   @OneToMany(() => Libro, libro => libro.autor, { cascade: [Cascade.PERSIST, Cascade.REMOVE] })
   libros = new Collection<Libro>(this);

@@ -101,31 +101,26 @@ const featuredBooksMock: ContentItem[] = [
   },
 ];
 
-// Variantes con transición suave
+// Variantes con transición suave y rápida
 const variants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 400 : -400,
+    x: direction > 0 ? 200 : -200,
     opacity: 0,
-    scale: 0.98,
   }),
   center: {
     x: 0,
     opacity: 1,
-    scale: 1,
     transition: {
-      x: { type: "spring" as const, stiffness: 300, damping: 30 },
-      opacity: { duration: 0.3 },
-      scale: { duration: 0.3 }
+      duration: 0.3,
+      ease: "easeOut"
     }
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 400 : -400,
+    x: direction < 0 ? 200 : -200,
     opacity: 0,
-    scale: 0.98,
     transition: {
-      x: { type: "spring" as const, stiffness: 300, damping: 30 },
-      opacity: { duration: 0.25 },
-      scale: { duration: 0.25 }
+      duration: 0.3,
+      ease: "easeIn"
     }
   }),
 };
@@ -377,37 +372,28 @@ export const FeaturedContent: React.FC = () => {
         </div>
 
         {/* Filtros de Categoría */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <span className="text-sm font-semibold text-gray-700">Filtrar por género</span>
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-bold text-gray-900 dark:text-white">Filtrar por género</span>
           </div>
           
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((category, idx) => {
+            {CATEGORIES.map((category) => {
               const isActive = selectedCategory === category.id;
               const count = categoryCounts[category.id];
               
               return (
                 <motion.button
                   key={category.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedCategory(category.id)}
                   className={`
-                    relative px-4 py-2.5 rounded-xl font-medium text-sm
-                    transition-all duration-300 border-2
+                    px-4 py-2 rounded-lg font-medium text-sm transition-all
                     ${isActive 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-lg shadow-blue-500/30' 
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                      ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-md' 
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400'
                     }
                   `}
                 >
@@ -415,39 +401,30 @@ export const FeaturedContent: React.FC = () => {
                     {category.label}
                     {count !== undefined && (
                       <span className={`
-                        px-2 py-0.5 rounded-full text-xs font-bold
+                        px-2 py-0.5 rounded-full text-xs font-semibold
                         ${isActive 
                           ? 'bg-white/20 text-white' 
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                         }
                       `}>
                         {count}
                       </span>
                     )}
                   </span>
-                  
-                  {/* Indicador activo */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeCategory"
-                      className="absolute inset-0 border-2 border-blue-400 rounded-xl"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
                 </motion.button>
               );
             })}
           </div>
-        </motion.div>
+        </div>
 
         {/* Carrusel Libros Destacados */}
-        <div className="relative max-w-md mx-auto px-2 sm:px-0">
+        <div className="relative max-w-4xl mx-auto">
           <div
-            className="relative h-[500px] sm:h-[480px] overflow-hidden mb-2"
+            className="relative h-[380px] overflow-hidden mb-4"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <AnimatePresence initial={false} custom={direction}>
+            <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.article
                 key={book.id}
                 custom={direction}
@@ -456,217 +433,133 @@ export const FeaturedContent: React.FC = () => {
                 animate="center"
                 exit="exit"
                 onClick={() => handleCardClick(book.id)}
-                className="absolute inset-0 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl dark:shadow-gray-900/50 overflow-hidden flex flex-col sm:flex-row transition-all duration-300 cursor-pointer border border-transparent dark:border-gray-700"
-                whileHover={{ scale: 1.02 }}
-                style={{ willChange: "transform" }}
+                className="absolute inset-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col sm:flex-row cursor-pointer border border-gray-200 dark:border-gray-700"
               >
-                                {/* Contenedor de portada con efecto 3D - Lado izquierdo */}
-                <div className="relative flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 w-full sm:w-2/5 p-4 sm:p-6 flex items-center justify-center transition-colors duration-300">
-                  {/* Portada del libro con efecto 3D */}
-                  <div className="relative w-full max-w-[200px] sm:max-w-none group">
-                    {/* Sombra y efecto de profundidad */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 via-gray-800/30 to-gray-900/40 dark:from-black/60 dark:via-gray-900/50 dark:to-black/60 rounded-lg transform translate-x-2 translate-y-2 blur-xl group-hover:translate-x-3 group-hover:translate-y-3 transition-transform duration-300"></div>
-                    
-                    {/* Marco de la portada */}
-                    <div className="relative bg-white p-1 rounded-lg shadow-2xl group-hover:shadow-3xl transition-shadow duration-300">
-                      {/* Borde interior decorativo */}
-                      <div className="relative border-2 border-gray-200 rounded-md overflow-hidden">
-                        {/* Gradiente overlay para mejor contraste con badges */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none z-10"></div>
-                        
-                        {/* Imagen de la portada */}
-                        <motion.img
-                          src={book.image}
-                          alt={book.title}
-                          className="w-full h-[280px] sm:h-[400px] object-cover"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      </div>
-                      
-                      {/* Efecto de brillo en el borde */}
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                    </div>
+                {/* Contenedor de portada - Lado izquierdo */}
+                <div className="relative flex-shrink-0 bg-gray-50 dark:bg-gray-900 w-full sm:w-1/3 p-4 flex items-center justify-center">
+                  {/* Portada del libro */}
+                  <div className="relative w-full max-w-[160px]">
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-full h-auto rounded-lg shadow-lg"
+                    />
                   </div>
                   
                   {/* Botón de favoritos */}
-                  <motion.button
+                  <button
                     onClick={(e) => toggleFavorite(e, book.id)}
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="absolute top-3 left-3 p-2 bg-white/95 backdrop-blur-sm rounded-full shadow-xl hover:bg-white hover:shadow-2xl transition-all z-20 border border-gray-200"
-                    aria-label={favorites.has(book.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    className="absolute top-2 right-2 p-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:shadow-lg transition-all z-10"
+                    title={favorites.has(book.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                   >
                     <Heart 
-                      className={`w-5 h-5 transition-colors ${
+                      className={`w-4 h-4 ${
                         favorites.has(book.id) 
                           ? 'fill-red-500 text-red-500' 
-                          : 'text-gray-600'
+                          : 'text-gray-600 dark:text-gray-400'
                       }`}
                     />
-                  </motion.button>
+                  </button>
                   
                   {/* Badge de trending */}
                   {book.trending && (
-                    <motion.span 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-xl backdrop-blur-sm z-20 border border-amber-300/50 flex items-center gap-1"
-                    >
-                      <span className="animate-pulse">⭐</span>
-                    </motion.span>
-                  )}
-                  
-                  {/* Badge de categoría */}
-                  {book.category && (
-                    <span className="absolute bottom-3 right-3 bg-gray-900/90 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-xl z-20 border border-white/10">
-                      {book.category}
+                    <span className="absolute top-2 left-2 bg-amber-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-md z-10 flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-white" />
+                      Trending
                     </span>
                   )}
                 </div>
                 
                 {/* Sección de información del libro - Lado derecho */}
-                <div className="relative p-5 sm:p-6 flex-grow flex flex-col overflow-hidden sm:w-3/5">
-                  {/* Imagen de fondo difuminada */}
-                  <div 
-                    className="absolute inset-0 opacity-[0.05] dark:opacity-[0.03] pointer-events-none"
-                    style={{
-                      backgroundImage: `url(${book.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      filter: 'blur(40px) saturate(1.5)',
-                      transform: 'scale(1.2)'
-                    }}
-                  ></div>
-                  
-                  {/* Gradiente overlay para mejor legibilidad */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/98 via-white/96 to-gray-50/95 dark:from-gray-800/98 dark:via-gray-800/96 dark:to-gray-900/95 pointer-events-none transition-colors duration-300"></div>
-                  
-                  {/* Contenido con z-index superior */}
-                  <div className="relative z-10 flex flex-col h-full">
-                    {/* Título y autor con mejor diseño y contraste */}
-                    <div className="mb-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-600 transition-colors duration-300">
-                      <h3 className="font-serif text-lg sm:text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white mb-2 leading-tight tracking-tight drop-shadow-sm line-clamp-2 transition-colors duration-300">
+                <div className="relative p-5 flex-grow flex flex-col sm:w-2/3">
+                  <div className="flex flex-col h-full space-y-3">
+                    {/* Título y autor */}
+                    <div>
+                      {book.category && (
+                        <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-semibold mb-2">
+                          {book.category}
+                        </span>
+                      )}
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-1 leading-tight line-clamp-2">
                         {book.title}
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <div className="h-0.5 flex-grow bg-gradient-to-r from-blue-600/60 dark:from-blue-400/60 to-transparent rounded-full"></div>
-                        <p className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors duration-300">
-                          por <span className="text-blue-700 dark:text-blue-400 font-bold">{book.author}</span>
-                        </p>
-                        <div className="h-0.5 flex-grow bg-gradient-to-l from-blue-600/60 dark:from-blue-400/60 to-transparent rounded-full"></div>
-                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        por <span className="text-blue-600 dark:text-blue-400 font-semibold">{book.author}</span>
+                      </p>
                     </div>
                     
-                    {/* Rating con diseño mejorado y compacto */}
+                    {/* Rating */}
                     {book.rating && (
-                      <motion.div 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-2 mb-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 px-3 py-2 rounded-lg border border-amber-200/50 dark:border-amber-700/50 shadow-sm transition-colors duration-300"
-                      >
+                      <div className="flex items-center gap-2">
                         <div className="flex items-center gap-0.5">
                           {[...Array(5)].map((_, i) => (
-                            <motion.svg
+                            <Star
                               key={i}
-                              initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: i * 0.05 }}
-                              className={`w-4 h-4 sm:w-5 sm:h-5 transition-all ${
+                              className={`w-4 h-4 ${
                                 i < Math.floor(book.rating!)
-                                  ? 'text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400 drop-shadow-sm'
-                                  : 'text-gray-300 dark:text-gray-600 fill-gray-300 dark:fill-gray-600'
+                                  ? 'text-amber-500 fill-amber-500'
+                                  : 'text-gray-300 dark:text-gray-600'
                               }`}
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </motion.svg>
+                            />
                           ))}
                         </div>
-                        <span className="text-base sm:text-lg font-bold text-amber-700 dark:text-amber-400 drop-shadow-sm transition-colors duration-300">{book.rating}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium transition-colors duration-300">/ 5.0</span>
-                      </motion.div>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{book.rating}</span>
+                      </div>
                     )}
                     
-                    {/* Sistema de Votación */}
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-3 mb-3 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-300"
-                    >
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
-                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 transition-colors duration-300">Popularidad</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 ml-auto">
-                        {/* Upvote Button */}
-                        <motion.button
-                          onClick={(e) => handleVote(e, book.id, 1)}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className={`
-                            p-2 rounded-lg transition-all duration-300
-                            ${(userVotes.get(book.id) || 0) === 1
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 shadow-md'
-                              : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400'
-                            }
-                          `}
-                          aria-label="Votar positivo"
-                        >
-                          <ThumbsUp className={`
-                            w-4 h-4 transition-all
-                            ${(userVotes.get(book.id) || 0) === 1 ? 'fill-current' : ''}
-                          `} />
-                        </motion.button>
-                        
-                        {/* Vote Counter */}
-                        <motion.span
-                          key={bookVotes.get(book.id) || 0}
-                          initial={{ scale: 1.3, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="min-w-[40px] text-center font-bold text-sm text-gray-800 dark:text-gray-200 transition-colors duration-300"
-                        >
-                          {(bookVotes.get(book.id) || 0) > 0 ? '+' : ''}{bookVotes.get(book.id) || 0}
-                        </motion.span>
-                        
-                        {/* Downvote Button */}
-                        <motion.button
-                          onClick={(e) => handleVote(e, book.id, -1)}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className={`
-                            p-2 rounded-lg transition-all duration-300
-                            ${(userVotes.get(book.id) || 0) === -1
-                              ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shadow-md'
-                              : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400'
-                            }
-                          `}
-                          aria-label="Votar negativo"
-                        >
-                          <ThumbsUp className={`
-                            w-4 h-4 rotate-180 transition-all
-                            ${(userVotes.get(book.id) || 0) === -1 ? 'fill-current' : ''}
-                          `} />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                    
-                    {/* Descripción con mejor diseño */}
+                    {/* Descripción */}
                     <div className="flex-1 overflow-hidden">
-                      <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-purple-900/10 rounded-lg p-3 sm:p-4 border border-blue-200/40 dark:border-blue-700/40 shadow-inner h-full flex flex-col transition-colors duration-300">
-                        {/* Icono decorativo */}
-                        <div className="absolute top-2 left-2 text-blue-300/30 dark:text-blue-600/30 text-3xl font-serif leading-none transition-colors duration-300">"</div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-3">
+                        {book.description || "Una lectura fascinante que te atrapará desde la primera página."}
+                      </p>
+                    </div>
+                    
+                    {/* Sistema de Votación Compacto */}
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between">
+                        {/* Título con info */}
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Vota por este libro</span>
+                          <div className="group/info relative">
+                            <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center cursor-help text-xs text-gray-600 dark:text-gray-400">
+                              ?
+                            </div>
+                            <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none z-30">
+                              Vota 👍 si te gusta o 👎 si no te interesa
+                            </div>
+                          </div>
+                        </div>
                         
-                        <p className="relative text-gray-700 dark:text-gray-300 text-xs sm:text-sm leading-relaxed pl-5 sm:pl-6 italic flex-1 overflow-y-auto transition-colors duration-300">
-                          {book.description || "Una lectura que transforma y abre nuevos horizontes."}
-                        </p>
-                        
-                        {/* Barra decorativa inferior */}
-                        <div className="mt-2 flex gap-1 flex-shrink-0">
-                          <div className="h-0.5 w-10 bg-gradient-to-r from-blue-500 dark:from-blue-400 to-indigo-500 dark:to-indigo-400 rounded-full"></div>
-                          <div className="h-0.5 w-6 bg-gradient-to-r from-indigo-500 dark:from-indigo-400 to-purple-500 dark:to-purple-400 rounded-full"></div>
-                          <div className="h-0.5 w-3 bg-gradient-to-r from-purple-500 dark:from-purple-400 to-pink-500 dark:to-pink-400 rounded-full"></div>
+                        {/* Botones de votación */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleVote(e, book.id, 1)}
+                            className={`p-2 rounded-lg transition-all ${
+                              (userVotes.get(book.id) || 0) === 1
+                                ? 'bg-green-500 text-white'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                            }`}
+                            title="Me gusta"
+                          >
+                            <ThumbsUp className={`w-4 h-4 ${(userVotes.get(book.id) || 0) === 1 ? 'fill-current' : ''}`} />
+                          </button>
+                          
+                          <span className="min-w-[32px] text-center font-bold text-sm text-gray-900 dark:text-white">
+                            {(bookVotes.get(book.id) || 0) > 0 ? '+' : ''}{bookVotes.get(book.id) || 0}
+                          </span>
+                          
+                          <button
+                            onClick={(e) => handleVote(e, book.id, -1)}
+                            className={`p-2 rounded-lg transition-all ${
+                              (userVotes.get(book.id) || 0) === -1
+                                ? 'bg-red-500 text-white'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                            }`}
+                            title="No me gusta"
+                          >
+                            <ThumbsUp className={`w-4 h-4 rotate-180 ${(userVotes.get(book.id) || 0) === -1 ? 'fill-current' : ''}`} />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -676,78 +569,70 @@ export const FeaturedContent: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          {/* Flechas */}
+          {/* Flechas de navegación */}
           <motion.button
             onClick={() => paginate(-1)}
             aria-label="Anterior"
-            whileHover={{ scale: 1.1, x: -2 }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 z-20 border border-gray-200 dark:border-gray-600 touch-manipulation"
+            className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all z-20 border border-gray-200 dark:border-gray-700"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-300 transition-colors duration-300" />
+            <ChevronLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </motion.button>
           <motion.button
             onClick={() => paginate(1)}
             aria-label="Siguiente"
-            whileHover={{ scale: 1.1, x: 2 }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="absolute right-2 sm:right-0 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 z-20 border border-gray-200 dark:border-gray-600 touch-manipulation"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all z-20 border border-gray-200 dark:border-gray-700"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-300 transition-colors duration-300" />
+            <ChevronRight className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </motion.button>
 
           {/* Indicadores de paginación con miniaturas */}
-          <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 mt-6 sm:mt-8 px-2 sm:px-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex justify-center gap-3 mt-8 overflow-x-auto pb-2">
             {featuredBooks.map((book, idx) => (
-              <motion.button
-                key={idx}
-                onClick={() => setPage([idx, idx > index ? 1 : -1])}
-                aria-label={`Ver ${book.title}`}
-                whileHover={{ scale: 1.1, y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                className={`relative flex-shrink-0 transition-all duration-300 rounded-md sm:rounded-lg overflow-hidden group touch-manipulation ${
-                  idx === index
-                    ? 'ring-3 sm:ring-4 ring-blue-500 dark:ring-blue-400 shadow-xl'
-                    : 'ring-2 ring-gray-200 dark:ring-gray-600 hover:ring-gray-400 dark:hover:ring-gray-500 shadow-md hover:shadow-lg'
-                }`}
-              >
-                {/* Miniatura de la portada */}
-                <div className="relative w-12 h-18 sm:w-16 sm:h-24 md:w-20 md:h-28">
-                  <img
-                    src={book.image}
-                    alt={book.title}
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  {/* Overlay oscuro cuando no está activo */}
-                  <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+              <div key={idx} className="group/thumb relative">
+                <motion.button
+                  onClick={() => setPage([idx, idx > index ? 1 : -1])}
+                  aria-label={`Ver ${book.title}`}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative flex-shrink-0 transition-all rounded-lg overflow-hidden ${
                     idx === index
-                      ? 'opacity-0'
-                      : 'opacity-40 group-hover:opacity-20'
-                  }`}></div>
-                  
-                  {/* Indicador de activo */}
-                  {idx === index && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute inset-0 border-2 border-white/50 rounded-lg pointer-events-none"
-                    >
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                      ? 'ring-3 ring-blue-600 dark:ring-blue-400 shadow-lg'
+                      : 'ring-2 ring-gray-300 dark:ring-gray-600 hover:ring-blue-400'
+                  }`}
+                >
+                  <div className="relative w-16 h-24">
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Overlay cuando no está activo */}
+                    <div className={`absolute inset-0 bg-black transition-opacity ${
+                      idx === index ? 'opacity-0' : 'opacity-40 group-hover/thumb:opacity-20'
+                    }`}></div>
+                    
+                    {/* Check mark cuando está activo */}
+                    {idx === index && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
-                    </motion.div>
-                  )}
-                  
-                  {/* Tooltip con título */}
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-30 shadow-xl">
-                    {book.title.length > 25 ? book.title.substring(0, 25) + '...' : book.title}
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                    )}
                   </div>
+                </motion.button>
+                
+                {/* Tooltip */}
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/thumb:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-30">
+                  {book.title.length > 20 ? book.title.substring(0, 20) + '...' : book.title}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
                 </div>
-              </motion.button>
+              </div>
             ))}
           </div>
         </div>

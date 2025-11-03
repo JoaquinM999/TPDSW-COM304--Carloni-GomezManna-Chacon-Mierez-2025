@@ -97,6 +97,10 @@ const BookCard: React.FC<{ work: AuthorDetails['works'][0] }> = ({ work }) => {
   );
 };
 
+/**
+ * @deprecated Este componente usa el endpoint antiguo /api/external-authors
+ * Usar DetalleAutor.tsx en su lugar, que usa /api/autor/${id}
+ */
 const AutorDetallePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [authorDetails, setAuthorDetails] = useState<AuthorDetails | null>(null);

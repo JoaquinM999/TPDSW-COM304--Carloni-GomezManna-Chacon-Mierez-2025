@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { searchAutores as searchAutoresAPI } from '../services/autorService';
 
 interface Autor {
   id: string;
@@ -10,6 +11,9 @@ interface Autor {
   photo?: string;
   esPopular?: boolean;
   scorePopularidad?: number;
+  biografia?: string;
+  googleBooksId?: string;
+  openLibraryKey?: string;
 }
 
 const AutoresPage: React.FC = () => {
@@ -23,6 +27,7 @@ const AutoresPage: React.FC = () => {
   const [sugerencias, setSugerencias] = useState<Autor[]>([]);
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [includeExternal, setIncludeExternal] = useState(false);
   const limit = 20; // Autores por página
 
   // Calculate total pages
@@ -76,8 +81,8 @@ const AutoresPage: React.FC = () => {
     try {
       // Usar la API local de autores que ya tiene el ordenamiento por popularidad
       const url = searchQuery.trim() 
-        ? `http://localhost:3000/api/autores?search=${encodeURIComponent(searchQuery)}&page=${pageNum}&limit=${limitNum}`
-        : `http://localhost:3000/api/autores?page=${pageNum}&limit=${limitNum}`;
+        ? `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=${pageNum}&limit=${limitNum}`
+        : `http://localhost:3000/api/autor?page=${pageNum}&limit=${limitNum}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -117,6 +122,16 @@ const AutoresPage: React.FC = () => {
     }
   }, []);
 
+  // Recargar búsqueda cuando cambia includeExternal
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      fetchSugerencias(searchTerm);
+      setPage(1);
+      fetchAutores(searchTerm, 1, limit);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includeExternal]);
+
   // Función para obtener sugerencias en tiempo real
   const fetchSugerencias = async (searchQuery: string) => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
@@ -126,24 +141,56 @@ const AutoresPage: React.FC = () => {
     }
 
     try {
-      const url = `http://localhost:3000/api/autores?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        const autoresMapeados = data.autores.map((autor: any) => ({
-          id: autor.id,
-          name: autor.name || `${autor.nombre} ${autor.apellido}`.trim(),
-          nombre: autor.nombre,
-          apellido: autor.apellido,
-          photo: autor.foto,
-          esPopular: autor.esPopular,
-          scorePopularidad: autor.scorePopularidad
-        }));
-        setSugerencias(autoresMapeados);
-        setMostrarSugerencias(autoresMapeados.length > 0);
+      let data;
+      // Solo usar búsqueda híbrida si el toggle está activado
+      if (includeExternal) {
+        try {
+          data = await searchAutoresAPI(searchQuery, includeExternal);
+        } catch (searchError) {
+          console.error('Error en búsqueda híbrida, usando fallback:', searchError);
+          // Fallback al endpoint normal
+          const response = await fetch(
+            `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
+          );
+          if (response.ok) {
+            const result = await response.json();
+            data = result.autores || result;
+          } else {
+            throw new Error('Error en fallback de búsqueda');
+          }
+        }
+      } else {
+        // Búsqueda local normal
+        const response = await fetch(
+          `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
+        );
+        if (response.ok) {
+          const result = await response.json();
+          data = result.autores || result;
+        } else {
+          throw new Error('Error al buscar autores');
+        }
       }
+      
+      const autoresMapeados = (Array.isArray(data) ? data : []).map((autor: any) => ({
+        id: autor.id,
+        name: autor.name || `${autor.nombre} ${autor.apellido}`.trim(),
+        nombre: autor.nombre,
+        apellido: autor.apellido,
+        photo: autor.foto,
+        esPopular: autor.esPopular,
+        scorePopularidad: autor.scorePopularidad,
+        biografia: autor.biografia,
+        googleBooksId: autor.googleBooksId,
+        openLibraryKey: autor.openLibraryKey
+      }));
+      // Limitar a 8 sugerencias
+      setSugerencias(autoresMapeados.slice(0, 8));
+      setMostrarSugerencias(autoresMapeados.length > 0);
     } catch (err) {
       console.error('Error fetching suggestions:', err);
+      setSugerencias([]);
+      setMostrarSugerencias(false);
     }
   };
 
@@ -248,12 +295,25 @@ const AutoresPage: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           
-          {/* Indicador de carga en el input */}
-          {loading && searchTerm && (
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+          {/* Indicador de carga */}
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-3">
+            {loading && searchTerm && (
               <div className="w-5 h-5 border-2 border-cyan-500 dark:border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
+            )}
+            {/* TODO: Toggle de búsqueda externa - Habilitar cuando se corrija el backend
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeExternal}
+                onChange={(e) => setIncludeExternal(e.target.checked)}
+                className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 dark:focus:ring-cyan-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <span className="hidden md:inline whitespace-nowrap">Buscar en APIs externas</span>
+              <span className="md:hidden" title="Buscar también en Google Books y OpenLibrary">🌐</span>
+            </label>
+            */}
+          </div>
+
           
           {/* Dropdown de sugerencias */}
           {mostrarSugerencias && sugerencias.length > 0 && (

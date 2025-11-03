@@ -107,14 +107,29 @@ export const addGoogleBook = async (req: AuthRequest, res: Response) => {
       const nombre = partesNombre[0] || autorNombreCompleto;
       const apellido = partesNombre.slice(1).join(' ') || '';
       
-      autor = await em.findOne(Autor, { nombre, apellido }) || undefined;
+      // Generar un ID único para Google Books (usamos el nombre completo como identificador)
+      const googleBooksAuthorId = `google_${autorNombreCompleto.toLowerCase().replace(/\s+/g, '_')}`;
+      
+      // Paso 1: Buscar por googleBooksId (ID externo de Google)
+      autor = await em.findOne(Autor, { googleBooksId: googleBooksAuthorId }) || undefined;
+      
       if (!autor) {
-        autor = em.create(Autor, {
-          nombre,
-          apellido,
-          createdAt: new Date()
-        });
-        await em.persist(autor); // No need to flush immediately, can be flushed with the book
+        // Paso 2: Buscar por nombre completo (por si ya existe de otra fuente)
+        autor = await em.findOne(Autor, { nombre, apellido }) || undefined;
+        
+        if (autor) {
+          // Si existe por nombre, actualizamos el googleBooksId
+          autor.googleBooksId = googleBooksAuthorId;
+        } else {
+          // Paso 3: Crear nuevo autor
+          autor = em.create(Autor, {
+            nombre,
+            apellido,
+            googleBooksId: googleBooksAuthorId,
+            createdAt: new Date()
+          });
+        }
+        await em.persist(autor);
       }
     }
 

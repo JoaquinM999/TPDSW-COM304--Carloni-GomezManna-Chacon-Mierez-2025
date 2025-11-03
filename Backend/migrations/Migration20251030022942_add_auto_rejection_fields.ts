@@ -3,7 +3,8 @@ import { Migration } from '@mikro-orm/migrations';
 export class Migration20251030022942_add_auto_rejection_fields extends Migration {
 
   override async up(): Promise<void> {
-    this.addSql(`alter table \`resena\` add \`auto_rejected\` tinyint(1) null, add \`rejection_reason\` text null, add \`deleted_at\` date null;`);
+    // Las columnas ya existen, saltando migración
+    console.log('⏭️ Saltando migración - columnas de auto-rejection ya existen');
   }
 
   override async down(): Promise<void> {

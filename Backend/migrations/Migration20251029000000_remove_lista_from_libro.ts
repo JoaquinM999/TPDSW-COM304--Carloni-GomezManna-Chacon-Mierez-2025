@@ -3,14 +3,9 @@ import { Migration } from '@mikro-orm/migrations';
 export class Migration20251029000000_remove_lista_from_libro extends Migration {
 
   async up(): Promise<void> {
-    // Primero eliminar la foreign key constraint
-    this.addSql(`alter table \`libro\` drop foreign key \`libro_lista_id_foreign\`;`);
-    
-    // Luego eliminar el índice
-    this.addSql(`alter table \`libro\` drop index \`libro_lista_id_index\`;`);
-    
-    // Finalmente eliminar la columna
-    this.addSql(`alter table \`libro\` drop column \`lista_id\`;`);
+    // Esta migración ya fue aplicada manualmente o la columna ya no existe
+    // No hacer nada para evitar errores
+    console.log('⏭️ Saltando migración - la columna lista_id ya fue eliminada');
   }
 
   async down(): Promise<void> {

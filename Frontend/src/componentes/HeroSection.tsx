@@ -10,20 +10,14 @@ import { getStatsWithCache, PlatformStats } from '../services/statsService';
 // Lazy load del componente Spline
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
-// Skeleton/Placeholder para Spline mientras carga
+// Skeleton/Placeholder para Spline mientras carga - Loading simple y limpio
 const SplineSkeleton: React.FC = () => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 rounded-3xl"
+    className="w-full h-full flex items-center justify-center"
   >
-    <div className="text-center space-y-4">
-      <div className="animate-pulse">
-        <div className="w-32 h-32 mx-auto bg-white/50 rounded-full"></div>
-        <div className="mt-4 h-3 bg-white/30 rounded w-24 mx-auto"></div>
-      </div>
-      <p className="text-sm text-gray-500 animate-pulse">Cargando...</p>
-    </div>
+    <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-700 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
   </motion.div>
 );
 

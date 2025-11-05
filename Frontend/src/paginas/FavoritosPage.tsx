@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Book, User, Tag, Clock, CheckCircle, Eye, Loader } from 'lucide-react';
+import { Heart, Book, User, Tag, Clock, CheckCircle, Eye, Loader, Check, X, AlertCircle } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
 import { obtenerFavoritos } from '../services/favoritosService';
@@ -46,7 +46,7 @@ export const FavoritosPage: React.FC = () => {
   const [autoresFavoritos, setAutoresFavoritos] = useState<AutorFavorito[]>([]);
   const [categoriasFavoritas, setCategoriasFavoritas] = useState<CategoriaFavorita[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updatingBookId, setUpdatingBookId] = useState<number | null>(null);
+  const [updatingBookAction, setUpdatingBookAction] = useState<{bookId: number, action: string} | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -237,15 +237,15 @@ export const FavoritosPage: React.FC = () => {
   const creatingLista = useRef<Record<string, Promise<Lista> | null>>({});
 
   const cambiarEstadoLibro = async (libroId: number, nuevoEstado: 'leido' | 'ver-mas-tarde' | 'pendiente') => {
-    // ✅ Feedback visual inmediato
-    setUpdatingBookId(libroId);
+    // ✅ Feedback visual inmediato específico para el botón
+    setUpdatingBookAction({ bookId: libroId, action: nuevoEstado });
     
     try {
       // Find the libro object usando el estado actual
       const libro = librosFavoritos.find(l => l.id === libroId);
       if (!libro) {
         toast.error('Libro no encontrado');
-        setUpdatingBookId(null);
+        setUpdatingBookAction(null);
         return;
       }
 
@@ -397,7 +397,7 @@ export const FavoritosPage: React.FC = () => {
       console.log('🔄 Recargando datos después del error...');
       await fetchData();
     } finally {
-      setUpdatingBookId(null);
+      setUpdatingBookAction(null);
     }
   };
 
@@ -425,7 +425,7 @@ export const FavoritosPage: React.FC = () => {
           src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
           loop
           autoplay
-          style={{ width: '300px', height: '300px' }}
+          style={{ width: 140, height: 140 }}
         />
         <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mt-4">Cargando tus favoritos...</h3>
         <p className="text-gray-500 dark:text-gray-400 mt-2">El pollito está buscando tus libros 🐣</p>
@@ -435,7 +435,59 @@ export const FavoritosPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      <Toaster position="top-center" />
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          className: '',
+          style: {
+            background: 'transparent',
+            boxShadow: 'none',
+            padding: 0,
+          },
+          success: {
+            icon: null,
+          },
+          error: {
+            icon: null,
+          },
+        }}
+      >
+        {(t) => {
+          const isSuccess = t.type === 'success';
+          const isError = t.type === 'error';
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={`
+                flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl
+                ${isSuccess 
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-500 dark:to-blue-500' 
+                  : isError
+                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 dark:from-rose-500 dark:to-pink-500'
+                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500'
+                }
+              `}
+            >
+              {/* Message */}
+              <div className="flex-1 text-sm font-semibold text-white">
+                {t.message?.toString()}
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="flex-shrink-0 w-7 h-7 rounded-full transition-all duration-200 flex items-center justify-center hover:bg-white/20"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </motion.div>
+          );
+        }}
+      </Toaster>
       {/* Header */}
       <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -648,19 +700,19 @@ export const FavoritosPage: React.FC = () => {
                           e.stopPropagation();
                           cambiarEstadoLibro(libro.id, 'leido');
                         }}
-                        disabled={updatingBookId === libro.id}
+                        disabled={updatingBookAction?.bookId === libro.id}
                         title="Marcar como Leído"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          updatingBookId === libro.id 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'leido'
+                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                             : libro.estados.includes('leido')
                             ? 'bg-green-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:shadow-md'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 hover:shadow-md'
                         }`}
-                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
-                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
+                        whileHover={updatingBookAction?.bookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookAction?.bookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        {updatingBookId === libro.id ? (
+                        {updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'leido' ? (
                           <Loader className="w-5 h-5 animate-spin" />
                         ) : (
                           <CheckCircle className="w-5 h-5" />
@@ -672,19 +724,19 @@ export const FavoritosPage: React.FC = () => {
                           e.stopPropagation();
                           cambiarEstadoLibro(libro.id, 'ver-mas-tarde');
                         }}
-                        disabled={updatingBookId === libro.id}
+                        disabled={updatingBookAction?.bookId === libro.id}
                         title="Marcar para Ver más tarde"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          updatingBookId === libro.id 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'ver-mas-tarde'
+                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                             : libro.estados.includes('ver-mas-tarde')
                             ? 'bg-blue-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 hover:shadow-md'
                         }`}
-                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
-                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
+                        whileHover={updatingBookAction?.bookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookAction?.bookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        {updatingBookId === libro.id ? (
+                        {updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'ver-mas-tarde' ? (
                           <Loader className="w-5 h-5 animate-spin" />
                         ) : (
                           <Eye className="w-5 h-5" />
@@ -696,19 +748,19 @@ export const FavoritosPage: React.FC = () => {
                           e.stopPropagation();
                           cambiarEstadoLibro(libro.id, 'pendiente');
                         }}
-                        disabled={updatingBookId === libro.id}
+                        disabled={updatingBookAction?.bookId === libro.id}
                         title="Marcar como Pendiente"
                         className={`flex-1 flex justify-center items-center p-2.5 rounded-xl transition-all duration-300 ${
-                          updatingBookId === libro.id 
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'pendiente'
+                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                             : libro.estados.includes('pendiente')
                             ? 'bg-orange-600 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-700 hover:shadow-md'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-400 hover:shadow-md'
                         }`}
-                        whileHover={updatingBookId === libro.id ? {} : { scale: 1.05 }}
-                        whileTap={updatingBookId === libro.id ? {} : { scale: 0.95 }}
+                        whileHover={updatingBookAction?.bookId === libro.id ? {} : { scale: 1.05 }}
+                        whileTap={updatingBookAction?.bookId === libro.id ? {} : { scale: 0.95 }}
                       >
-                        {updatingBookId === libro.id ? (
+                        {updatingBookAction?.bookId === libro.id && updatingBookAction?.action === 'pendiente' ? (
                           <Loader className="w-5 h-5 animate-spin" />
                         ) : (
                           <Clock className="w-5 h-5" />

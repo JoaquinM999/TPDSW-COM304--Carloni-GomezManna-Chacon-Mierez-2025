@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { TrendingUp, Flame } from "lucide-react";
 import LibroCard from "../componentes/LibroCard";
 
 interface LibroTrending {
@@ -61,113 +63,205 @@ export default function LibrosPopulares() {
     fetchTrending();
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
-      <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
-          Libros populares
-        </span>
-      </h2>
-      <p className="text-center text-sm text-gray-600 dark:text-gray-300 mb-14">
-        Descubre los libros más leídos y trending
-      </p>
-
-      {/* Loading */}
-      {loadingTrending && (
-        <div className="flex justify-center items-center my-8">
-          <DotLottieReact
-            src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
-            loop
-            autoplay
-            style={{ width: 140, height: 140 }}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+      {/* Header */}
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
+                Libros populares
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+              Descubre los libros más leídos y trending del momento
+            </p>
+          </motion.div>
         </div>
-      )}
+      </div>
 
-      {/* Error */}
-      {errorTrending && (
-        <p className="text-red-500 dark:text-red-400 text-center text-lg">Error: {errorTrending}</p>
-      )}
+      {/* Contenido principal */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      {/* Contenido */}
-      {!loadingTrending && !errorTrending && (
-        <>
-          {/* Top 5 */}
-          <section className="mb-16">
-            <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-10 text-center flex items-center justify-center gap-2">
-              Los 5 más leídos
-            </h3>
-            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-              {trending.slice(0, 5).map((libro, index) => (
-                <Link to={`/libro/${libro.slug}`} state={{ from: location.pathname }} key={libro.id} className="group relative block">
-                  <div className="absolute top-4 left-4 z-10">
-                    <svg
-                      className="w-12 h-12"
-                      viewBox="0 0 50 50"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+        {/* Loading */}
+        {loadingTrending && (
+          <div className="flex justify-center items-center py-12">
+            <DotLottieReact
+              src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+              loop
+              autoplay
+              style={{ width: 140, height: 140 }}
+            />
+          </div>
+        )}
+
+        {/* Error */}
+        {errorTrending && (
+          <p className="text-center text-red-500 dark:text-red-400 text-lg">{errorTrending}</p>
+        )}
+
+        {/* Contenido */}
+        {!loadingTrending && !errorTrending && (
+          <>
+            {/* Top 5 */}
+            <section className="mb-12">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-center mb-8"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 px-5 py-2.5 rounded-full shadow-lg mb-3">
+                  <Flame className="w-5 h-5 text-white" />
+                  <h3 className="text-xl font-bold text-white">Top 5 Más Leídos</h3>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {trending.slice(0, 5).map((libro, index) => (
+                  <motion.div
+                    key={libro.id}
+                    variants={cardVariants}
+                    whileHover={{ y: -8 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link 
+                      to={`/libro/${libro.slug}`} 
+                      state={{ from: location.pathname }} 
+                      className="group relative block h-full"
                     >
-                      <circle cx="25" cy="25" r="25" fill={index === 0 ? "#A855F7" : "url(#grad)"} />
-                      <text
-                        x="50%"
-                        y="50%"
-                        dominantBaseline="middle"
-                        textAnchor="middle"
-                        fill="white"
-                        className="text-white font-bold text-lg"
-                      >
-                        {index + 1}
-                      </text>
-                      <defs>
-                        <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#3B82F6" />
-                          <stop offset="100%" stopColor="#8B5CF6" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  <LibroCard
-                    title={libro.title}
-                    authors={libro.authors}
-                    image={libro.coverUrl}
-                    extraInfo={`Actividad: ${libro.activities_count}`}
-                  />
-                </Link>
-              ))}
-            </div>
-          </section>
+                      {/* Badge de ranking */}
+                      <div className="absolute -top-3 -left-3 z-20">
+                        <div className={`
+                          w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-xl
+                          ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : 
+                            index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
+                            index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
+                            'bg-gradient-to-br from-blue-500 to-purple-600'}
+                        `}>
+                          {index + 1}
+                        </div>
+                      </div>
 
-          {/* Otros Libros */}
-          <section>
-            <h3 className="text-3xl font-bold text-blue-800 mb-10 text-center">
-              Siguientes en popularidad
-            </h3>
-            <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-              {trending.slice(5, visibleCount).map((libro) => (
-                <Link key={libro.id} to={`/libro/${libro.slug}`} state={{ from: location.pathname }} className="block">
-                  <LibroCard
-                    title={libro.title}
-                    authors={libro.authors}
-                    image={libro.coverUrl}
-                    extraInfo={`Actividad: ${libro.activities_count}`}
-                  />
-                </Link>
-              ))}
-            </div>
+                      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-200/50 dark:border-gray-700/50 h-full">
+                        <LibroCard
+                          title={libro.title}
+                          authors={libro.authors}
+                          image={libro.coverUrl}
+                          extraInfo={`${libro.activities_count} actividades`}
+                        />
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </section>
 
-            {visibleCount < trending.length && (
-              <div className="flex justify-center mt-6">
-                <button
-                  onClick={() => setVisibleCount(prev => Math.min(prev + 5, trending.length))}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            {/* Otros Libros */}
+            <section>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center mb-8"
+              >
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2.5 rounded-full shadow-lg mb-3">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                  <h3 className="text-xl font-bold text-white">Siguientes en Popularidad</h3>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                className="grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {trending.slice(5, visibleCount).map((libro) => (
+                  <motion.div
+                    key={libro.id}
+                    variants={cardVariants}
+                    whileHover={{ y: -6 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link 
+                      to={`/libro/${libro.slug}`} 
+                      state={{ from: location.pathname }} 
+                      className="block group h-full"
+                    >
+                      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-200/50 dark:border-gray-700/50 h-full">
+                        <LibroCard
+                          title={libro.title}
+                          authors={libro.authors}
+                          image={libro.coverUrl}
+                          extraInfo={`${libro.activities_count} actividades`}
+                        />
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {visibleCount < trending.length && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-center mt-10"
                 >
-                  Ver más
-                </button>
-              </div>
-            )}
-          </section>
-        </>
-      )}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setVisibleCount(prev => Math.min(prev + 10, trending.length))}
+                    className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <span>Ver más libros</span>
+                    <svg 
+                      className="w-5 h-5" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </motion.button>
+                </motion.div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 }

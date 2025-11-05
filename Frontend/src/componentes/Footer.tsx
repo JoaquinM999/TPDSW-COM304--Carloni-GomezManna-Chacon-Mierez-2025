@@ -104,7 +104,7 @@ export const Footer: React.FC<FooterProps> = ({
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 py-16 shadow-lg relative overflow-hidden"
+            className="bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900 py-16 shadow-lg relative overflow-hidden"
           >
             {/* Fondo animado suave */}
             <motion.div
@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({
               <h3 className="text-3xl font-extrabold tracking-tight mb-4 drop-shadow-sm select-text">
                 Mantente al día con las últimas reseñas y novedades
               </h3>
-              <p className="max-w-xl mx-auto mb-10 select-text text-gray-700 dark:text-gray-300 dark:text-gray-400">
+              <p className="max-w-xl mx-auto mb-10 select-text text-gray-700 dark:text-gray-300">
                 Recibe recomendaciones exclusivas, lanzamientos y noticias directamente en tu inbox.
               </p>
               <form className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
@@ -130,13 +130,13 @@ export const Footer: React.FC<FooterProps> = ({
                   type="email"
                   placeholder="Tu email"
                   aria-label="Correo electrónico"
-                  className="flex-grow rounded-lg px-5 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800/90 backdrop-blur-md focus:outline-none focus:ring-4 focus:ring-indigo-400 focus:ring-opacity-70 transition shadow-md"
+                  className="flex-grow rounded-lg px-5 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md focus:outline-none focus:ring-4 focus:ring-indigo-400 dark:focus:ring-indigo-500 focus:ring-opacity-70 transition shadow-md"
                   whileFocus={{ scale: 1.03, boxShadow: "0 0 12px 3px rgba(99,102,241,0.8)" }}
                   transition={{ type: "spring", stiffness: 300 }}
                 />
                 <motion.button
                   type="submit"
-                  className="rounded-lg bg-indigo-600 text-white font-semibold px-8 py-3 hover:bg-indigo-700 shadow-lg transition shadow-indigo-400"
+                  className="rounded-lg bg-indigo-600 dark:bg-indigo-500 text-white font-semibold px-8 py-3 hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-lg transition"
                   whileHover={{ scale: 1.1, boxShadow: "0 0 15px 5px rgba(99,102,241,0.7)" }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -183,11 +183,11 @@ export const Footer: React.FC<FooterProps> = ({
             >
               {siteName}
             </motion.h2>
-            <p className="text-gray-400 dark:text-gray-500 max-w-md leading-relaxed select-text">
+            <p className="text-gray-400 dark:text-gray-400 max-w-md leading-relaxed select-text">
               Plataforma para descubrir, reseñar y compartir libros. Únete a la comunidad y encuentra tu próxima lectura favorita.
             </p>
 
-            <div className="space-y-3 text-gray-400 dark:text-gray-500">
+            <div className="space-y-3 text-gray-400 dark:text-gray-400">
               {[
                 { icon: Mail, text: "contacto@tpdsw.com" },
                 { icon: Phone, text: "+54 9 11 1234 5678" },
@@ -236,7 +236,7 @@ export const Footer: React.FC<FooterProps> = ({
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-lg font-semibold mb-6 text-gray-300 dark:text-gray-400 select-text">{title}</h3>
+              <h3 className="text-lg font-semibold mb-6 text-gray-300 dark:text-gray-300 select-text">{title}</h3>
               <ul className="space-y-4">
                 {links.map(({ name, href }, i) => (
                   <motion.li
@@ -250,7 +250,7 @@ export const Footer: React.FC<FooterProps> = ({
                   >
                     <a
                       href={href}
-                      className="flex items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-blue-400 transition-colors duration-200 no-underline"
+                      className="flex items-center gap-1 text-gray-400 dark:text-gray-400 hover:text-blue-400 dark:hover:text-blue-400 transition-colors duration-200 no-underline"
                     >
                       {name}
                       <motion.span
@@ -271,8 +271,8 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 py-6">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-gray-500 dark:text-gray-400 dark:text-gray-500 text-sm select-text">
+        <div className="border-t border-gray-800 dark:border-gray-700 py-6">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-gray-500 dark:text-gray-400 text-sm select-text">
             <p>© 2025 TPDSW-COM304. Todos los derechos reservados.</p>
             <nav className="flex space-x-8 mt-3 md:mt-0">
               {["Política de Cookies", "Accesibilidad", "Sitemap"].map(

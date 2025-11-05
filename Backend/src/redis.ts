@@ -5,7 +5,8 @@ interface RedisMock {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, options?: { EX: number }) => Promise<string>;
   setex: (key: string, ttl: number, value: string) => Promise<string>;
-  del: (key: string) => Promise<number>;
+  del: (...keys: string[]) => Promise<number>;
+  keys: (pattern: string) => Promise<string[]>;
   ping: () => Promise<string>;
   quit: () => Promise<string>;
   disconnect: () => void;
@@ -34,9 +35,13 @@ if (!redisUrl) {
       console.log(`Mock Redis SETEX called for key: ${key} ttl: ${ttl} (value length: ${value.length})`);
       return 'OK';
     },
-    del: async (key: string) => {
-      console.log(`Mock Redis DEL called for key: ${key}`);
-      return 0;
+    del: async (...keys: string[]) => {
+      console.log(`Mock Redis DEL called for keys: ${keys.join(', ')}`);
+      return keys.length;
+    },
+    keys: async (pattern: string) => {
+      console.log(`Mock Redis KEYS called for pattern: ${pattern}`);
+      return [];
     },
     ping: async () => {
       console.log('Mock Redis PING called');

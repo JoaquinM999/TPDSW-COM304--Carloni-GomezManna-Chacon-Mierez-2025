@@ -7,6 +7,7 @@
     "start": "node dist/index.js",
     "build": "tsc --skipLibCheck",
     "seed:sagas": "npm run build && node dist/seed-sagas.js",
+    "create:admin": "ts-node-dev src/scripts/create-admin-user.ts",
     "test": "jest",
     "test:watch": "jest --watch"
   },

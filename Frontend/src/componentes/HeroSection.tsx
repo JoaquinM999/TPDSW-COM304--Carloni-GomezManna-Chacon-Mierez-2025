@@ -135,7 +135,7 @@ export const HeroSection: React.FC = () => {
       {/* Fondo animado */}
       <motion.div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-radial from-indigo-300 via-purple-200 to-pink-100 dark:from-indigo-900/30 dark:via-purple-900/20 dark:to-pink-900/10 opacity-50"
+        className="absolute inset-0 bg-gradient-radial from-indigo-300 via-purple-200 to-pink-100 dark:from-indigo-900/40 dark:via-purple-900/30 dark:to-pink-900/20 opacity-50"
         animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
         transition={{ duration: 30, ease: 'easeInOut', repeat: Infinity, repeatType: 'mirror' }}
         style={{ backgroundSize: '200% 200%' }}
@@ -166,7 +166,7 @@ export const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-4 sm:mb-6 select-none"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-4 sm:mb-6 select-none text-gray-900 dark:text-white"
           >
             Descubre tu próximo{' '}
             <motion.span
@@ -224,7 +224,7 @@ export const HeroSection: React.FC = () => {
               onClick={scrollToFeatured}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 group backdrop-blur-sm"
+              className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-300 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-300 group backdrop-blur-sm"
             >
               Ver libros destacados
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
@@ -238,7 +238,7 @@ export const HeroSection: React.FC = () => {
         {stats.map(({ icon: Icon, label, value, color }, idx) => (
           <motion.div
             key={idx}
-            className="relative rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-white/40 dark:border-gray-700/60 shadow-md cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/80 dark:to-gray-900/40 backdrop-blur-xl hover:border-white/60 dark:hover:border-gray-600/80 transition-colors duration-300"
+            className="relative rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-white/40 dark:border-gray-700/70 shadow-md cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-900/60 backdrop-blur-xl hover:border-white/60 dark:hover:border-gray-600/90 transition-colors duration-300"
             whileHover="hover"
             initial="rest"
             animate="rest"
@@ -249,7 +249,7 @@ export const HeroSection: React.FC = () => {
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {/* Efecto de brillo de fondo */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 dark:via-gray-700/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 dark:via-gray-600/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
 
             {/* Icono */}
             <motion.div

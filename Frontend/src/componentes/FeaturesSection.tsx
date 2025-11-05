@@ -61,7 +61,7 @@ export default function FeaturesSection() {
   return (
     <section
       onMouseMove={handleMouseMove}
-      className="relative w-full py-20 bg-gradient-to-br from-white to-gray-100 overflow-hidden"
+      className="relative w-full py-20 bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden"
       style={{
         perspective: 1200,
         transformStyle: "preserve-3d",
@@ -84,7 +84,7 @@ export default function FeaturesSection() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0, x: [0, 15, 0, -15, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-cyan-400 via-blue-600 to-lime-400 bg-clip-text text-transparent select-text"
+          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-cyan-400 via-blue-600 to-lime-400 dark:from-cyan-300 dark:via-blue-400 dark:to-lime-300 bg-clip-text text-transparent select-text"
         >
           Funcionalidades Destacadas
         </motion.h2>

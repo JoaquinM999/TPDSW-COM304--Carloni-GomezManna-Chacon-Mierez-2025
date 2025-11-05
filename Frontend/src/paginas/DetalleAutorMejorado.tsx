@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
   BookOpen, 
-  Star, 
   MessageCircle,
   UserCircle,
   ChevronDown,
   ChevronUp,
   Award,
-  TrendingUp
+  TrendingUp,
+  Star
 } from 'lucide-react';
 
 interface AutorDetalle {
@@ -155,34 +155,6 @@ const DetalleAutor = () => {
     }
   };
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(
-          <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-        );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <div key={i} className="relative w-4 h-4">
-            <Star className="absolute w-4 h-4 text-yellow-400" />
-            <div className="absolute overflow-hidden w-1/2">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            </div>
-          </div>
-        );
-      } else {
-        stars.push(
-          <Star key={i} className="w-4 h-4 text-gray-300" />
-        );
-      }
-    }
-    return stars;
-  };
-
   const getInitials = (nombre: string, apellido: string) => {
     return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase();
   };
@@ -302,12 +274,12 @@ const DetalleAutor = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
                 >
                   {/* Total Libros */}
                   <motion.div 
                     whileHover={{ scale: 1.05, y: -5 }}
-                    className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer"
+                    className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <BookOpen className="w-10 h-10 text-white" />
@@ -315,23 +287,7 @@ const DetalleAutor = () => {
                         {estadisticas.estadisticas.totalLibros}
                       </span>
                     </div>
-                    <p className="text-sm text-blue-100 font-semibold">Libros Publicados</p>
-                  </motion.div>
-
-                  {/* Promedio Calificación */}
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex gap-0.5">
-                        {renderStars(estadisticas.estadisticas.promedioCalificacion)}
-                      </div>
-                      <span className="text-4xl font-bold text-white">
-                        {estadisticas.estadisticas.promedioCalificacion.toFixed(1)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-yellow-100 font-semibold">Calificación Promedio</p>
+                    <p className="text-sm text-cyan-100 font-semibold">Total Libros</p>
                   </motion.div>
 
                   {/* Total Reseñas */}
@@ -346,6 +302,22 @@ const DetalleAutor = () => {
                       </span>
                     </div>
                     <p className="text-sm text-purple-100 font-semibold">Reseñas Totales</p>
+                  </motion.div>
+
+                  {/* Promedio Calificación */}
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <Star className="w-10 h-10 text-white" />
+                      <span className="text-4xl font-bold text-white">
+                        {estadisticas.estadisticas.promedioCalificacion > 0 
+                          ? estadisticas.estadisticas.promedioCalificacion.toFixed(1)
+                          : '—'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-amber-100 font-semibold">Calificación Promedio</p>
                   </motion.div>
                 </motion.div>
               )}

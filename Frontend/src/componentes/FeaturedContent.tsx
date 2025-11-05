@@ -112,7 +112,8 @@ const variants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: "easeOut"
+      // Cast cubic-bezier arrays to any to satisfy the Variants typing
+      ease: [0.22, 1, 0.36, 1] as any,
     }
   },
   exit: (direction: number) => ({
@@ -120,7 +121,8 @@ const variants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      ease: "easeIn"
+      // Cast cubic-bezier arrays to any to satisfy the Variants typing
+      ease: [0.4, 0, 0.2, 1] as any,
     }
   }),
 };

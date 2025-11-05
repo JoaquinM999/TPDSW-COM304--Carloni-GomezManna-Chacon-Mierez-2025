@@ -1,6 +1,7 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Autor } from '../entities/autor.entity';
 import axios from 'axios';
+import redis from '../redis';
 
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
@@ -15,6 +16,17 @@ interface OpenLibraryAuthor {
   death_date?: string;
   bio?: string | { value: string };
   photos?: number[];
+}
+
+// DTO para autores externos (sin guardar en BDD)
+export interface ExternalAuthorDTO {
+  nombre: string;
+  apellido: string;
+  googleBooksId?: string;
+  openLibraryKey?: string;
+  biografia?: string;
+  foto?: string;
+  external: true; // Flag para identificar que no está en BDD
 }
 
 /**
@@ -220,4 +232,266 @@ export async function searchOpenLibraryAuthors(
     console.error('❌ Error searching OpenLibrary authors:', error.message);
     return [];
   }
+}
+
+/**
+ * Busca autores en Google Books sin guardarlos en BDD (solo lectura)
+ * Retorna DTOs que representan autores externos
+ */
+export async function searchGoogleBooksAuthorsReadOnly(query: string): Promise<ExternalAuthorDTO[]> {
+  try {
+    console.log('📚 [READ-ONLY] Buscando en Google Books API:', query);
+    
+    const url = GOOGLE_BOOKS_API_KEY
+      ? `https://www.googleapis.com/books/v1/volumes?q=inauthor:${encodeURIComponent(query)}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=10`
+      : `https://www.googleapis.com/books/v1/volumes?q=inauthor:${encodeURIComponent(query)}&maxResults=10`;
+    
+    const response = await axios.get(url, { timeout: 5000 });
+    
+    if (!response.data.items || response.data.items.length === 0) {
+      console.log('⚠️ No se encontraron resultados en Google Books');
+      return [];
+    }
+    
+    const authorsSet = new Set<string>();
+    const autoresDTO: ExternalAuthorDTO[] = [];
+    
+    for (const item of response.data.items) {
+      const authors = item.volumeInfo?.authors || [];
+      for (const authorName of authors) {
+        if (!authorsSet.has(authorName)) {
+          authorsSet.add(authorName);
+          
+          const partesNombre = authorName.trim().split(' ');
+          const nombre = partesNombre[0] || authorName;
+          const apellido = partesNombre.slice(1).join(' ') || '';
+          const googleBooksId = `google_${authorName.toLowerCase().replace(/\s+/g, '_')}`;
+          
+          autoresDTO.push({
+            nombre,
+            apellido,
+            googleBooksId,
+            external: true
+          });
+        }
+      }
+    }
+    
+    console.log(`✅ [READ-ONLY] Encontrados ${autoresDTO.length} autores en Google Books`);
+    return autoresDTO;
+  } catch (error: any) {
+    console.error('❌ Error searching Google Books authors (read-only):', error.message);
+    return [];
+  }
+}
+
+/**
+ * Busca autores en OpenLibrary sin guardarlos en BDD (solo lectura)
+ * Retorna DTOs que representan autores externos
+ */
+export async function searchOpenLibraryAuthorsReadOnly(query: string): Promise<ExternalAuthorDTO[]> {
+  try {
+    console.log('📚 [READ-ONLY] Buscando en OpenLibrary API:', query);
+    
+    const url = `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}&limit=10`;
+    const response = await axios.get(url, { timeout: 5000 });
+    
+    if (!response.data.docs || response.data.docs.length === 0) {
+      console.log('⚠️ No se encontraron autores en OpenLibrary');
+      return [];
+    }
+    
+    const autoresDTO: ExternalAuthorDTO[] = [];
+    
+    for (const olAuthor of response.data.docs) {
+      const autorNombreCompleto = olAuthor.name.trim();
+      const partesNombre = autorNombreCompleto.split(' ');
+      const nombre = partesNombre[0] || autorNombreCompleto;
+      const apellido = partesNombre.slice(1).join(' ') || '';
+      
+      const biografia = olAuthor.bio 
+        ? (typeof olAuthor.bio === 'string' ? olAuthor.bio : olAuthor.bio.value)
+        : undefined;
+      
+      const foto = olAuthor.photos && olAuthor.photos.length > 0
+        ? `https://covers.openlibrary.org/a/id/${olAuthor.photos[0]}-L.jpg`
+        : undefined;
+      
+      autoresDTO.push({
+        nombre,
+        apellido,
+        openLibraryKey: olAuthor.key,
+        biografia,
+        foto,
+        external: true
+      });
+    }
+    
+    console.log(`✅ [READ-ONLY] Encontrados ${autoresDTO.length} autores en OpenLibrary`);
+    return autoresDTO;
+  } catch (error: any) {
+    console.error('❌ Error searching OpenLibrary authors (read-only):', error.message);
+    return [];
+  }
+}
+
+/**
+ * Guarda un autor externo en la BDD bajo demanda (cuando el usuario lo visualiza)
+ * @param em EntityManager
+ * @param externalAuthor DTO del autor externo
+ * @returns El autor guardado en la BDD
+ */
+export async function saveExternalAuthor(
+  em: EntityManager,
+  externalAuthor: ExternalAuthorDTO
+): Promise<Autor> {
+  try {
+    console.log(`💾 Guardando autor externo bajo demanda: ${externalAuthor.nombre} ${externalAuthor.apellido}`);
+    
+    // Verificar si ya existe por ID externo
+    let autor: Autor | null = null;
+    
+    if (externalAuthor.googleBooksId) {
+      autor = await em.findOne(Autor, { googleBooksId: externalAuthor.googleBooksId });
+    } else if (externalAuthor.openLibraryKey) {
+      autor = await em.findOne(Autor, { openLibraryKey: externalAuthor.openLibraryKey });
+    }
+    
+    // Si no existe por ID externo, buscar por nombre
+    if (!autor) {
+      autor = await em.findOne(Autor, { 
+        nombre: externalAuthor.nombre, 
+        apellido: externalAuthor.apellido 
+      });
+    }
+    
+    // Si existe, actualizar con info externa
+    if (autor) {
+      console.log('✅ Autor ya existe, actualizando con info externa...');
+      if (externalAuthor.googleBooksId && !autor.googleBooksId) {
+        autor.googleBooksId = externalAuthor.googleBooksId;
+      }
+      if (externalAuthor.openLibraryKey && !autor.openLibraryKey) {
+        autor.openLibraryKey = externalAuthor.openLibraryKey;
+      }
+      if (externalAuthor.biografia && !autor.biografia) {
+        autor.biografia = externalAuthor.biografia;
+      }
+      if (externalAuthor.foto && !autor.foto) {
+        autor.foto = externalAuthor.foto;
+      }
+    } else {
+      // Crear nuevo autor
+      console.log('✅ Creando nuevo autor en BDD...');
+      autor = em.create(Autor, {
+        nombre: externalAuthor.nombre,
+        apellido: externalAuthor.apellido,
+        googleBooksId: externalAuthor.googleBooksId,
+        openLibraryKey: externalAuthor.openLibraryKey,
+        biografia: externalAuthor.biografia,
+        foto: externalAuthor.foto,
+        createdAt: new Date()
+      });
+    }
+    
+    await em.persistAndFlush(autor);
+    console.log(`✅ Autor guardado con ID: ${autor.id}`);
+    return autor;
+  } catch (error: any) {
+    console.error('❌ Error guardando autor externo:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene autores populares de APIs externas (solo lectura)
+ * Se usa cuando la base de datos está vacía para mostrar contenido inicial
+ * Incluye caché de 24 horas para evitar golpear las APIs constantemente
+ */
+export async function getPopularAuthorsFromAPIs(limit: number = 20): Promise<ExternalAuthorDTO[]> {
+  const CACHE_KEY = `autores:populares:${limit}`;
+  const CACHE_TTL = 24 * 60 * 60; // 24 horas en segundos
+  
+  try {
+    // Intentar obtener del caché
+    const cached = await redis.get(CACHE_KEY);
+    
+    if (cached) {
+      console.log(`✅ Autores populares obtenidos del caché`);
+      return JSON.parse(cached);
+    }
+  } catch (error) {
+    console.log('⚠️ Redis no disponible, continuando sin caché');
+  }
+
+  const AUTORES_POPULARES = [
+    'Gabriel García Márquez',
+    'Isabel Allende',
+    'Jorge Luis Borges',
+    'Paulo Coelho',
+    'Julio Cortázar',
+    'Mario Vargas Llosa',
+    'Stephen King',
+    'J.K. Rowling',
+    'George R.R. Martin',
+    'Agatha Christie',
+    'Jane Austen',
+    'Charles Dickens',
+    'Mark Twain',
+    'Edgar Allan Poe',
+    'Oscar Wilde',
+    'Virginia Woolf',
+    'Franz Kafka',
+    'Haruki Murakami',
+    'Dan Brown',
+    'Neil Gaiman',
+    'Ernest Hemingway',
+    'F. Scott Fitzgerald',
+    'George Orwell',
+    'J.R.R. Tolkien',
+    'Miguel de Cervantes',
+    'William Shakespeare',
+    'Emily Dickinson',
+    'Leo Tolstoy',
+    'Fyodor Dostoevsky',
+    'Albert Camus'
+  ];
+
+  console.log(`🌟 Buscando ${limit} autores populares en APIs externas...`);
+  
+  const autoresPromises = AUTORES_POPULARES.slice(0, limit).map(async (nombreCompleto) => {
+    try {
+      // Buscar primero en Google Books (más info)
+      const autoresGoogle = await searchGoogleBooksAuthorsReadOnly(nombreCompleto);
+      if (autoresGoogle.length > 0) {
+        return autoresGoogle[0]; // Tomar el primero (más relevante)
+      }
+      
+      // Si no está en Google Books, buscar en OpenLibrary
+      const autoresOpenLibrary = await searchOpenLibraryAuthorsReadOnly(nombreCompleto);
+      if (autoresOpenLibrary.length > 0) {
+        return autoresOpenLibrary[0];
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`❌ Error buscando autor popular "${nombreCompleto}":`, error);
+      return null;
+    }
+  });
+
+  const autoresPopulares = (await Promise.all(autoresPromises))
+    .filter((autor): autor is ExternalAuthorDTO => autor !== null);
+
+  console.log(`✅ Encontrados ${autoresPopulares.length} autores populares`);
+  
+  // Guardar en caché
+  try {
+    await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(autoresPopulares));
+    console.log(`✅ Autores populares guardados en caché (24h)`);
+  } catch (error) {
+    console.log('⚠️ No se pudo guardar en caché');
+  }
+  
+  return autoresPopulares;
 }

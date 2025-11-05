@@ -17,7 +17,7 @@ interface Libro {
 export default function TodosLosLibros() {
   const location = useLocation();
   const [libros, setLibros] = useState<Libro[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Load More
@@ -364,17 +364,23 @@ export default function TodosLosLibros() {
             </div>
 
             <div className="flex flex-col items-center gap-4 mt-8">
-              {hasMore && (
+              {loadingMore && (
+                <div className="flex justify-center items-center my-4">
+                  <DotLottieReact
+                    src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+                    loop
+                    autoplay
+                    style={{ width: 140, height: 140 }}
+                  />
+                </div>
+              )}
+              
+              {hasMore && !loadingMore && (
                 <button
                   onClick={() => setPagina((p) => p + 1)}
-                  disabled={loadingMore}
-                  className={`px-8 py-4 rounded-2xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${
-                    loadingMore
-                      ? "bg-gray-400 dark:bg-gray-600 cursor-not-allowed"
-                      : "bg-gradient-to-r from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 hover:from-cyan-600 hover:to-blue-700 dark:hover:from-cyan-700 dark:hover:to-blue-800"
-                  }`}
+                  className="px-8 py-4 rounded-2xl text-white font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 bg-gradient-to-r from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 hover:from-cyan-600 hover:to-blue-700 dark:hover:from-cyan-700 dark:hover:to-blue-800"
                 >
-                  {loadingMore ? "Cargando más..." : "Cargar más libros"}
+                  Cargar más libros
                 </button>
               )}
 

@@ -43,7 +43,7 @@ const SagasPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-gray-950 dark:to-indigo-950">
         <DotLottieReact
           src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
           loop
@@ -92,21 +92,22 @@ const SagasPage: React.FC = () => {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
                   Sagas
                 </span>
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                Descubre series completas de libros
+                Explora universos completos y series legendarias
               </p>
             </motion.div>
           </div>
         </div>
       </div>
 
+      {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -116,55 +117,104 @@ const SagasPage: React.FC = () => {
             return (
               <motion.div
                 key={saga.id}
-                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 dark:border-gray-700/50"
                 variants={cardVariants}
-                whileHover={{
-                  scale: 1.03,
-                  y: -8,
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-                }}
+                whileHover={{ y: -8 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {firstBookWithImage ? (
-                  <div className="h-48 relative overflow-hidden">
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: `url(${firstBookWithImage.imagen})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        filter: 'blur(8px)',
-                      }}
-                    />
-                    <div className="relative z-10 h-full flex items-center justify-center">
-                      <img
-                        src={firstBookWithImage.imagen!}
-                        alt={firstBookWithImage.titulo}
-                        className="max-w-full max-h-full object-contain"
-                      />
+                <Link
+                  to={`/sagas/${saga.id}`}
+                  className="group block h-full"
+                >
+                  <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-200/50 dark:border-gray-700/50 h-full flex flex-col">
+                    {/* Imagen de portada con efecto mejorado */}
+                    <div className="relative h-64 overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-900/20 dark:to-blue-900/20">
+                      {firstBookWithImage ? (
+                        <>
+                          {/* Fondo blur más intenso */}
+                          <div
+                            className="absolute inset-0 scale-150 blur-2xl opacity-85 dark:opacity-75"
+                            style={{
+                              backgroundImage: `url(${firstBookWithImage.imagen})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }}
+                          />
+                          {/* Sin overlay para maximizar colores */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-transparent" />
+                          
+                          <div className="relative h-full flex items-center justify-center p-3">
+                            <img
+                              src={firstBookWithImage.imagen!}
+                              alt={firstBookWithImage.titulo}
+                              className="h-[90%] w-auto object-contain drop-shadow-2xl transform group-hover:scale-105 group-hover:-translate-y-2 transition-all duration-500"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className={`h-full ${colors[index % colors.length]} flex items-center justify-center relative overflow-hidden`}>
+                          {/* Patrón decorativo de fondo */}
+                          <div className="absolute inset-0 opacity-10">
+                            <div className="absolute top-0 left-0 w-full h-full" 
+                                 style={{
+                                   backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                                   backgroundSize: '30px 30px'
+                                 }} 
+                            />
+                          </div>
+                          <BookOpen className="w-20 h-20 text-white opacity-90 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300" />
+                        </div>
+                      )}
+                      
+                      {/* Badge de cantidad de libros mejorado */}
+                      <div className="absolute top-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full px-4 py-2 shadow-xl border-2 border-white/30">
+                        <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                          <BookOpen className="w-4 h-4" />
+                          {saga.cantidadLibros}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contenido con mejor espaciado */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                        {saga.nombre}
+                      </h3>
+                      
+                      {/* CTA más atractivo */}
+                      <div className="mt-auto pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+                        <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 font-semibold group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          <span className="text-sm">Ver colección completa</span>
+                          <svg 
+                            className="w-5 h-5 transform group-hover:translate-x-2 transition-transform duration-300" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <div className={`h-48 ${colors[index % colors.length]} flex items-center justify-center relative`}>
-                    <BookOpen className="w-12 h-12 text-white" />
-                  </div>
-                )}
-                <div className="p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 text-lg leading-tight">{saga.nombre}</h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 font-medium">{saga.cantidadLibros} libros</p>
-                  <div className="flex items-center justify-between">
-                    <Link
-                      to={`/sagas/${saga.id}`}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
-                    >
-                      Explorar
-                    </Link>
-                  </div>
-                </div>
+                </Link>
               </motion.div>
             );
           })}
         </motion.div>
+
+        {/* Mensaje si no hay sagas */}
+        {sagas.length === 0 && !loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <BookOpen className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              No hay sagas disponibles en este momento
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   );

@@ -1,71 +1,16 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/core';
 import { Autor } from '../entities/autor.entity';
-import { searchGoogleBooksAuthors, searchOpenLibraryAuthors } from '../services/autor.service';
-
-// Lista de autores populares que sabemos tienen muchos libros en Google Books
-const AUTORES_POPULARES = [
-  'gabriel garcía márquez',
-  'isabel allende',
-  'jorge luis borges',
-  'paulo coelho',
-  'julio cortázar',
-  'mario vargas llosa',
-  'octavio paz',
-  'carlos ruiz zafón',
-  'stephen king',
-  'j.k. rowling',
-  'george r.r. martin',
-  'agatha christie',
-  'ernest hemingway',
-  'garcía lorca',
-  'pablo neruda',
-  'gabriel garcía',
-  'garcía márquez',
-  'miguel de cervantes',
-  'william shakespeare',
-  'jane austen',
-  'charles dickens',
-  'mark twain',
-  'edgar allan poe',
-  'oscar wilde',
-  'virginia woolf',
-  'franz kafka',
-  'albert camus',
-  'james joyce',
-  'haruki murakami',
-  'dan brown',
-  'neil gaiman',
-  'brandon sanderson'
-];
-
-// Función para calcular score de popularidad
-const calcularScorePopularidad = (autor: Autor): number => {
-  const nombreCompleto = `${autor.nombre} ${autor.apellido}`.toLowerCase();
-  
-  // Buscar coincidencia exacta
-  if (AUTORES_POPULARES.includes(nombreCompleto)) {
-    return 1000;
-  }
-  
-  // Buscar coincidencia parcial (apellido coincide)
-  const apellidoLower = autor.apellido.toLowerCase();
-  for (const popular of AUTORES_POPULARES) {
-    if (popular.includes(apellidoLower) && apellidoLower.length > 3) {
-      return 500;
-    }
-  }
-  
-  // Buscar coincidencia parcial (nombre coincide)
-  const nombreLower = autor.nombre.toLowerCase();
-  for (const popular of AUTORES_POPULARES) {
-    if (popular.includes(nombreLower) && nombreLower.length > 3) {
-      return 250;
-    }
-  }
-  
-  return 0;
-};
+import redis from '../redis';
+import { 
+  searchGoogleBooksAuthors, 
+  searchOpenLibraryAuthors,
+  searchGoogleBooksAuthorsReadOnly,
+  searchOpenLibraryAuthorsReadOnly,
+  saveExternalAuthor,
+  ExternalAuthorDTO,
+  getPopularAuthorsFromAPIs
+} from '../services/autor.service';
 
 export const getAutores = async (req: Request, res: Response) => {
   try {
@@ -82,6 +27,25 @@ export const getAutores = async (req: Request, res: Response) => {
     }
     
     console.log('📚 getAutores - page:', pageNum, 'limit:', limitNum, 'search:', search);
+    
+    // 🚀 CACHE: Generar clave única para esta búsqueda
+    const cacheKey = `autores:page:${pageNum}:limit:${limitNum}:search:${search}:sort:${sortBy}`;
+    const cacheTTL = 300; // 5 minutos
+    
+    // 🚀 CACHE: Intentar obtener del cache primero
+    if (redis) {
+      try {
+        const cachedData = await redis.get(cacheKey);
+        if (cachedData) {
+          console.log('✅ Cache HIT para autores:', cacheKey);
+          return res.json(JSON.parse(cachedData));
+        }
+        console.log('⚠️ Cache MISS para autores:', cacheKey);
+      } catch (cacheError) {
+        console.error('❌ Error al leer cache de autores:', cacheError);
+        // Continuar con la consulta a BD si falla el cache
+      }
+    }
     
     // Construir filtro de búsqueda mejorado
     const where: any = {};
@@ -107,9 +71,194 @@ export const getAutores = async (req: Request, res: Response) => {
       orderBy: { [sortBy as string]: 'ASC' }
     });
     
-    console.log(`✅ Encontrados ${total} autores totales, mostrando ${autores.length}`);
+    console.log(`✅ Encontrados ${total} autores totales en BD, mostrando ${autores.length}`);
     
-    res.json({
+    // 🌟 NUEVA FUNCIONALIDAD: Si hay menos de 15 autores en BD y no hay búsqueda, complementar con externos
+    const UMBRAL_MINIMO_AUTORES = 15;
+    // Permitir complementar con externos en cualquier página, no solo la primera
+    const debeComplementarConExternos = total < UMBRAL_MINIMO_AUTORES && !search;
+    
+    if (debeComplementarConExternos) {
+      console.log(`📦 BD tiene solo ${total} autores (< ${UMBRAL_MINIMO_AUTORES}), complementando con externos...`);
+      
+      try {
+        // Cargar autores populares desde APIs (siempre traer 30)
+        const cantidadExternosNecesarios = 30;
+        const autoresPopulares = await getPopularAuthorsFromAPIs(cantidadExternosNecesarios);
+        
+        // Mapear autores de BD
+        const autoresBD = autores.map((autor: Autor) => ({
+          id: autor.id,
+          nombre: autor.nombre,
+          apellido: autor.apellido,
+          name: `${autor.nombre} ${autor.apellido}`.trim(),
+          foto: autor.foto,
+          biografia: autor.biografia,
+          googleBooksId: autor.googleBooksId,
+          openLibraryKey: autor.openLibraryKey,
+          createdAt: autor.createdAt,
+          external: false
+        }));
+        
+        // Crear Sets con los IDs externos de los autores que ya están en BD
+        const googleBooksIdsEnBD = new Set(
+          autoresBD
+            .filter(a => a.googleBooksId)
+            .map(a => a.googleBooksId)
+        );
+        const openLibraryKeysEnBD = new Set(
+          autoresBD
+            .filter(a => a.openLibraryKey)
+            .map(a => a.openLibraryKey)
+        );
+        
+        // Filtrar autores externos que NO estén ya en la BD
+        const autoresExternosFiltrados = autoresPopulares.filter((autor: ExternalAuthorDTO) => {
+          // Si el autor externo tiene googleBooksId y ya existe en BD, excluirlo
+          if (autor.googleBooksId && googleBooksIdsEnBD.has(autor.googleBooksId)) {
+            console.log(`🚫 Duplicado encontrado (Google Books): ${autor.nombre} ${autor.apellido}`);
+            return false;
+          }
+          // Si el autor externo tiene openLibraryKey y ya existe en BD, excluirlo
+          if (autor.openLibraryKey && openLibraryKeysEnBD.has(autor.openLibraryKey)) {
+            console.log(`🚫 Duplicado encontrado (OpenLibrary): ${autor.nombre} ${autor.apellido}`);
+            return false;
+          }
+          return true;
+        });
+        
+        // Mapear autores externos filtrados
+        const autoresExternos = autoresExternosFiltrados.map((autor: ExternalAuthorDTO) => ({
+          nombre: autor.nombre,
+          apellido: autor.apellido,
+          name: `${autor.nombre} ${autor.apellido}`.trim(),
+          foto: autor.foto,
+          biografia: autor.biografia,
+          googleBooksId: autor.googleBooksId,
+          openLibraryKey: autor.openLibraryKey,
+          external: true
+        }));
+        
+        // 🧹 ELIMINAR DUPLICADOS por nombre normalizado
+        // Función auxiliar para normalizar nombres (quitar acentos, mayúsculas, espacios extra, puntos, comas)
+        const normalizarNombre = (texto: string): string => {
+          return texto
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+            .replace(/\./g, '') // quitar puntos (J.K. → JK)
+            .replace(/,/g, '') // quitar comas
+            .replace(/\s+/g, '') // quitar TODOS los espacios
+            .trim();
+        };
+        
+        // Función para generar múltiples claves normalizadas (considerando orden de palabras)
+        const generarClavesNormalizadas = (autor: any): string[] => {
+          const nombreCompleto = autor.name || `${autor.nombre} ${autor.apellido}`.trim();
+          const palabras = nombreCompleto
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[.,]/g, '')
+            .split(/\s+/)
+            .filter(p => p.length > 0);
+          
+          // Generar variaciones ordenadas alfabéticamente para capturar "García Márquez Gabriel" y "Gabriel García Márquez"
+          const clavePrincipal = palabras.sort().join('');
+          const claveOriginal = palabras.join('');
+          
+          return [clavePrincipal, claveOriginal];
+        };
+        
+        // Combinar todos los autores primero
+        const autoresCombinados = [...autoresBD, ...autoresExternos];
+        
+        // Crear un Map para eliminar duplicados por nombre normalizado
+        const autoresUnicos = new Map<string, any>();
+        const clavesUsadas = new Set<string>();
+        
+        autoresCombinados.forEach(autor => {
+          const nombreCompleto = autor.name || `${autor.nombre} ${autor.apellido}`.trim();
+          const claves = generarClavesNormalizadas(autor);
+          
+          // Verificar si alguna de las claves ya fue usada
+          const yaExiste = claves.some(clave => clavesUsadas.has(clave));
+          
+          if (yaExiste) {
+            // Encontrar el autor existente
+            let existente: any = null;
+            let claveExistente = '';
+            for (const clave of claves) {
+              if (autoresUnicos.has(clave)) {
+                existente = autoresUnicos.get(clave);
+                claveExistente = clave;
+                break;
+              }
+            }
+            
+            if (existente) {
+              // Priorizar autores de BD (external: false) sobre externos
+              if (!autor.external && existente.external) {
+                console.log(`🔄 Reemplazando autor externo duplicado: "${existente.name}" con autor de BD: "${nombreCompleto}"`);
+                // Remover el autor antiguo del map
+                autoresUnicos.delete(claveExistente);
+                // Agregar el nuevo con la primera clave
+                autoresUnicos.set(claves[0], autor);
+                claves.forEach(c => clavesUsadas.add(c));
+              } else {
+                console.log(`🚫 Duplicado por nombre encontrado: "${nombreCompleto}" (ya existe como "${existente.name}")`);
+              }
+            }
+          } else {
+            // Agregar el autor si no existe
+            autoresUnicos.set(claves[0], autor);
+            claves.forEach(c => clavesUsadas.add(c));
+          }
+        });
+        
+        // Convertir el Map a array
+        const todosLosAutores = Array.from(autoresUnicos.values());
+        const totalCompleto = todosLosAutores.length;
+        
+        console.log(`📊 Autores después de eliminar duplicados: ${autoresCombinados.length} → ${totalCompleto}`);
+        
+        // 🔧 Aplicar paginación: calcular offset y limit ANTES de slicear
+        const totalPaginasCalculado = Math.ceil(totalCompleto / limitNum);
+        const offset = (pageNum - 1) * limitNum;
+        const autoresPaginados = todosLosAutores.slice(offset, offset + limitNum);
+        
+        console.log(`✅ Respuesta híbrida: ${autoresBD.length} de BD + ${autoresExternos.length} externos = ${totalCompleto} total | Mostrando ${autoresPaginados.length} en página ${pageNum}/${totalPaginasCalculado}`);
+        
+        const responseData = {
+          autores: autoresPaginados,
+          total: totalCompleto,
+          page: pageNum,
+          totalPages: totalPaginasCalculado,
+          hasMore: pageNum < totalPaginasCalculado,
+          fromExternalAPIs: true,
+          autoresBD: autoresBD.length,
+          autoresExternos: autoresExternos.length
+        };
+        
+        // 🚀 CACHE: Guardar respuesta híbrida en cache
+        if (redis) {
+          try {
+            await redis.setex(cacheKey, cacheTTL, JSON.stringify(responseData));
+            console.log('💾 Respuesta híbrida guardada en cache');
+          } catch (cacheError) {
+            console.error('❌ Error al guardar en cache:', cacheError);
+          }
+        }
+        
+        return res.json(responseData);
+      } catch (error: any) {
+        console.error('❌ Error cargando autores populares:', error.message);
+        // Si falla cargar externos, continuar con solo BD
+      }
+    }
+    
+    // Respuesta normal (solo BD)
+    const responseData = {
       autores: autores.map((autor: Autor) => ({
         id: autor.id,
         nombre: autor.nombre,
@@ -120,14 +269,26 @@ export const getAutores = async (req: Request, res: Response) => {
         googleBooksId: autor.googleBooksId,
         openLibraryKey: autor.openLibraryKey,
         createdAt: autor.createdAt,
-        esPopular: calcularScorePopularidad(autor) > 0,
-        scorePopularidad: calcularScorePopularidad(autor)
+        external: false
       })),
       total,
       page: pageNum,
       totalPages: Math.ceil(total / limitNum),
-      hasMore: pageNum < Math.ceil(total / limitNum)
-    });
+      hasMore: pageNum < Math.ceil(total / limitNum),
+      fromExternalAPIs: false
+    };
+    
+    // 🚀 CACHE: Guardar respuesta en cache
+    if (redis) {
+      try {
+        await redis.setex(cacheKey, cacheTTL, JSON.stringify(responseData));
+        console.log('💾 Respuesta guardada en cache');
+      } catch (cacheError) {
+        console.error('❌ Error al guardar en cache:', cacheError);
+      }
+    }
+    
+    res.json(responseData);
   } catch (error: any) {
     console.error('❌ Error en getAutores:', error.message);
     console.error('Stack:', error.stack);
@@ -143,9 +304,9 @@ export const getAutorById = async (req: Request, res: Response) => {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     const autorId = +req.params.id;
-    
+
     console.log('🔍 getAutorById - ID:', autorId);
-    
+
     // Validación robusta del ID
     if (isNaN(autorId) || autorId < 1) {
       return res.status(400).json({ error: 'ID de autor inválido. Debe ser un número positivo' });
@@ -170,7 +331,54 @@ export const getAutorById = async (req: Request, res: Response) => {
   }
 };
 
-export const createAutor = async (req: Request, res: Response) => {
+/**
+ * Nuevo endpoint: Guarda un autor externo bajo demanda cuando el usuario lo visualiza
+ * Recibe los datos del autor externo en el body y lo guarda en la BDD
+ */
+export const saveExternalAuthorOnDemand = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const externalAuthor: ExternalAuthorDTO = req.body;
+
+    console.log('💾 saveExternalAutorOnDemand - Autor:', externalAuthor.nombre, externalAuthor.apellido);
+
+    // Validación
+    if (!externalAuthor.nombre || !externalAuthor.apellido) {
+      return res.status(400).json({ error: 'Nombre y apellido son requeridos' });
+    }
+
+    if (!externalAuthor.external) {
+      return res.status(400).json({ error: 'Este endpoint es solo para autores externos' });
+    }
+
+    // Guardar el autor externo en la BDD
+    const autorGuardado = await saveExternalAuthor(em, externalAuthor);
+    
+    // 🚀 CACHE: Invalidar cache de autores al guardar uno externo
+    if (redis) {
+      try {
+        const keys = await redis.keys('autores:*');
+        if (keys.length > 0) {
+          await redis.del(...keys);
+          console.log(`💾 Cache invalidado: ${keys.length} keys eliminadas`);
+        }
+      } catch (cacheError) {
+        console.error('❌ Error al invalidar cache:', cacheError);
+      }
+    }
+    
+    console.log('✅ Autor externo guardado con ID:', autorGuardado.id);
+    res.status(201).json(autorGuardado);
+  } catch (error: any) {
+    console.error('❌ Error en saveExternalAutorOnDemand:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Error al guardar autor externo',
+      details: error.message 
+    });
+  }
+};export const createAutor = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
@@ -213,6 +421,21 @@ export const createAutor = async (req: Request, res: Response) => {
     // Crear nuevo autor
     const autor = em.create(Autor, req.body);
     await em.persistAndFlush(autor);
+    
+    // 🚀 CACHE: Invalidar cache de autores al crear uno nuevo
+    if (redis) {
+      try {
+        // Obtener todas las keys que empiecen con 'autores:'
+        const keys = await redis.keys('autores:*');
+        if (keys.length > 0) {
+          await redis.del(...keys);
+          console.log(`💾 Cache invalidado: ${keys.length} keys eliminadas`);
+        }
+      } catch (cacheError) {
+        console.error('❌ Error al invalidar cache:', cacheError);
+      }
+    }
+    
     res.status(201).json(autor);
   } catch (error) {
     console.error('Error en createAutor:', error);
@@ -263,6 +486,25 @@ export const searchAutores = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'La consulta de búsqueda no puede exceder 100 caracteres' });
     }
 
+    // 🚀 CACHE: Generar clave única para esta búsqueda
+    const cacheKey = `autores:search:${trimmedQuery}:external:${includeExternal}`;
+    const cacheTTL = 300; // 5 minutos
+    
+    // 🚀 CACHE: Intentar obtener del cache primero
+    if (redis) {
+      try {
+        const cachedData = await redis.get(cacheKey);
+        if (cachedData) {
+          console.log('✅ Cache HIT para búsqueda:', cacheKey);
+          return res.json(JSON.parse(cachedData));
+        }
+        console.log('⚠️ Cache MISS para búsqueda:', cacheKey);
+      } catch (cacheError) {
+        console.error('❌ Error al leer cache de búsqueda:', cacheError);
+        // Continuar con la consulta a BD si falla el cache
+      }
+    }
+
     // Paso 1: Buscar en BDD (fuente única de verdad)
     console.log('📚 Buscando en BDD local...');
     const autoresLocales = await em.find(Autor, {
@@ -276,53 +518,61 @@ export const searchAutores = async (req: Request, res: Response) => {
 
     // Paso 2 (opcional): Buscar en APIs externas si hay pocos resultados
     // y el usuario quiere descubrir más autores
+    // IMPORTANTE: Solo muestra resultados, NO guarda en BDD hasta que el usuario vea el perfil
     if (includeExternal && autoresLocales.length < 5) {
       try {
-        console.log('🌐 Buscando en APIs externas...');
+        console.log('🌐 Buscando en APIs externas (READ-ONLY)...');
         
-        // Buscar en paralelo en Google Books y OpenLibrary
-        const [autoresGoogle, autoresOpenLibrary] = await Promise.all([
-          searchGoogleBooksAuthors(em, trimmedQuery).catch((err) => {
+        // Buscar en paralelo en Google Books y OpenLibrary (sin guardar)
+        const [autoresGoogleDTO, autoresOpenLibraryDTO] = await Promise.all([
+          searchGoogleBooksAuthorsReadOnly(trimmedQuery).catch((err) => {
             console.error('❌ Error en Google Books:', err.message);
             return [];
           }),
-          searchOpenLibraryAuthors(em, trimmedQuery).catch((err) => {
+          searchOpenLibraryAuthorsReadOnly(trimmedQuery).catch((err) => {
             console.error('❌ Error en OpenLibrary:', err.message);
             return [];
           })
         ]);
         
-        console.log(`✅ Encontrados ${autoresGoogle.length} autores en Google Books`);
-        console.log(`✅ Encontrados ${autoresOpenLibrary.length} autores en OpenLibrary`);
+        console.log(`✅ Encontrados ${autoresGoogleDTO.length} autores en Google Books`);
+        console.log(`✅ Encontrados ${autoresOpenLibraryDTO.length} autores en OpenLibrary`);
         
-        // Combinar resultados eliminando duplicados (por ID)
-        const autoresMap = new Map<number, Autor>();
+        // Combinar resultados: primero locales (tienen ID), luego externos (sin ID)
+        const autoresCombinados = [
+          ...autoresLocales,
+          ...autoresGoogleDTO,
+          ...autoresOpenLibraryDTO
+        ];
         
-        // Añadir autores locales primero (prioridad)
-        autoresLocales.forEach(autor => autoresMap.set(autor.id, autor));
+        console.log(`✅ Total combinado: ${autoresCombinados.length} autores (${autoresLocales.length} locales, ${autoresGoogleDTO.length + autoresOpenLibraryDTO.length} externos)`);
         
-        // Añadir autores de Google Books
-        autoresGoogle.forEach(autor => {
-          if (!autoresMap.has(autor.id)) {
-            autoresMap.set(autor.id, autor);
+        // 🚀 CACHE: Guardar respuesta combinada en cache
+        if (redis) {
+          try {
+            await redis.setex(cacheKey, cacheTTL, JSON.stringify(autoresCombinados));
+            console.log('💾 Búsqueda combinada guardada en cache');
+          } catch (cacheError) {
+            console.error('❌ Error al guardar en cache:', cacheError);
           }
-        });
+        }
         
-        // Añadir autores de OpenLibrary
-        autoresOpenLibrary.forEach(autor => {
-          if (!autoresMap.has(autor.id)) {
-            autoresMap.set(autor.id, autor);
-          }
-        });
-        
-        const autoresCombinados = Array.from(autoresMap.values());
-        console.log(`✅ Total combinado: ${autoresCombinados.length} autores`);
         return res.json(autoresCombinados);
       } catch (error: any) {
         console.error('❌ Error buscando en APIs externas:', error.message);
         console.error('Stack:', error.stack);
         // Si falla la búsqueda externa, devolver solo los locales
         return res.json(autoresLocales);
+      }
+    }
+
+    // 🚀 CACHE: Guardar respuesta local en cache
+    if (redis) {
+      try {
+        await redis.setex(cacheKey, cacheTTL, JSON.stringify(autoresLocales));
+        console.log('💾 Búsqueda local guardada en cache');
+      } catch (cacheError) {
+        console.error('❌ Error al guardar en cache:', cacheError);
       }
     }
 

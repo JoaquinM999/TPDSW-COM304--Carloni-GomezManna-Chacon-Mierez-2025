@@ -39,41 +39,60 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo,
   return (
     <article 
       ref={cardRef}
-      className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-out flex flex-col border border-gray-200 h-full group relative animate-fadeIn focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2"
+      className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transition-all duration-500 ease-out flex flex-col border border-gray-200/50 dark:border-gray-700/50 h-full group relative animate-fadeIn"
       role="article"
       aria-label={`Libro: ${title}`}
     >
       {/* Contenedor de imagen mejorado */}
-      <div className="relative w-full h-72 bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0">
+      <div className="relative w-full h-64 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-900/20 dark:to-blue-900/20 overflow-hidden flex-shrink-0">
         {image && !imageError && shouldLoadImage ? (
           <>
+            {/* Fondo blur con colores de la portada */}
+            {imageLoaded && (
+              <div
+                className="absolute inset-0 scale-150 blur-2xl opacity-85 dark:opacity-75"
+                style={{
+                  backgroundImage: `url(${image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
+            )}
             {/* Skeleton loader mientras carga la imagen */}
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]" aria-label="Cargando imagen"></div>
             )}
-            <img 
-              src={image} 
-              alt={`Portada de ${title}`}
-              loading="lazy"
-              className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-700 ease-out ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{ objectPosition: 'center top' }}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => setImageError(true)}
-            />
-            {/* Efecto de brillo al hacer hover */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/0 to-transparent group-hover:via-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" aria-hidden="true"></div>
+            <div className="relative h-full flex items-center justify-center p-3">
+              <img 
+                src={image} 
+                alt={`Portada de ${title}`}
+                loading="lazy"
+                className={`h-[90%] w-auto object-contain drop-shadow-2xl transform group-hover:scale-105 group-hover:-translate-y-2 transition-all duration-500 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+            </div>
           </>
         ) : (
           <div 
-            className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 group-hover:from-purple-100 group-hover:via-pink-100 group-hover:to-blue-100 transition-all duration-500"
+            className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 dark:from-gray-700 dark:via-purple-900/30 dark:to-blue-900/30 relative overflow-hidden"
             role="img"
             aria-label="Imagen no disponible"
           >
-            <div className="text-center p-8 transform group-hover:scale-105 transition-transform duration-500">
+            {/* Patrón decorativo de fondo */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-full h-full" 
+                   style={{
+                     backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                     backgroundSize: '30px 30px'
+                   }} 
+              />
+            </div>
+            <div className="text-center p-8 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative z-10">
               <svg 
-                className="w-20 h-20 mx-auto mb-3 text-gray-300 group-hover:text-gray-400 dark:text-gray-500 transition-colors duration-300" 
+                className="w-20 h-20 mx-auto mb-3 text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400 transition-colors duration-300" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -81,43 +100,42 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo,
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Sin portada</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 flex flex-col flex-grow relative z-10 bg-white dark:bg-gray-800 min-h-[140px]">
+      <div className="p-5 flex flex-col flex-grow relative z-10 bg-white/95 dark:bg-gray-800/95 min-h-[140px]">
         <h3 
-          className="text-sm font-black mb-1.5 line-clamp-2 text-gray-900 dark:text-gray-100 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-700 group-hover:to-pink-700 transition-all duration-300 break-words" 
-          style={{ fontWeight: 900, overflowWrap: 'break-word', wordBreak: 'break-word' }}
+          className="text-base font-bold mb-2 line-clamp-2 text-gray-900 dark:text-gray-100 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300 break-words" 
+          style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
           title={title}
         >
           {title}
         </h3>
         <p 
-          className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2 line-clamp-1 font-medium group-hover:text-gray-800 transition-colors duration-300"
+          className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-1 font-medium transition-colors duration-300"
           title={authors?.length ? authors.join(", ") : "Autor desconocido"}
         >
           {authors?.length ? authors.join(", ") : "Autor desconocido"}
         </p>
         {extraInfo && (
-          <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-auto">
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-auto pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
             {typeof extraInfo === 'string' ? <p>{extraInfo}</p> : extraInfo}
           </div>
         )}
       </div>
 
-      {/* Badge de rating con animación mejorada */}
+      {/* Badge de rating mejorado */}
       {rating !== undefined && rating !== null && rating > 0 && (
         <div 
-          className="absolute top-3 right-3 z-20 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+          className="absolute top-4 right-4 z-20"
           role="status"
           aria-label={`Calificación: ${rating.toFixed(1)} de 5 estrellas`}
         >
-          <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-sm border-2 border-white group-hover:shadow-xl animate-pulse-subtle">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-2 rounded-full flex items-center gap-1.5 shadow-xl border-2 border-white/30">
             <svg 
-              className="w-4 h-4 animate-spin-slow" 
+              className="w-4 h-4" 
               fill="currentColor" 
               viewBox="0 0 20 20"
               aria-hidden="true"
@@ -128,9 +146,6 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo,
           </div>
         </div>
       )}
-
-      {/* Efecto de resplandor inferior al hacer hover */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" aria-hidden="true"></div>
     </article>
   );
 };

@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { searchAutores as searchAutoresAPI } from '../services/autorService';
 
 interface Autor {
-  id: string;
+  id?: string;
   name: string;
   nombre?: string;
   apellido?: string;
   photo?: string;
-  esPopular?: boolean;
-  scorePopularidad?: number;
   biografia?: string;
   googleBooksId?: string;
   openLibraryKey?: string;
+  external?: boolean; // Flag para identificar autores externos (sin ID en BD)
 }
 
 const AutoresPage: React.FC = () => {
+  const navigate = useNavigate();
   const [autores, setAutores] = useState<Autor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ const AutoresPage: React.FC = () => {
   const [sugerencias, setSugerencias] = useState<Autor[]>([]);
   const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [includeExternal, setIncludeExternal] = useState(false);
+  const includeExternal = false; // Siempre buscar solo en BD local
   const limit = 20; // Autores por página
 
   // Calculate total pages
@@ -97,8 +97,10 @@ const AutoresPage: React.FC = () => {
         nombre: autor.nombre,
         apellido: autor.apellido,
         photo: autor.foto,
-        esPopular: autor.esPopular,
-        scorePopularidad: autor.scorePopularidad
+        external: autor.external, // Flag para identificar autores externos
+        googleBooksId: autor.googleBooksId,
+        openLibraryKey: autor.openLibraryKey,
+        biografia: autor.biografia
       }));
       
       setAutores(autoresMapeados);
@@ -178,8 +180,6 @@ const AutoresPage: React.FC = () => {
         nombre: autor.nombre,
         apellido: autor.apellido,
         photo: autor.foto,
-        esPopular: autor.esPopular,
-        scorePopularidad: autor.scorePopularidad,
         biografia: autor.biografia,
         googleBooksId: autor.googleBooksId,
         openLibraryKey: autor.openLibraryKey
@@ -244,6 +244,49 @@ const AutoresPage: React.FC = () => {
   const handleSearchBlur = () => {
     // Delay para permitir clicks en sugerencias
     setTimeout(() => setMostrarSugerencias(false), 200);
+  };
+
+  // Función para guardar autor externo en la BD cuando el usuario hace clic
+  const handleAutorClick = async (autor: Autor): Promise<string | null> => {
+    // Si el autor ya tiene ID (está en la BD), retornar ese ID
+    if (autor.id && !autor.external) {
+      return autor.id;
+    }
+
+    // Si es externo, guardarlo primero
+    if (autor.external) {
+      try {
+        console.log('💾 Guardando autor externo en BD:', autor.name);
+        const response = await fetch('http://localhost:3000/api/autor/external/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nombre: autor.nombre || autor.name.split(' ')[0],
+            apellido: autor.apellido || autor.name.split(' ').slice(1).join(' '),
+            googleBooksId: autor.googleBooksId,
+            openLibraryKey: autor.openLibraryKey,
+            biografia: autor.biografia,
+            foto: autor.photo,
+            external: true
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al guardar autor externo');
+        }
+
+        const savedAutor = await response.json();
+        console.log('✅ Autor guardado con ID:', savedAutor.id);
+        return savedAutor.id;
+      } catch (error) {
+        console.error('❌ Error guardando autor externo:', error);
+        return null;
+      }
+    }
+
+    return autor.id || null;
   };
 
   const highlightText = (text: string, query: string) => {
@@ -326,7 +369,7 @@ const AutoresPage: React.FC = () => {
                     className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 border-b border-gray-100 dark:border-gray-700 last:border-b-0 text-left group"
                   >
                     <img
-                      src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=40&background=${autor.esPopular ? 'f59e0b' : '0ea5e9'}&color=fff&format=png&bold=true`}
+                      src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=40&background=0ea5e9&color=fff&format=png&bold=true`}
                       alt={autor.name}
                       className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 group-hover:ring-cyan-400 dark:group-hover:ring-cyan-500 transition-all"
                     />
@@ -334,9 +377,6 @@ const AutoresPage: React.FC = () => {
                       <p className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                         {highlightText(autor.name, searchTerm)}
                       </p>
-                      {autor.esPopular && (
-                        <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">⭐ Popular</p>
-                      )}
                     </div>
                     <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -381,13 +421,6 @@ const AutoresPage: React.FC = () => {
           )}
         </div>
         
-        {/* Mensaje informativo */}
-        {!searchTerm && autores.length > 0 && (
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
-            ⭐ Los autores populares con muchos libros en Google Books aparecen primero
-          </p>
-        )}
-        
         {searchTerm && !loading && autores.length > 0 && (
           <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-3">
             Se encontraron <span className="font-bold text-cyan-600 dark:text-cyan-400">{total}</span> autores
@@ -415,23 +448,11 @@ const AutoresPage: React.FC = () => {
         {autores.map((autor) => (
           <div
             key={autor.id}
-            className={`bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border ${
-              autor.esPopular ? 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-300 dark:ring-yellow-600' : 'border-gray-100 dark:border-gray-700'
-            } hover:shadow-2xl hover:scale-105 transition-all duration-300 group relative`}
+            className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:scale-105 transition-all duration-300 group relative"
           >
-            {/* Badge de Popular */}
-            {autor.esPopular && (
-              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-yellow-500 dark:to-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                Popular
-              </div>
-            )}
-            
             <div className="flex items-center mb-4">
               <img
-                src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=64&background=${autor.esPopular ? 'f59e0b' : '0ea5e9'}&color=fff&format=png&bold=true`}
+                src={autor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(autor.name)}&size=64&background=0ea5e9&color=fff&format=png&bold=true`}
                 alt={autor.name}
                 className="w-16 h-16 rounded-full mr-4 object-cover ring-2 ring-gray-200 dark:ring-gray-600"
                 onError={(e) => {
@@ -442,16 +463,16 @@ const AutoresPage: React.FC = () => {
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                   {autor.name}
                 </h2>
-                {autor.esPopular && (
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold mt-1">
-                    ⭐ Muchos libros disponibles
-                  </p>
-                )}
               </div>
             </div>
-            <Link
-              to={`/autores/${autor.id}`}
-              className="inline-flex items-center text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 font-medium transition-colors group-hover:translate-x-1 transform duration-200"
+            <button
+              onClick={async () => {
+                const autorId = await handleAutorClick(autor);
+                if (autorId) {
+                  navigate(`/autores/${autorId}`);
+                }
+              }}
+              className="inline-flex items-center text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 font-medium transition-colors group-hover:translate-x-1 transform duration-200 cursor-pointer"
             >
               Ver detalles
               <svg
@@ -463,7 +484,7 @@ const AutoresPage: React.FC = () => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </Link>
+            </button>
           </div>
         ))}
       </div>

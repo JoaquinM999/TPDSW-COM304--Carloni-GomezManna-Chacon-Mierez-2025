@@ -584,14 +584,91 @@ async function analizarSentimiento(texto: string) {
 
 ---
 
+## 🎭 Mejoras del Sistema de Autores
+
+### ✅ YA IMPLEMENTADO
+- [x] **Paginación en Base de Datos** - Implementado con `findAndCount()`
+- [x] **Índices en BD** - idx_autor_nombre, idx_autor_apellido, idx_autor_nombre_apellido
+- [x] **Corrección MySQL** - Reemplazado `$ilike` por `$like`
+- [x] **Cache con Redis** - ✨ **RECIÉN IMPLEMENTADO** en getAutores y searchAutores (5 min TTL)
+- [x] **Búsqueda Híbrida** - Google Books + OpenLibrary integrados
+- [x] **Enriquecimiento Básico** - Biografías y fotos desde APIs externas
+
+### � VIABLE - Alta Prioridad (2-4 horas c/u)
+- [ ] **Full-Text Search** - Solo requiere índice FULLTEXT en MySQL
+  ```sql
+  ALTER TABLE autor ADD FULLTEXT INDEX idx_fulltext_autor (nombre, apellido);
+  ```
+  - Complejidad: ⭐ Baja
+  - Impacto: 🚀🚀🚀 Alto (búsquedas 10x más rápidas)
+  - Tiempo: 2-3 horas
+
+- [ ] **Cache de APIs Externas** - Cachear resultados de Google Books/OpenLibrary por 24h
+  - Complejidad: ⭐ Baja
+  - Impacto: 🚀🚀 Medio-Alto (reduce llamadas API)
+  - Tiempo: 2 horas
+
+### 🟡 VIABLE - Media Prioridad (4-8 horas c/u)
+- [ ] **Wikipedia API Integration** - Enriquecimiento de biografías
+  ```typescript
+  // API REST simple, sin auth requerida
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${authorName}`;
+  ```
+  - Complejidad: ⭐ Baja
+  - Impacto: 🚀 Medio (mejor contenido)
+  - Tiempo: 3-4 horas
+
+- [ ] **Infinite Scroll Frontend** - Usar `react-infinite-scroll-component` (ya instalado)
+  - Complejidad: ⭐⭐ Media
+  - Impacto: 🚀🚀 Medio-Alto (mejor UX)
+  - Tiempo: 6-8 horas
+  - Paquete: Ya instalado en Frontend
+
+- [ ] **Búsqueda Fonética (Soundex)** - Para tolerar errores de escritura
+  - Complejidad: ⭐⭐ Media
+  - Impacto: 📊 Medio (mejor búsqueda)
+  - Tiempo: 4-6 horas
+  - Paquete: `natural@8.1.0` ya instalado
+
+### 🔴 NO VIABLE - Alta Complejidad (NO hacer ahora)
+- [ ] ❌ **Job Queue con Bull** - Requiere Redis + Worker separado
+  - Complejidad: ⭐⭐⭐⭐ Muy Alta
+  - Beneficio vs Costo: Bajo para proyecto actual
+  - Alternativa: Enriquecimiento síncrono con timeout
+  - Tiempo: 20+ horas
+
+- [ ] ❌ **Clean Architecture** - Refactorización masiva del código
+  - Complejidad: ⭐⭐⭐⭐⭐ Muy Alta
+  - Beneficio: Solo para proyectos muy grandes
+  - Recomendación: Mantener estructura actual
+  - Tiempo: 60-80 horas
+
+- [ ] ❌ **Virtual Scrolling con TanStack** - Ya existe alternativa mejor
+  - Usar `react-infinite-scroll-component` en su lugar
+  - No requiere: `@tanstack/react-query` ni `@tanstack/react-virtual`
+
+### 📊 Monitoring y Analytics (Evaluar necesidad)
+- [ ] **Métricas de Búsqueda** - Solo si se necesitan métricas de negocio
+  - Alternativa: Usar herramientas SaaS (Google Analytics, Mixpanel)
+  - Complejidad: ⭐⭐⭐ Alta
+  - Tiempo: 12-16 horas
+
+- [ ] **Analytics de Popularidad** - Rastrear autores más vistos
+  - Usar Redis ZINCRBY para contadores
+  - Complejidad: ⭐⭐ Media
+  - Tiempo: 4-6 horas
+
+---
+
 ## 🔄 Prioridades
 
 ### 🔴 Alta Prioridad (Próximas 2 semanas)
-1. Mejorar rendimiento de carga de imágenes
-2. Implementar lazy loading
-3. Corregir bugs críticos de navegación
-4. Mejorar responsividad móvil
-5. Implementar skeleton loaders
+1. ✅ **Cache Redis para Autores** - ✨ COMPLETADO
+2. Implementar Full-Text Search en MySQL
+3. Mejorar rendimiento de carga de imágenes
+4. Implementar lazy loading
+5. Corregir bugs críticos de navegación
+6. Mejorar responsividad móvil
 
 ### 🟡 Media Prioridad (Próximo mes)
 1. Implementar sistema de notificaciones

@@ -970,7 +970,7 @@ const DetalleLibro: React.FC = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-gray-950 dark:to-indigo-950">
         <DotLottieReact
           src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
           loop
@@ -1009,81 +1009,92 @@ const DetalleLibro: React.FC = () => {
         moderationDetails={moderationError?.details}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-          <button
-          onClick={handleGoBack}
-          className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-200 group mb-6"
-          aria-label="Volver a la página anterior"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" /> Volver
-        </button>
-
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 justify-center">
-          {/* Cover Section */}
-          <div className="flex justify-center">
-            <div className="relative group">
-              <LibroImagen
-                src={libro.coverUrl || libro.imagen}
-                alt={`Portada del libro ${libro.titulo}`}
-                titulo={libro.titulo}
-                className="w-48 h-72 sm:w-56 sm:h-80 lg:w-64 lg:h-96 object-cover rounded-xl shadow-2xl transition-all duration-500 group-hover:shadow-3xl group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950 dark:to-gray-950 transition-colors duration-300">
+        {/* Header con efecto glassmorphism */}
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-slate-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <button
+              onClick={handleGoBack}
+              className="inline-flex items-center gap-2 text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 transition-all duration-200 group font-medium"
+              aria-label="Volver a la página anterior"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" /> 
+              Volver
+            </button>
           </div>
+        </div>
 
-          {/* Info Section */}
-          <div className="space-y-6 text-center">
-            <div className="space-y-4">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{libro.titulo}</h1>
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
 
-              <div className="flex flex-wrap gap-2 justify-center">
-                {libro.autores.map((a, i) => (
-                  <Link
-                    key={i}
-                    to={`/autores/${encodeURIComponent(a)}`}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-indigo-700 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-100 dark:border-gray-700"
-                  >
-                    <User className="w-4 h-4" />
-                    {a}
-                  </Link>
-                ))}
+          <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-12 lg:gap-16">
+            {/* Cover Section con animación */}
+            <div className="w-full lg:w-auto flex justify-center lg:sticky lg:top-8">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <LibroImagen
+                  src={libro.coverUrl || libro.imagen}
+                  alt={`Portada del libro ${libro.titulo}`}
+                  titulo={libro.titulo}
+                  className="relative w-56 h-80 sm:w-64 sm:h-96 lg:w-72 lg:h-[432px] object-cover rounded-2xl shadow-2xl transition-all duration-500 group-hover:shadow-[0_20px_70px_-15px_rgba(6,182,212,0.3)] group-hover:scale-[1.02]"
+                />
+              </div>
+            </div>
+
+            {/* Info Section */}
+            <div className="flex-1 space-y-8 w-full max-w-3xl">
+              <div className="space-y-6">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-500 dark:to-indigo-500 leading-tight text-center lg:text-left">
+                  {libro.titulo}
+                </h1>
+
+                <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                  {libro.autores.map((a, i) => (
+                    <Link
+                      key={i}
+                      to={`/autores/${encodeURIComponent(a)}`}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
+                    >
+                      <User className="w-4 h-4" />
+                      {a}
+                    </Link>
+                  ))}
+                </div>
+
+                {libro.source && (
+                  <div className="flex justify-center lg:justify-start">
+                    <span className="inline-flex items-center text-sm font-medium text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-4 py-2 rounded-full border border-gray-200 dark:border-slate-700">
+                      Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {libro.source && (
-                <span className="inline-block text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
-                  Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
-                </span>
-              )}
-            </div>
+              <div className="flex flex-wrap gap-3 pt-6 justify-center lg:justify-start">
+                <button
+                  onClick={toggleFavorito}
+                  className={`group relative p-4 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 ${
+                    esFavorito
+                      ? "bg-gradient-to-br from-red-500 to-pink-600 dark:from-red-600 dark:to-pink-700 text-white"
+                      : "bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 border-2 border-gray-200 dark:border-slate-700"
+                  }`}
+                  aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+                >
+                  <Heart className={`w-6 h-6 transition-transform duration-300 group-hover:scale-110 ${esFavorito ? "fill-current" : ""}`} />
+                </button>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
-              <button
-                onClick={toggleFavorito}
-                className={`p-3 rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${
-                  esFavorito
-                    ? "bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
-                    : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-                }`}
-                aria-label={esFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
-              >
-                <Heart className={`w-6 h-6 ${esFavorito ? "fill-current" : ""}`} />
-              </button>
-
-              {isAuthenticated() && (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setShowListaDropdown(!showListaDropdown)}
-                    className="inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 border border-gray-200 dark:border-gray-700"
-                    aria-label="Agregar a una lista"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Agregar a Lista
-                  </button>
+                {isAuthenticated() && (
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowListaDropdown(!showListaDropdown)}
+                      className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-500 dark:to-blue-600 text-white hover:scale-105 hover:from-cyan-700 hover:to-blue-700"
+                      aria-label="Agregar a una lista"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Agregar a Lista
+                    </button>
 
                   {showListaDropdown && (
-                    <div className="absolute top-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 w-48 text-left">
+                    <div className="absolute top-full mt-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-2xl z-10 w-56 text-left overflow-hidden">
                       {/* Opciones predefinidas (siempre se muestran si estás logueado) */}
                       {nombresDeListasFijas.map((nombre) => {
                         const listaExistente = listas.find(l => l.nombre === nombre);
@@ -1098,10 +1109,10 @@ const DetalleLibro: React.FC = () => {
                                 handleAddToListByName(nombre);
                               }
                             }}
-                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
+                            className="block w-full text-left px-4 py-3 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 flex items-center justify-between text-gray-900 dark:text-slate-100 transition-colors font-medium"
                           >
                             <span>{nombre}</span>
-                            {estaEnLista && <span className="text-green-500">✓</span>}
+                            {estaEnLista && <span className="text-green-500 dark:text-green-400 text-lg">✓</span>}
                           </button>
                         );
                       })}
@@ -1111,18 +1122,18 @@ const DetalleLibro: React.FC = () => {
                         const listasFiltradas = listas.filter(l => !nombresDeListasFijas.includes(l.nombre));
                         return listasFiltradas.length > 0 ? (
                           <>
-                            <hr className="my-1" />
+                            <hr className="border-gray-200 dark:border-slate-700" />
                             {listasFiltradas.map((lista) => {
                               const estaEnLista = listasConLibro.has(lista.id);
                               return (
                                 <button
                                   key={lista.id}
                                   onClick={() => estaEnLista ? null : handleAddToList(lista.id)}
-                                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between ${estaEnLista ? 'text-gray-500 dark:text-gray-600' : 'text-gray-900 dark:text-gray-100'}`}
+                                  className={`block w-full text-left px-4 py-3 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 flex items-center justify-between transition-colors font-medium ${estaEnLista ? 'text-gray-400 dark:text-slate-600' : 'text-gray-900 dark:text-slate-100'}`}
                                   disabled={estaEnLista}
                                 >
                                   <span>{lista.nombre}</span>
-                                  {estaEnLista && <span className="text-green-500 dark:text-green-400">✓</span>}
+                                  {estaEnLista && <span className="text-green-500 dark:text-green-400 text-lg">✓</span>}
                                 </button>
                               );
                             })}
@@ -1138,124 +1149,143 @@ const DetalleLibro: React.FC = () => {
         </div>
       </div>
 
-      {/* Sinopsis */}
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <MessageCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Sinopsis
-          </h2>
-          <p className={`text-gray-700 dark:text-gray-300 leading-relaxed ${!mostrarSinopsis ? "line-clamp-4" : ""}`}>
-            {renderSinopsis(libro.descripcion)}
-          </p>
-          {libro.descripcion && plainTextLength(libro.descripcion) > 200 && (
-            <button
-              onClick={() => setMostrarSinopsis(!mostrarSinopsis)}
-              className="mt-3 text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline"
-            >
-              {mostrarSinopsis ? (
-                <>
-                  <ChevronUp className="w-4 h-4" /> Ver menos
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4" /> Ver más
-                </>
-              )}
-            </button>
-          )}
+        {/* Sinopsis */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 border border-gray-100 dark:border-slate-700">
+            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-gray-900 dark:text-slate-100">
+              <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700 rounded-xl">
+                <MessageCircle className="w-6 h-6 text-white" />
+              </div>
+              Sinopsis
+            </h2>
+            <p className={`text-lg text-gray-700 dark:text-slate-300 leading-relaxed ${!mostrarSinopsis ? "line-clamp-4" : ""}`}>
+              {renderSinopsis(libro.descripcion)}
+            </p>
+            {libro.descripcion && plainTextLength(libro.descripcion) > 200 && (
+              <button
+                onClick={() => setMostrarSinopsis(!mostrarSinopsis)}
+                className="mt-4 text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 flex items-center gap-2 font-semibold transition-colors"
+              >
+                {mostrarSinopsis ? (
+                  <>
+                    <ChevronUp className="w-5 h-5" /> Ver menos
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-5 h-5" /> Ver más
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Rating */}
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Rating
-          </h2>
-          <div className="flex items-center gap-4">
-            <div className="text-lg text-gray-600 dark:text-gray-300">
-              <div className="flex items-center gap-1">
-                <div className="flex items-center gap-1">{renderStars(reviewState.averageRating || 0, "w-6 h-6")}</div>
-                <span className="ml-2 font-medium text-xl text-gray-900 dark:text-gray-100">{(reviewState.averageRating || 0).toFixed(1)}/5</span>
+        {/* Rating */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 sm:p-10 border border-gray-100 dark:border-slate-700">
+            <h2 className="text-3xl font-bold mb-8 flex items-center gap-3 text-gray-900 dark:text-slate-100">
+              <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 dark:from-amber-600 dark:to-orange-700 rounded-xl">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              Calificación
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              {/* Promedio y contador de reseñas */}
+              <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-2xl border-2 border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2 mb-3">{renderStars(reviewState.averageRating || 0, "w-8 h-8")}</div>
+                <span className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 mb-2">
+                  {(reviewState.averageRating || 0).toFixed(1)}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-slate-400 font-medium mb-4">de 5 estrellas</span>
+                
+                <div className="text-center pt-4 border-t border-amber-200 dark:border-amber-800 w-full">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                    {reviewState.reseñas.length}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-slate-400">
+                    {reviewState.reseñas.length === 1 ? 'reseña' : 'reseñas'}
+                  </div>
+                </div>
+                
                 {reviewState.reseñas.length === 0 && (
-                  <span className="ml-2 text-gray-400 dark:text-gray-500 text-sm">Libro sin reseñas</span>
+                  <p className="text-sm text-gray-500 dark:text-slate-400 text-center mt-4">¡Sé el primero en opinar!</p>
                 )}
               </div>
-              <div className="mt-2 font-semibold text-gray-900 dark:text-gray-100">{reviewState.reseñas.length} reseñas</div>
+
+              {/* Rating Distribution */}
+              {reviewState.reseñas.length > 0 && (
+                <div className="flex flex-col justify-center">
+                  <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-slate-100">Distribución</h3>
+                  <div className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = ratingDistribution[star as keyof typeof ratingDistribution];
+                    const percentage = reviewState.reseñas.length > 0 ? (count / reviewState.reseñas.length) * 100 : 0;
+                    return (
+                      <div key={star} className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 w-16 font-semibold text-gray-700 dark:text-slate-300">
+                          <span>{star}</span>
+                          <Star className="w-4 h-4 text-amber-400 fill-current" />
+                        </div>
+                        <div className="flex-1 bg-gray-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-600 rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-600 dark:text-slate-400 w-12 text-right">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Rating Distribution */}
-          {reviewState.reseñas.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Resumen de calificaciones</h3>
-              <div className="space-y-2">
-                {[5, 4, 3, 2, 1].map((star) => {
-                  const count = ratingDistribution[star as keyof typeof ratingDistribution];
-                  const percentage = reviewState.reseñas.length > 0 ? (count / reviewState.reseñas.length) * 100 : 0;
-                  return (
-                    <div key={star} className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 w-12">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{star}</span>
-                        <Star className="w-4 h-4 text-amber-400 fill-current" />
-                      </div>
-                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-amber-400 dark:bg-amber-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300 w-8 text-right">{count}</span>
-                    </div>
-                  );
-                })}
+        {/* Reseñas mejoradas */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <h2 className="text-3xl font-bold flex items-center gap-3 text-gray-900 dark:text-slate-100">
+              <div className="p-2 bg-gradient-to-br from-pink-500 to-rose-500 dark:from-pink-600 dark:to-rose-600 rounded-xl shadow-md">
+                <MessageCircle className="w-6 h-6 text-white" />
+              </div>
+              Reseñas
+            </h2>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="px-4 py-1.5 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 rounded-full border border-pink-200 dark:border-pink-800/50">
+                <span className="text-sm font-semibold text-pink-700 dark:text-pink-300">{reviewState.reseñas.length} {reviewState.reseñas.length === 1 ? 'reseña' : 'reseñas'}</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-2xl shadow-lg px-3 py-2 border border-gray-200 dark:border-slate-700">
+                <button
+                  onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_recientes' })}
+                  className={`text-xs sm:text-sm px-3 py-2 rounded-xl font-medium transition-all ${reviewState.sortOrder === 'mas_recientes' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                >
+                  Recientes
+                </button>
+                <button
+                  onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mejor_valoradas' })}
+                  className={`text-xs sm:text-sm px-3 py-2 rounded-xl font-medium transition-all ${reviewState.sortOrder === 'mejor_valoradas' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                >
+                  Mejor valoradas
+                </button>
+                <button
+                  onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_populares' })}
+                  className={`text-xs sm:text-sm px-3 py-2 rounded-xl font-medium flex items-center gap-1.5 transition-all ${reviewState.sortOrder === 'mas_populares' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                  Populares
+                </button>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Reseñas mejoradas */}
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold flex items-center gap-3 text-gray-900 dark:text-gray-100">
-            <MessageCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" /> Reseñas
-          </h2>
-
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600 dark:text-gray-300 text-right">
-              <div className="font-semibold">{reviewState.reseñas.length} reseñas</div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg shadow px-3 py-2 border border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_recientes' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mas_recientes' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-              >
-                Más recientes
-              </button>
-              <button
-                onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mejor_valoradas' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors ${reviewState.sortOrder === 'mejor_valoradas' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-              >
-                Mejor valoradas
-              </button>
-              <button
-                onClick={() => dispatch({ type: 'SET_SORT_ORDER', payload: 'mas_populares' })}
-                className={`text-sm px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 ${reviewState.sortOrder === 'mas_populares' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-              >
-                <Heart className="w-3.5 h-3.5" />
-                Más populares
-              </button>
-            </div>
           </div>
-        </div>
 
-        {isAuthenticated() && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 mb-8">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Agregar una reseña</h3>
+          {isAuthenticated() && (
+            <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl p-8 mb-10 border-2 border-blue-100 dark:border-blue-900">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-slate-100">Escribe tu reseña</h3>
             <NewReviewForm
               libroId={libro.id}
               onAdded={refreshResenas}
@@ -1264,20 +1294,23 @@ const DetalleLibro: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-6">
-          {reviewState.reviewsLoading ? (
-            <div className="flex items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow">
-              <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600 dark:text-indigo-400" /> 
-              <span className="text-gray-900 dark:text-gray-100">Cargando reseñas...</span>
-            </div>
-          ) : sortedResenas().length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
-              <MessageCircle className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">Aún no hay reseñas disponibles para este libro. ¡Sé el primero en comentar!</p>
-            </div>
-          ) : (
-            sortedResenas().map((r) => (
-              <article key={r.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition border border-transparent dark:border-gray-700">
+          <div className="space-y-6">
+            {reviewState.reviewsLoading ? (
+              <div className="flex items-center justify-center p-12 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl">
+                <Loader2 className="w-8 h-8 animate-spin mr-3 text-blue-600 dark:text-blue-400" /> 
+                <span className="text-lg font-medium text-gray-900 dark:text-slate-100">Cargando reseñas...</span>
+              </div>
+            ) : sortedResenas().length === 0 ? (
+              <div className="bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl p-12 text-center border-2 border-purple-100 dark:border-purple-900">
+                <div className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full inline-block mb-6">
+                  <MessageCircle className="w-16 h-16 text-purple-600 dark:text-purple-400" />
+                </div>
+                <p className="text-lg text-gray-600 dark:text-slate-300">Aún no hay reseñas para este libro.</p>
+                <p className="text-gray-500 dark:text-slate-400 mt-2">¡Sé el primero en compartir tu opinión!</p>
+              </div>
+            ) : (
+              sortedResenas().map((r) => (
+                <article key={r.id} className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all border border-gray-100 dark:border-slate-700 hover:border-purple-200 dark:hover:border-purple-800">
                 <div className="flex gap-4">
                   <UserAvatar usuario={r.usuario} />
 
@@ -1322,37 +1355,41 @@ const DetalleLibro: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-6 mt-4 text-sm items-center">
+                    <div className="flex flex-wrap gap-3 mt-5 text-sm items-center">
                       <button
                         onClick={() => handleToggleLike(r.id)}
-                        className={`flex items-center gap-2 ${reviewState.likedByUser[r.id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${reviewState.likedByUser[r.id] ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg hover:scale-105" : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"}`}
                       >
                         <ThumbsUp className="w-4 h-4" />
-                        <span className="font-medium">Me gusta</span>
+                        <span>Me gusta</span>
                       </button>
 
                       <button
                         onClick={() => toggleReplyForm(r.id)}
-                        className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all font-medium"
                       >
+                        <MessageCircle className="w-4 h-4" />
                         Responder
                       </button>
 
                       {(r.respuestas && r.respuestas.length > 1) && (
                         <button
                           onClick={() => dispatch({ type: 'TOGGLE_EXPAND_REPLIES', payload: r.id.toString() })}
-                          className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1"
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-900/40 transition-all font-medium"
                         >
                           {reviewState.expandedReplies[r.id.toString()] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          {reviewState.expandedReplies[r.id.toString()] ? "Ver menos" : `Ver más respuestas (${(r.respuestas ? r.respuestas.length - 1 : 0)})`}
+                          {reviewState.expandedReplies[r.id.toString()] 
+                            ? "Ver menos" 
+                            : `Ver ${(r.respuestas ? r.respuestas.length - 1 : 0)} ${(r.respuestas && r.respuestas.length - 1 === 1) ? 'respuesta' : 'respuestas'}`
+                          }
                         </button>
                       )}
 
-                      <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {r.id}</span>
+                      <span className="ml-auto text-xs text-gray-400 dark:text-slate-500 px-3 py-1.5 bg-gray-50 dark:bg-slate-700/50 rounded-full">ID: {r.id}</span>
                     </div>
 
                     {reviewState.replyForms[r.id] && (
-                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <div className="mt-5 p-5 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 shadow-inner">
                         <div className="space-y-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tu respuesta</label>
@@ -1362,16 +1399,16 @@ const DetalleLibro: React.FC = () => {
                                 dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: { ...reviewState.replyForms[r.id]!, comentario: e.target.value } } })
                               }
                               rows={3}
-                              className="w-full resize-y rounded border border-gray-300 dark:border-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                              className="w-full resize-y rounded-xl border-2 border-cyan-300 dark:border-cyan-700 p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
                               placeholder="Escribe tu respuesta..."
                             />
                           </div>
 
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex gap-3 justify-end">
                             <button
                               type="button"
                               onClick={() => dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId: r.id, form: null } })}
-                              className="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                              className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
                             >
                               Cancelar
                             </button>
@@ -1384,7 +1421,7 @@ const DetalleLibro: React.FC = () => {
                                 )
                               }
                               disabled={reviewState.replyForms[r.id]!.submitting || !reviewState.replyForms[r.id]!.comentario.trim()}
-                              className="px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-sm font-semibold rounded-xl hover:from-cyan-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all hover:scale-105"
                             >
                               {reviewState.replyForms[r.id]!.submitting ? "Enviando..." : "Responder"}
                             </button>
@@ -1399,9 +1436,9 @@ const DetalleLibro: React.FC = () => {
 
                     {/* Display replies */}
                     {r.respuestas && r.respuestas.length > 0 && (
-                      <div className="mt-6 space-y-4 border-l-2 border-gray-200 dark:border-gray-700 pl-6">
+                      <div className="mt-6 space-y-4 border-l-4 border-pink-200 dark:border-pink-800/50 pl-6 ml-4">
                         {/* Always show the first reply */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+                        <div className="bg-gradient-to-br from-pink-50/50 to-rose-50/50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-5 border border-pink-100 dark:border-pink-800/50 shadow-sm">
                           <div className="flex gap-3">
                             {r.respuestas[0].usuario.avatar ? (
                               <img
@@ -1449,17 +1486,17 @@ const DetalleLibro: React.FC = () => {
                                 </div>
                               )}
 
-                              <div className="flex gap-4 mt-3 text-sm items-center">
+                              <div className="flex gap-3 mt-4 text-sm items-center">
                                 <button
                                   onClick={() => r.respuestas && r.respuestas[0] && handleToggleLike(r.respuestas[0].id)}
-                                  className={`flex items-center gap-1 ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md" : "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40"}`}
                                   disabled={!r.respuestas || !r.respuestas[0]}
                                 >
-                                  <ThumbsUp className="w-3 h-3" />
+                                  <ThumbsUp className="w-3.5 h-3.5" />
                                   <span className="text-xs">Me gusta</span>
                                 </button>
 
-                                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {r.respuestas[0].id}</span>
+                                <span className="ml-auto text-xs text-gray-400 dark:text-slate-500 px-2 py-1 bg-gray-50 dark:bg-slate-700/50 rounded-full">ID: {r.respuestas[0].id}</span>
                               </div>
                             </div>
                           </div>
@@ -1467,8 +1504,8 @@ const DetalleLibro: React.FC = () => {
 
                         {/* Show additional replies only if expanded */}
                         {reviewState.expandedReplies[r.id.toString()] && r.respuestas.slice(1).map((reply) => (
-                          <div key={reply.id} className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
-                            <div className="flex gap-3">
+                          <div key={reply.id} className="bg-gradient-to-br from-pink-50/50 to-rose-50/50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-5 border border-pink-100 dark:border-pink-800/50 shadow-sm">
+                            <div className="flex gap-4">
                               {reply.usuario.avatar ? (
                                 <img
                                   src={`/assets/${reply.usuario.avatar}.svg`}
@@ -1515,16 +1552,16 @@ const DetalleLibro: React.FC = () => {
                                   </div>
                                 )}
 
-                                <div className="flex gap-4 mt-3 text-sm items-center">
+                                <div className="flex gap-3 mt-4 text-sm items-center">
                                   <button
                                     onClick={() => handleToggleLike(reply.id)}
-                                    className={`flex items-center gap-1 ${reviewState.likedByUser[reply.id] ? "text-indigo-600 dark:text-indigo-400" : "text-gray-600 dark:text-gray-300"} hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all ${reviewState.likedByUser[reply.id] ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md" : "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40"}`}
                                   >
-                                    <ThumbsUp className="w-3 h-3" />
+                                    <ThumbsUp className="w-3.5 h-3.5" />
                                     <span className="text-xs">Me gusta</span>
                                   </button>
 
-                                  <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">ID: {reply.id}</span>
+                                  <span className="ml-auto text-xs text-gray-400 dark:text-slate-500 px-2 py-1 bg-gray-50 dark:bg-slate-700/50 rounded-full">ID: {reply.id}</span>
                                 </div>
                               </div>
                             </div>

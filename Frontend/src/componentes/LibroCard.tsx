@@ -105,7 +105,7 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo,
         )}
       </div>
 
-      <div className="p-5 flex flex-col flex-grow relative z-10 bg-white/95 dark:bg-gray-800/95 min-h-[140px]">
+      <div className="p-5 flex flex-col flex-grow relative z-10 bg-white/95 dark:bg-gray-800/95 min-h-[160px]">
         <h3 
           className="text-base font-bold mb-2 line-clamp-2 text-gray-900 dark:text-gray-100 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300 break-words" 
           style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
@@ -114,7 +114,15 @@ const LibroCard: React.FC<LibroCardProps> = ({ title, authors, image, extraInfo,
           {title}
         </h3>
         <p 
-          className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-1 font-medium transition-colors duration-300"
+          className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium transition-colors duration-300 leading-relaxed"
+          style={{ 
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word'
+          }}
           title={authors?.length ? authors.join(", ") : "Autor desconocido"}
         >
           {authors?.length ? authors.join(", ") : "Autor desconocido"}

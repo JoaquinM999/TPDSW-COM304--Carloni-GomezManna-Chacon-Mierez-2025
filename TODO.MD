@@ -91,15 +91,18 @@
 - [ ] Implementar highlighting de reseñas verificadas
 - [ ] Mejorar sistema de respuestas (threading visual)
 - [ ] Agregar badges de "top reviewer"
+- [ ] Mostrar indicador visual de moderación automática
 
 **Funcionalidad:**
+- [x] ✅ **Sistema de moderación automática** - Ya implementado (moderationScore, autoModerated)
+- [x] ✅ **Auto-rechazo de reseñas** - Ya implementado (autoRejected, rejectionReason)
+- [x] ✅ **Estados de reseña** - Sistema completo (PENDING/APPROVED/FLAGGED/REJECTED)
 - [ ] Implementar sistema de reacciones emoji
 - [ ] Agregar filtros por calificación y utilidad
 - [ ] Implementar búsqueda dentro de reseñas
 - [ ] Agregar sistema de "útil/no útil" con feedback
 - [ ] Implementar edición de reseñas con historial
 - [ ] Agregar opción de reseña anónima
-- [ ] Implementar sistema anti-spam mejorado
 - [ ] Agregar traducción automática de reseñas
 
 ### 👤 Perfil de Usuario
@@ -125,9 +128,11 @@
 - [ ] Mejorar diseño de tarjetas de listas
 - [ ] Agregar covers/thumbnails personalizados
 - [ ] Implementar vista de mosaico de portadas
-- [ ] Mejorar drag & drop visual
+- [ ] Mejorar drag & drop visual (backend ya soporta campo `orden`)
 
 **Funcionalidad:**
+- [x] ✅ **Ordenamiento personalizado** - Campo `orden` implementado en ContenidoLista
+- [x] ✅ **Constraint único lista-libro** - Evita duplicados en misma lista
 - [ ] Implementar listas colaborativas
 - [ ] Agregar versionado de listas
 - [ ] Implementar importar/exportar listas
@@ -167,10 +172,16 @@
 ### 👥 Autores
 **Visuales:**
 - [ ] Mejorar diseño de tarjetas de autor
-- [ ] Agregar biografía expandible visualmente
+- [ ] Agregar biografía expandible visualmente (biografía ya viene de APIs)
 - [ ] Implementar línea de tiempo de obras
+- [ ] Mostrar origen de datos (local vs API externa)
 
 **Funcionalidad:**
+- [x] ✅ **Fotos de autores** - Campo `foto` implementado
+- [x] ✅ **Biografías** - Campo `biografia` desde APIs externas
+- [x] ✅ **Búsqueda híbrida** - Local + Google Books + OpenLibrary
+- [x] ✅ **Prevención de duplicados** - Constraint único + reconciliación
+- [x] ✅ **IDs externos** - googleBooksId y openLibraryKey
 - [ ] Agregar seguimiento de autores
 - [ ] Implementar notificaciones de nuevos lanzamientos
 - [ ] Agregar eventos/firmas de autores
@@ -258,8 +269,9 @@
 - [ ] Mejorar gestión de estado global
 
 ### Backend
+- [x] ✅ **Sistema de caché con Redis** - Implementado en redis.ts con modo mock
+- [x] ✅ **Índices de base de datos** - Implementados en autores (nombre, apellido, IDs externos)
 - [ ] Implementar rate limiting más granular
-- [ ] Agregar sistema de caché distribuido (Redis)
 - [ ] Mejorar logging y monitoreo
 - [ ] Implementar health checks
 - [ ] Agregar documentación API (Swagger)
@@ -267,7 +279,7 @@
 - [ ] Mejorar manejo de errores
 - [ ] Agregar tests unitarios y de integración
 - [ ] Implementar respaldos automáticos
-- [ ] Optimizar queries de base de datos
+- [ ] Optimizar queries de base de datos (considerar más índices)
 
 ### Base de Datos
 - [ ] Agregar índices en columnas frecuentemente consultadas
@@ -586,13 +598,14 @@ async function analizarSentimiento(texto: string) {
 
 ## 🎭 Mejoras del Sistema de Autores
 
-### ✅ YA IMPLEMENTADO
-- [x] **Paginación en Base de Datos** - Implementado con `findAndCount()`
-- [x] **Índices en BD** - idx_autor_nombre, idx_autor_apellido, idx_autor_nombre_apellido
-- [x] **Corrección MySQL** - Reemplazado `$ilike` por `$like`
-- [x] **Cache con Redis** - ✨ **RECIÉN IMPLEMENTADO** en getAutores y searchAutores (5 min TTL)
-- [x] **Búsqueda Híbrida** - Google Books + OpenLibrary integrados
-- [x] **Enriquecimiento Básico** - Biografías y fotos desde APIs externas
+### ✅ COMPLETADO E IMPLEMENTADO
+- [x] **Paginación en Base de Datos** - ✅ Implementado con `findAndCount()`
+- [x] **Índices en BD** - ✅ idx_autor_nombre, idx_autor_nombre_apellido (Migration20251103000000)
+- [x] **Corrección MySQL** - ✅ Reemplazado `$ilike` por `$like`
+- [x] **Cache con Redis** - ✅ Implementado en autor.service.ts con TTL configurable
+- [x] **Búsqueda Híbrida** - ✅ Google Books + OpenLibrary (GUIA_BUSQUEDA_HIBRIDA.md)
+- [x] **Enriquecimiento Básico** - ✅ reconcileGoogleBooksAuthor + reconcileOpenLibraryAuthor
+- [x] **IDs Externos** - ✅ googleBooksId y openLibraryKey (Migration20251103194440)
 
 ### � VIABLE - Alta Prioridad (2-4 horas c/u)
 - [ ] **Full-Text Search** - Solo requiere índice FULLTEXT en MySQL
@@ -663,12 +676,11 @@ async function analizarSentimiento(texto: string) {
 ## 🔄 Prioridades
 
 ### 🔴 Alta Prioridad (Próximas 2 semanas)
-1. ✅ **Cache Redis para Autores** - ✨ COMPLETADO
-2. Implementar Full-Text Search en MySQL
-3. Mejorar rendimiento de carga de imágenes
-4. Implementar lazy loading
-5. Corregir bugs críticos de navegación
-6. Mejorar responsividad móvil
+1. Implementar Full-Text Search en MySQL
+2. Mejorar rendimiento de carga de imágenes
+3. Implementar lazy loading
+4. Corregir bugs críticos de navegación
+5. Mejorar responsividad móvil
 
 ### 🟡 Media Prioridad (Próximo mes)
 1. Implementar sistema de notificaciones
@@ -686,6 +698,39 @@ async function analizarSentimiento(texto: string) {
 
 ---
 
-**Última actualización:** 2 de noviembre de 2025
+## ✅ FUNCIONALIDADES YA IMPLEMENTADAS (NO DUPLICAR)
+
+### Backend - Migraciones Aplicadas:
+- [x] **Migration20251031140000** - Campo `foto` en entidad Autor
+- [x] **Migration20251031150000** - Constraint único en autor (nombre + apellido)
+- [x] **Migration20251101000000** - Constraint único en lista_tipo
+- [x] **Migration20251103000000** - Índices en autor (nombre, apellido, nombre_apellido)
+- [x] **Migration20251103194440** - IDs externos (googleBooksId, openLibraryKey)
+- [x] **Migration20251030145005** - Campo `orden` en ContenidoLista (drag & drop)
+- [x] **Migration20251030012556** - Campos de moderación en Resena
+- [x] **Migration20251030022942** - Campos de auto-rechazo en Resena
+- [x] **Migration20251031021933** - Campo `slug` en Libro (luego removido)
+
+### Backend - Servicios Implementados:
+- [x] **Redis Cache** - Sistema de caché configurado en `redis.ts` con modo mock
+- [x] **Reconciliación de Autores** - `reconcileGoogleBooksAuthor()` y `reconcileOpenLibraryAuthor()`
+- [x] **APIs Externas** - Integración con Google Books API y OpenLibrary API
+- [x] **Búsqueda Híbrida** - Búsqueda local + APIs externas (documentado en GUIA_BUSQUEDA_HIBRIDA.md)
+
+### Entidades con Funcionalidades Avanzadas:
+- [x] **Resena Entity** - Sistema de moderación automática completo
+  - `moderationScore`, `moderationReasons`, `autoModerated`
+  - `autoRejected`, `rejectionReason`
+  - Estados: PENDING, APPROVED, FLAGGED, REJECTED
+- [x] **ContenidoLista Entity** - Campo `orden` para ordenamiento personalizado
+- [x] **Autor Entity** - Foto, biografía, IDs externos, índices de búsqueda
+
+### Frontend:
+- [x] **Búsqueda Híbrida UI** - Toggle para activar búsqueda en APIs externas (AutoresPageMejorada.tsx)
+- [x] **Logs de Debug** - Sistema de logging para debugging de búsquedas
+
+---
+
+**Última actualización:** 5 de noviembre de 2025
 **Mantenedor:** Equipo BookCode
-**Versión del documento:** 1.0
+**Versión del documento:** 1.1

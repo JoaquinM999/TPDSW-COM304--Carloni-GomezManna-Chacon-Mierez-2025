@@ -34,13 +34,13 @@ export const getRecomendaciones = async (req: Request, res: Response) => {
       id: libro.id,
       slug: libro.slug || generateSlug(libro.nombre || `libro-${libro.id}`), // Usar slug real
       titulo: libro.nombre || 'Sin título',
-      autores: libro.autor ? [libro.autor.nombre] : [],
+      autores: libro.autor ? [`${libro.autor.nombre} ${libro.autor.apellido}`.trim()] : [],
       imagen: libro.imagen || null,
       descripcion: libro.sinopsis || null,
       averageRating: 0, // TODO: Calcular desde reseñas
       score: 0.85, // Score del algoritmo (placeholder)
       matchCategorias: libro.categoria ? [libro.categoria.nombre] : [],
-      matchAutores: libro.autor ? [libro.autor.nombre] : [],
+      matchAutores: libro.autor ? [`${libro.autor.nombre} ${libro.autor.apellido}`.trim()] : [],
       esReciente: libro.createdAt ? 
         (new Date().getTime() - new Date(libro.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000 : false
     }));

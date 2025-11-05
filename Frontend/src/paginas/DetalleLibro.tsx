@@ -69,6 +69,7 @@ interface ReviewState {
   reseñas: Reseña[];
   averageRating: number | null;
   likedByUser: Record<number, boolean>;
+  dislikedByUser: Record<number, boolean>;
   expandedReviewIds: Record<number, boolean>;
   expandedReplies: Record<string, boolean>;
   replyForms: Record<number, { comentario: string; submitting: boolean; error: string | null } | null>;
@@ -80,6 +81,7 @@ type ReviewAction =
   | { type: 'SET_REVIEWS'; payload: Reseña[] }
   | { type: 'SET_AVERAGE_RATING'; payload: number | null }
   | { type: 'SET_LIKED_BY_USER'; payload: Record<number, boolean> }
+  | { type: 'SET_DISLIKED_BY_USER'; payload: Record<number, boolean> }
   | { type: 'TOGGLE_EXPAND_REVIEW'; payload: number }
   | { type: 'TOGGLE_EXPAND_REPLIES'; payload: string }
   | { type: 'SET_REPLY_FORM'; payload: { reviewId: number; form: { comentario: string; submitting: boolean; error: string | null } | null } }
@@ -95,6 +97,8 @@ const reviewReducer = (state: ReviewState, action: ReviewAction): ReviewState =>
       return { ...state, averageRating: action.payload };
     case 'SET_LIKED_BY_USER':
       return { ...state, likedByUser: action.payload };
+    case 'SET_DISLIKED_BY_USER':
+      return { ...state, dislikedByUser: action.payload };
     case 'TOGGLE_EXPAND_REVIEW':
       return { ...state, expandedReviewIds: { ...state.expandedReviewIds, [action.payload]: !state.expandedReviewIds[action.payload] } };
     case 'TOGGLE_EXPAND_REPLIES':
@@ -177,6 +181,7 @@ const initialReviewState: ReviewState = {
   reseñas: [],
   averageRating: null,
   likedByUser: {},
+  dislikedByUser: {},
   expandedReviewIds: {},
   expandedReplies: {},
   replyForms: {},
@@ -380,16 +385,40 @@ const DetalleLibro: React.FC = () => {
 
             dispatch({ type: 'SET_REVIEWS', payload: filtered });
 
-            // Inicializar likedByUser si hay token
+            // Inicializar likedByUser y dislikedByUser si hay token
             const token = getToken();
             const userId = token ? getUserIdFromToken(token) : 0;
+            console.log("🔍 Inicializando likes/dislikes - userId:", userId);
             const likedMap: Record<number, boolean> = {};
+            const dislikedMap: Record<number, boolean> = {};
             filtered.forEach((r: Reseña) => {
+              // Verificar like/dislike en reseña principal
+              console.log(`📝 Reseña ${r.id} - reacciones:`, r.reacciones);
               if (r.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+                console.log(`✅ Usuario ${userId} tiene LIKE en reseña ${r.id}`);
                 likedMap[r.id] = true;
               }
+              if (r.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "dislike" && (rec.usuarioId ?? 0) === userId)) {
+                console.log(`✅ Usuario ${userId} tiene DISLIKE en reseña ${r.id}`);
+                dislikedMap[r.id] = true;
+              }
+              // Verificar likes/dislikes en respuestas anidadas
+              r.respuestas?.forEach(resp => {
+                console.log(`📝 Respuesta ${resp.id} - reacciones:`, resp.reacciones);
+                if (resp.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+                  console.log(`✅ Usuario ${userId} tiene LIKE en respuesta ${resp.id}`);
+                  likedMap[resp.id] = true;
+                }
+                if (resp.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "dislike" && (rec.usuarioId ?? 0) === userId)) {
+                  console.log(`✅ Usuario ${userId} tiene DISLIKE en respuesta ${resp.id}`);
+                  dislikedMap[resp.id] = true;
+                }
+              });
             });
+            console.log("🎯 Mapa de likes inicializado:", likedMap);
+            console.log("🎯 Mapa de dislikes inicializado:", dislikedMap);
             dispatch({ type: 'SET_LIKED_BY_USER', payload: likedMap });
+            dispatch({ type: 'SET_DISLIKED_BY_USER', payload: dislikedMap });
 
             // Calculate average rating from parent reviews only
             const calculatedAvg = filtered.length > 0
@@ -503,9 +532,16 @@ const DetalleLibro: React.FC = () => {
         const userId = token ? getUserIdFromToken(token) : 0;
         const likedMap: Record<number, boolean> = {};
         filtered.forEach((r: Reseña) => {
+          // Verificar like en reseña principal
           if (r.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
             likedMap[r.id] = true;
           }
+          // Verificar likes en respuestas anidadas
+          r.respuestas?.forEach(resp => {
+            if (resp.reacciones?.some((rec: { id: number; tipo: string; usuarioId?: number }) => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+              likedMap[resp.id] = true;
+            }
+          });
         });
         dispatch({ type: 'SET_LIKED_BY_USER', payload: likedMap });
 
@@ -620,16 +656,38 @@ const DetalleLibro: React.FC = () => {
       const reviews = reviewsData?.reviews || [];
       const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
       dispatch({ type: 'SET_REVIEWS', payload: filtered });
-      // actualizar likedByUser tras refresh
+      // actualizar likedByUser y dislikedByUser tras refresh
       const token = getToken();
       const userId = token ? getUserIdFromToken(token) : 0;
       const likedMap: Record<number, boolean> = {};
+      const dislikedMap: Record<number, boolean> = {};
+      console.log(`🔍 RefreshResenas - userId: ${userId}`);
       filtered.forEach((r: Reseña) => {
+        console.log(`📊 Reseña ${r.id} - reacciones:`, r.reacciones);
+        // Verificar like en reseña principal
         if (r.reacciones?.some(rec => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
           likedMap[r.id] = true;
+          console.log(`✅ Usuario ${userId} dio LIKE a reseña ${r.id}`);
         }
+        // Verificar dislike en reseña principal
+        if (r.reacciones?.some(rec => rec.tipo === "dislike" && (rec.usuarioId ?? 0) === userId)) {
+          dislikedMap[r.id] = true;
+          console.log(`✅ Usuario ${userId} dio DISLIKE a reseña ${r.id}`);
+        }
+        // Verificar likes y dislikes en respuestas anidadas
+        r.respuestas?.forEach(resp => {
+          if (resp.reacciones?.some(rec => rec.tipo === "like" && (rec.usuarioId ?? 0) === userId)) {
+            likedMap[resp.id] = true;
+          }
+          if (resp.reacciones?.some(rec => rec.tipo === "dislike" && (rec.usuarioId ?? 0) === userId)) {
+            dislikedMap[resp.id] = true;
+          }
+        });
       });
+      console.log(`🎯 Final likedMap:`, likedMap);
+      console.log(`🎯 Final dislikedMap:`, dislikedMap);
       dispatch({ type: 'SET_LIKED_BY_USER', payload: likedMap });
+      dispatch({ type: 'SET_DISLIKED_BY_USER', payload: dislikedMap });
       // Recalculate average rating from parent reviews only
       const calculatedAvg = filtered.length > 0
         ? filtered.reduce((sum: number, r: Reseña) => sum + r.estrellas, 0) / filtered.length
@@ -779,9 +837,18 @@ const DetalleLibro: React.FC = () => {
     }
     const usuarioId = getUserIdFromToken(token);
     const currentlyLiked = !!reviewState.likedByUser[reviewId];
+    const currentlyDisliked = !!reviewState.dislikedByUser[reviewId];
+    console.log(`🔄 Toggle like - reviewId: ${reviewId}, usuarioId: ${usuarioId}, currentlyLiked: ${currentlyLiked}, currentlyDisliked: ${currentlyDisliked}`);
+    
     // snapshots para revertir en caso de error
     const prevResenas = reviewState.reseñas;
     const prevLiked = reviewState.likedByUser;
+    const prevDisliked = reviewState.dislikedByUser;
+    
+    // Si está disliked, quitamos el dislike primero
+    if (currentlyDisliked) {
+      dispatch({ type: 'SET_DISLIKED_BY_USER', payload: { ...reviewState.dislikedByUser, [reviewId]: false } });
+    }
     
     // optimista: actualizar contador y estado liked
     dispatch({ type: 'SET_LIKED_BY_USER', payload: { ...reviewState.likedByUser, [reviewId]: !currentlyLiked } });
@@ -789,15 +856,20 @@ const DetalleLibro: React.FC = () => {
     // Actualizar reacciones y contadores optimísticamente
     const updatedResenas = prevResenas.map(r => {
       if (r.id === reviewId) {
-        const newReacciones = !currentlyLiked
-          ? [...(r.reacciones || []), { id: Date.now(), tipo: "like", usuarioId }]
-          : (r.reacciones?.filter(rec => !(rec.tipo === "like" && (rec.usuarioId ?? 0) === usuarioId)) ?? []);
+        // Primero quitar cualquier reacción existente del usuario (like o dislike)
+        let newReacciones = r.reacciones?.filter(rec => !((rec.tipo === "like" || rec.tipo === "dislike") && (rec.usuarioId ?? 0) === usuarioId)) ?? [];
+        
+        // Si vamos a agregar like, lo agregamos
+        if (!currentlyLiked) {
+          newReacciones = [...newReacciones, { id: Date.now(), tipo: "like", usuarioId }];
+        }
         
         // Actualizar reaccionesCount si existe
         const newReaccionesCount = r.reaccionesCount ? {
           ...r.reaccionesCount,
           likes: !currentlyLiked ? r.reaccionesCount.likes + 1 : Math.max(0, r.reaccionesCount.likes - 1),
-          total: !currentlyLiked ? r.reaccionesCount.total + 1 : Math.max(0, r.reaccionesCount.total - 1)
+          dislikes: currentlyDisliked ? Math.max(0, r.reaccionesCount.dislikes - 1) : r.reaccionesCount.dislikes,
+          total: !currentlyLiked ? (currentlyDisliked ? r.reaccionesCount.total : r.reaccionesCount.total + 1) : Math.max(0, r.reaccionesCount.total - 1)
         } : undefined;
         
         return { ...r, reacciones: newReacciones, reaccionesCount: newReaccionesCount };
@@ -808,14 +880,19 @@ const DetalleLibro: React.FC = () => {
           ...r,
           respuestas: r.respuestas.map(resp => {
             if (resp.id === reviewId) {
-              const newReacciones = !currentlyLiked
-                ? [...(resp.reacciones || []), { id: Date.now(), tipo: "like", usuarioId }]
-                : (resp.reacciones?.filter(rec => !(rec.tipo === "like" && (rec.usuarioId ?? 0) === usuarioId)) ?? []);
+              // Primero quitar cualquier reacción existente del usuario
+              let newReacciones = resp.reacciones?.filter(rec => !((rec.tipo === "like" || rec.tipo === "dislike") && (rec.usuarioId ?? 0) === usuarioId)) ?? [];
+              
+              // Si vamos a agregar like, lo agregamos
+              if (!currentlyLiked) {
+                newReacciones = [...newReacciones, { id: Date.now(), tipo: "like", usuarioId }];
+              }
               
               const newReaccionesCount = resp.reaccionesCount ? {
                 ...resp.reaccionesCount,
                 likes: !currentlyLiked ? resp.reaccionesCount.likes + 1 : Math.max(0, resp.reaccionesCount.likes - 1),
-                total: !currentlyLiked ? resp.reaccionesCount.total + 1 : Math.max(0, resp.reaccionesCount.total - 1)
+                dislikes: currentlyDisliked ? Math.max(0, resp.reaccionesCount.dislikes - 1) : resp.reaccionesCount.dislikes,
+                total: !currentlyLiked ? (currentlyDisliked ? resp.reaccionesCount.total : resp.reaccionesCount.total + 1) : Math.max(0, resp.reaccionesCount.total - 1)
               } : undefined;
               
               return { ...resp, reacciones: newReacciones, reaccionesCount: newReaccionesCount };
@@ -831,14 +908,120 @@ const DetalleLibro: React.FC = () => {
     
     try {
       if (!currentlyLiked) {
-        await addOrUpdateReaccion({ usuarioId, resenaId: reviewId, tipo: "like" }, token);
+        // Añadir like - solo enviar resenaId y tipo
+        console.log("➕ Agregando like...");
+        const result = await addOrUpdateReaccion({ resenaId: reviewId, tipo: "like" }, token);
+        console.log("✅ Like agregado:", result);
       } else {
-        await deleteReaccion(usuarioId, reviewId, "like");
+        // Quitar like
+        console.log("➖ Quitando like...");
+        const result = await deleteReaccion(usuarioId, reviewId, token);
+        console.log("✅ Like quitado:", result);
       }
     } catch (err) {
-      console.warn("Error guardando reaccion:", err);
+      console.error("❌ Error guardando reaccion:", err);
       // revertir a los snapshots previos
       dispatch({ type: 'SET_LIKED_BY_USER', payload: prevLiked });
+      dispatch({ type: 'SET_DISLIKED_BY_USER', payload: prevDisliked });
+      dispatch({ type: 'SET_REVIEWS', payload: prevResenas });
+      alert("No se pudo actualizar la reacción. Intentá de nuevo.");
+    }
+  };
+
+  const handleToggleDislike = async (reviewId: number) => {
+    const token = getToken();
+    if (!token) {
+      alert("Debes iniciar sesión para dar dislike a una reseña.");
+      return;
+    }
+    const usuarioId = getUserIdFromToken(token);
+    const currentlyLiked = !!reviewState.likedByUser[reviewId];
+    const currentlyDisliked = !!reviewState.dislikedByUser[reviewId];
+    console.log(`🔄 Toggle dislike - reviewId: ${reviewId}, usuarioId: ${usuarioId}, currentlyLiked: ${currentlyLiked}, currentlyDisliked: ${currentlyDisliked}`);
+    
+    // snapshots para revertir en caso de error
+    const prevResenas = reviewState.reseñas;
+    const prevLiked = reviewState.likedByUser;
+    const prevDisliked = reviewState.dislikedByUser;
+    
+    // Si está liked, quitamos el like primero
+    if (currentlyLiked) {
+      dispatch({ type: 'SET_LIKED_BY_USER', payload: { ...reviewState.likedByUser, [reviewId]: false } });
+    }
+    
+    // optimista: actualizar contador y estado disliked
+    dispatch({ type: 'SET_DISLIKED_BY_USER', payload: { ...reviewState.dislikedByUser, [reviewId]: !currentlyDisliked } });
+    
+    // Actualizar reacciones y contadores optimísticamente
+    const updatedResenas = prevResenas.map(r => {
+      if (r.id === reviewId) {
+        // Primero quitar cualquier reacción existente del usuario (like o dislike)
+        let newReacciones = r.reacciones?.filter(rec => !((rec.tipo === "like" || rec.tipo === "dislike") && (rec.usuarioId ?? 0) === usuarioId)) ?? [];
+        
+        // Si vamos a agregar dislike, lo agregamos
+        if (!currentlyDisliked) {
+          newReacciones = [...newReacciones, { id: Date.now(), tipo: "dislike", usuarioId }];
+        }
+        
+        // Actualizar reaccionesCount si existe
+        const newReaccionesCount = r.reaccionesCount ? {
+          ...r.reaccionesCount,
+          likes: currentlyLiked ? Math.max(0, r.reaccionesCount.likes - 1) : r.reaccionesCount.likes,
+          dislikes: !currentlyDisliked ? r.reaccionesCount.dislikes + 1 : Math.max(0, r.reaccionesCount.dislikes - 1),
+          total: !currentlyDisliked ? (currentlyLiked ? r.reaccionesCount.total : r.reaccionesCount.total + 1) : Math.max(0, r.reaccionesCount.total - 1)
+        } : undefined;
+        
+        return { ...r, reacciones: newReacciones, reaccionesCount: newReaccionesCount };
+      }
+      // También actualizar en respuestas anidadas
+      if (r.respuestas) {
+        return {
+          ...r,
+          respuestas: r.respuestas.map(resp => {
+            if (resp.id === reviewId) {
+              // Primero quitar cualquier reacción existente del usuario
+              let newReacciones = resp.reacciones?.filter(rec => !((rec.tipo === "like" || rec.tipo === "dislike") && (rec.usuarioId ?? 0) === usuarioId)) ?? [];
+              
+              // Si vamos a agregar dislike, lo agregamos
+              if (!currentlyDisliked) {
+                newReacciones = [...newReacciones, { id: Date.now(), tipo: "dislike", usuarioId }];
+              }
+              
+              const newReaccionesCount = resp.reaccionesCount ? {
+                ...resp.reaccionesCount,
+                likes: currentlyLiked ? Math.max(0, resp.reaccionesCount.likes - 1) : resp.reaccionesCount.likes,
+                dislikes: !currentlyDisliked ? resp.reaccionesCount.dislikes + 1 : Math.max(0, resp.reaccionesCount.dislikes - 1),
+                total: !currentlyDisliked ? (currentlyLiked ? resp.reaccionesCount.total : resp.reaccionesCount.total + 1) : Math.max(0, resp.reaccionesCount.total - 1)
+              } : undefined;
+              
+              return { ...resp, reacciones: newReacciones, reaccionesCount: newReaccionesCount };
+            }
+            return resp;
+          })
+        };
+      }
+      return r;
+    });
+    
+    dispatch({ type: 'SET_REVIEWS', payload: updatedResenas });
+    
+    try {
+      if (!currentlyDisliked) {
+        // Añadir dislike
+        console.log("➕ Agregando dislike...");
+        const result = await addOrUpdateReaccion({ resenaId: reviewId, tipo: "dislike" }, token);
+        console.log("✅ Dislike agregado:", result);
+      } else {
+        // Quitar dislike
+        console.log("➖ Quitando dislike...");
+        const result = await deleteReaccion(usuarioId, reviewId, token);
+        console.log("✅ Dislike quitado:", result);
+      }
+    } catch (err) {
+      console.error("❌ Error guardando reaccion:", err);
+      // revertir a los snapshots previos
+      dispatch({ type: 'SET_LIKED_BY_USER', payload: prevLiked });
+      dispatch({ type: 'SET_DISLIKED_BY_USER', payload: prevDisliked });
       dispatch({ type: 'SET_REVIEWS', payload: prevResenas });
       alert("No se pudo actualizar la reacción. Intentá de nuevo.");
     }
@@ -1348,20 +1531,29 @@ const DetalleLibro: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Contadores de reacciones */}
-                    {r.reaccionesCount && (
-                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <ReaccionContadores reaccionesCount={r.reaccionesCount} />
-                      </div>
-                    )}
-
                     <div className="flex flex-wrap gap-3 mt-5 text-sm items-center">
                       <button
                         onClick={() => handleToggleLike(r.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${reviewState.likedByUser[r.id] ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg hover:scale-105" : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"}`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all transform ${
+                          reviewState.likedByUser[r.id] 
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-105" 
+                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-600 hover:text-blue-600 dark:hover:text-blue-400"
+                        }`}
                       >
-                        <ThumbsUp className="w-4 h-4" />
-                        <span>Me gusta</span>
+                        <ThumbsUp className={`w-4 h-4 ${reviewState.likedByUser[r.id] ? "fill-current" : ""}`} />
+                        <span className="font-bold">{r.reaccionesCount?.likes || 0}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleToggleDislike(r.id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all transform ${
+                          reviewState.dislikedByUser[r.id] 
+                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105" 
+                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-600 hover:text-red-600 dark:hover:text-red-400"
+                        }`}
+                      >
+                        <ThumbsDown className={`w-4 h-4 ${reviewState.dislikedByUser[r.id] ? "fill-current" : ""}`} />
+                        <span className="font-bold">{r.reaccionesCount?.dislikes || 0}</span>
                       </button>
 
                       <button
@@ -1479,21 +1671,31 @@ const DetalleLibro: React.FC = () => {
                                 <p className="text-base leading-relaxed">{r.respuestas[0].comentario}</p>
                               </div>
 
-                              {/* Contadores de reacciones en respuesta */}
-                              {r.respuestas[0].reaccionesCount && (
-                                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                  <ReaccionContadores reaccionesCount={r.respuestas[0].reaccionesCount} />
-                                </div>
-                              )}
-
                               <div className="flex gap-3 mt-4 text-sm items-center">
                                 <button
                                   onClick={() => r.respuestas && r.respuestas[0] && handleToggleLike(r.respuestas[0].id)}
-                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md" : "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40"}`}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold transition-all transform ${
+                                    r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id]
+                                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-105"
+                                      : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-600 hover:text-blue-600 dark:hover:text-blue-400"
+                                  }`}
                                   disabled={!r.respuestas || !r.respuestas[0]}
                                 >
-                                  <ThumbsUp className="w-3.5 h-3.5" />
-                                  <span className="text-xs">Me gusta</span>
+                                  <ThumbsUp className={`w-3.5 h-3.5 ${r.respuestas && r.respuestas[0] && reviewState.likedByUser[r.respuestas[0].id] ? "fill-current" : ""}`} />
+                                  <span className="text-xs font-bold">{r.respuestas && r.respuestas[0] ? (r.respuestas[0].reaccionesCount?.likes || 0) : 0}</span>
+                                </button>
+
+                                <button
+                                  onClick={() => r.respuestas && r.respuestas[0] && handleToggleDislike(r.respuestas[0].id)}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold transition-all transform ${
+                                    r.respuestas && r.respuestas[0] && reviewState.dislikedByUser[r.respuestas[0].id]
+                                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105"
+                                      : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-600 hover:text-red-600 dark:hover:text-red-400"
+                                  }`}
+                                  disabled={!r.respuestas || !r.respuestas[0]}
+                                >
+                                  <ThumbsDown className={`w-3.5 h-3.5 ${r.respuestas && r.respuestas[0] && reviewState.dislikedByUser[r.respuestas[0].id] ? "fill-current" : ""}`} />
+                                  <span className="text-xs font-bold">{r.respuestas && r.respuestas[0] ? (r.respuestas[0].reaccionesCount?.dislikes || 0) : 0}</span>
                                 </button>
 
                                 <span className="ml-auto text-xs text-gray-400 dark:text-slate-500 px-2 py-1 bg-gray-50 dark:bg-slate-700/50 rounded-full">ID: {r.respuestas[0].id}</span>
@@ -1545,20 +1747,29 @@ const DetalleLibro: React.FC = () => {
                                   <p className="text-base leading-relaxed">{reply.comentario}</p>
                                 </div>
 
-                                {/* Contadores de reacciones en respuesta */}
-                                {reply.reaccionesCount && (
-                                  <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                    <ReaccionContadores reaccionesCount={reply.reaccionesCount} />
-                                  </div>
-                                )}
-
                                 <div className="flex gap-3 mt-4 text-sm items-center">
                                   <button
                                     onClick={() => handleToggleLike(reply.id)}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all ${reviewState.likedByUser[reply.id] ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md" : "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40"}`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold transition-all transform ${
+                                      reviewState.likedByUser[reply.id]
+                                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-105"
+                                        : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-600 hover:text-blue-600 dark:hover:text-blue-400"
+                                    }`}
                                   >
-                                    <ThumbsUp className="w-3.5 h-3.5" />
-                                    <span className="text-xs">Me gusta</span>
+                                    <ThumbsUp className={`w-3.5 h-3.5 ${reviewState.likedByUser[reply.id] ? "fill-current" : ""}`} />
+                                    <span className="text-xs font-bold">{reply.reaccionesCount?.likes || 0}</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleToggleDislike(reply.id)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold transition-all transform ${
+                                      reviewState.dislikedByUser[reply.id]
+                                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl hover:scale-105"
+                                        : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-slate-600 hover:text-red-600 dark:hover:text-red-400"
+                                    }`}
+                                  >
+                                    <ThumbsDown className={`w-3.5 h-3.5 ${reviewState.dislikedByUser[reply.id] ? "fill-current" : ""}`} />
+                                    <span className="text-xs font-bold">{reply.reaccionesCount?.dislikes || 0}</span>
                                   </button>
 
                                   <span className="ml-auto text-xs text-gray-400 dark:text-slate-500 px-2 py-1 bg-gray-50 dark:bg-slate-700/50 rounded-full">ID: {reply.id}</span>

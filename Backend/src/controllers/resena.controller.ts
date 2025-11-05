@@ -67,8 +67,11 @@ export const getResenas = async (req: Request, res: Response) => {
         'usuario',
         'libro',
         'reacciones',
+        'reacciones.usuario',
         'resenaPadre.usuario',
         'respuestas.usuario',
+        'respuestas.reacciones',
+        'respuestas.reacciones.usuario',
         'respuestas.resenaPadre.usuario',
         'respuestas.respuestas.usuario'
       ],
@@ -78,6 +81,7 @@ export const getResenas = async (req: Request, res: Response) => {
     // 📊 Agregar contadores de reacciones a cada reseña
     const agregarContadores = (resena: Resena) => {
       const reacciones = resena.reacciones.getItems();
+      console.log(`🔍 Reseña ${resena.id} tiene ${reacciones.length} reacciones:`, reacciones.map(r => ({ id: r.id, tipo: r.tipo, usuarioId: r.usuario?.id })));
       (resena as any).reaccionesCount = {
         likes: reacciones.filter(r => r.tipo === 'like').length,
         dislikes: reacciones.filter(r => r.tipo === 'dislike').length,
@@ -152,9 +156,91 @@ export const getResenas = async (req: Request, res: Response) => {
     const offset = (page - 1) * limit;
     const paginatedTopLevel = topLevel.slice(offset, offset + limit);
 
-    console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
+        console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
+    
+    // Función recursiva para convertir reseña a objeto plano (evita referencias circulares)
+    const serializeResena = (resena: any, includeParent = false): any => {
+      // Extraer reacciones
+      let reaccionesArray: any[] = [];
+      if (resena.reacciones) {
+        if (typeof resena.reacciones.getItems === 'function') {
+          reaccionesArray = resena.reacciones.getItems();
+        } else if (Array.isArray(resena.reacciones)) {
+          reaccionesArray = resena.reacciones;
+        }
+      }
+      
+      // Extraer respuestas
+      let respuestasArray: any[] = [];
+      if (resena.respuestas) {
+        if (typeof resena.respuestas.getItems === 'function') {
+          respuestasArray = resena.respuestas.getItems();
+        } else if (Array.isArray(resena.respuestas)) {
+          respuestasArray = resena.respuestas;
+        }
+      }
+      
+      // Calcular contadores
+      const reaccionesCount = {
+        likes: reaccionesArray.filter((r: any) => r.tipo === 'like').length,
+        dislikes: reaccionesArray.filter((r: any) => r.tipo === 'dislike').length,
+        corazones: reaccionesArray.filter((r: any) => r.tipo === 'corazon').length,
+        total: reaccionesArray.length
+      };
+      
+      return {
+        id: resena.id,
+        comentario: resena.comentario,
+        estrellas: resena.estrellas,
+        estado: resena.estado,
+        fechaResena: resena.fechaResena,
+        createdAt: resena.createdAt,
+        updatedAt: resena.updatedAt,
+        usuario: {
+          id: resena.usuario?.id,
+          nombre: resena.usuario?.nombre,
+          username: resena.usuario?.username,
+          email: resena.usuario?.email,
+          avatar: resena.usuario?.avatar
+        },
+        libro: resena.libro ? {
+          id: resena.libro.id,
+          nombre: resena.libro.nombre,
+          externalId: resena.libro.externalId
+        } : null,
+        reacciones: reaccionesArray.map((r: any) => ({
+          id: r.id,
+          tipo: r.tipo,
+          usuarioId: r.usuario?.id || r.usuario,
+          fecha: r.fecha
+        })),
+        reaccionesCount,
+        // Recursivamente serializar respuestas (sin incluir su padre para evitar ciclo)
+        respuestas: respuestasArray.map(resp => serializeResena(resp, false)),
+        // Solo incluir resenaPadre si se solicita (no incluir respuestas del padre)
+        resenaPadre: includeParent && resena.resenaPadre ? {
+          id: resena.resenaPadre.id,
+          comentario: resena.resenaPadre.comentario,
+          usuario: {
+            id: resena.resenaPadre.usuario?.id,
+            nombre: resena.resenaPadre.usuario?.nombre,
+            username: resena.resenaPadre.usuario?.username
+          }
+        } : null
+      };
+    };
+    
+    // Serializar todas las reseñas paginadas
+    const serializedReviews = paginatedTopLevel.map(r => serializeResena(r, false));
+    
+    console.log('📤 Enviando respuesta con reseñas:', serializedReviews.map(r => ({ 
+      id: r.id, 
+      reaccionesCount: r.reaccionesCount,
+      reaccionesLength: r.reacciones?.length 
+    })));
+    
     res.json({
-      reviews: paginatedTopLevel,
+      reviews: serializedReviews,
       total: topLevel.length,
       page,
       pages: Math.ceil(topLevel.length / limit)

@@ -50,7 +50,7 @@ app.use('/api/editorial', editorialRoutes);
 app.use('/api/libro', libroRoutes);
 app.use('/api/resena', resenaRoutes);
 app.use('/api/contenido-lista', contenidoListaRoutes);
-app.use('/api/reacciones', reaccionRoutes);
+app.use('/api/reaccion', reaccionRoutes);
 app.use('/api/seguimientos', seguimientoRoutes);
 app.use('/api/recomendaciones', recomendacionRoutes);
 app.use('/api/protected', protectedRoutes);

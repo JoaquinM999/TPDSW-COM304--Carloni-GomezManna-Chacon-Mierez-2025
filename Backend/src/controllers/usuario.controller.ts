@@ -2,6 +2,7 @@
 import { Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Usuario, RolUsuario } from '../entities/usuario.entity';
+import { Seguimiento } from '../entities/seguimiento.entity';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 // Create user
@@ -208,5 +209,48 @@ export const deleteAllUsers = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'All users deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting users' });
+  }
+};
+
+// Get public user profile by ID
+export const getPublicUserProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const userId = +req.params.userId;
+
+    const user = await orm.em.findOne(Usuario, { id: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Return only public information
+    const publicProfile = {
+      id: user.id,
+      username: user.username,
+      nombre: user.nombre,
+      biografia: user.biografia,
+      ubicacion: user.ubicacion,
+      genero: user.genero,
+      avatar: user.avatar,
+      createdAt: user.createdAt,
+    };
+
+    // Check if the current user follows this profile (if authenticated)
+    let isFollowing = false;
+    if (req.user && typeof req.user === 'object' && req.user.id) {
+      const seguimiento = await orm.em.findOne(Seguimiento, {
+        seguidor: req.user.id,
+        seguido: userId,
+      });
+      isFollowing = !!seguimiento;
+    }
+
+    res.json({
+      ...publicProfile,
+      isFollowing,
+    });
+  } catch (error) {
+    console.error('Error al obtener perfil público:', error);
+    res.status(500).json({ error: 'Error al obtener perfil de usuario' });
   }
 };

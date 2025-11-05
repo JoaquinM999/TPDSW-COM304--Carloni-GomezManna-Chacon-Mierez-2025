@@ -155,12 +155,12 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
           <Route path="/LoginPage" element={<LoginPage />} />
           <Route path="/registro" element={<RegistrationPage />} />
           <Route path="/perfil" element={<PerfilPage />} />
+          <Route path="/perfil/:id" element={<PerfilUsuario />} />
           <Route path="/configuracion" element={<ConfiguracionUsuario />} />
           <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/libro/:slug" element={<DetalleLibro />} />
           <Route path="/favoritos" element={<FavoritosPage />} />
           <Route path="/libros" element={<LibrosPage />} />
-          <Route path="/usuario/:id" element={<PerfilUsuario />} />
           <Route path="/crear-libro" element={<CrearLibro />} />
           <Route path="/crear-categoria" element={<CrearCategoria />} />
           <Route path="/crear-editorial" element={<CrearEditorial />} />

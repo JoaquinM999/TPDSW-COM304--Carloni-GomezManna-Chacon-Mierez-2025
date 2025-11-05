@@ -105,3 +105,39 @@ export const getFollowCounts = async (req: Request, res: Response) => {
 
   res.json({ seguidores: seguidoresCount, siguiendo: siguiendoCount });
 };
+
+// Verificar si el usuario actual sigue a otro usuario
+export const verificarSeguimiento = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const seguidorPayload = (req as any).user;
+  const usuarioId = Number(req.params.usuarioId);
+
+  if (!seguidorPayload || !seguidorPayload.id) {
+    return res.status(401).json({ error: 'Usuario no autenticado' });
+  }
+
+  const seguimiento = await orm.em.findOne(Seguimiento, {
+    seguidor: seguidorPayload.id,
+    seguido: usuarioId,
+  });
+
+  res.json({ isSiguiendo: !!seguimiento });
+};
+
+// Verificar si sigue a un usuario (alternativa con seguidoId)
+export const isFollowing = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const seguidorPayload = (req as any).user;
+  const seguidoId = Number(req.params.seguidoId);
+
+  if (!seguidorPayload || !seguidorPayload.id) {
+    return res.status(401).json({ error: 'Usuario no autenticado' });
+  }
+
+  const seguimiento = await orm.em.findOne(Seguimiento, {
+    seguidor: seguidorPayload.id,
+    seguido: seguidoId,
+  });
+
+  res.json({ isFollowing: !!seguimiento });
+};

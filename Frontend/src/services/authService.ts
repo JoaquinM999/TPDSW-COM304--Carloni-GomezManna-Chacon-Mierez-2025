@@ -87,6 +87,41 @@ export const isAuthenticated = (): boolean => {
   return !!getToken();
 };
 
+// Decode JWT token to get user info
+export const getUserIdFromToken = (): number | null => {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    // JWT token format: header.payload.signature
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded.id || null;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
+export const getUserInfoFromToken = (): { id: number; email: string; username: string; rol: string } | null => {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return {
+      id: decoded.id,
+      email: decoded.email,
+      username: decoded.username,
+      rol: decoded.rol
+    };
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
 export const updateCurrentUser = async (data: any): Promise<void> => {
   const token = getToken();
   if (!token) {

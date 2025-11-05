@@ -1,25 +1,99 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { User, Mail, AtSign, Calendar, MapPin, BookOpen, Edit3, Settings, Heart, MessageCircle, Users } from 'lucide-react';
+import { User, Mail, AtSign, Calendar, MapPin, BookOpen, Edit3, Settings, Heart, MessageCircle, Users, UserPlus, List as ListIcon, TrendingUp } from 'lucide-react';
+import { getUserIdFromToken } from '../services/authService';
+import { usuarioService } from '../services/usuarioService';
+import { getResenasByUsuario } from '../services/resenaService';
+import { listaService } from '../services/listaService';
+import { obtenerFavoritos } from '../services/favoritosService';
+
+interface UserStats {
+  seguidores: number;
+  siguiendo: number;
+  reseñasCount: number;
+  listasCount: number;
+  favoritosCount: number;
+  librosLeidosCount: number;
+}
 
 const PerfilPage = () => {
+  const navigate = useNavigate();
   const [perfil, setPerfil] = useState<any>(null);
+  const [stats, setStats] = useState<UserStats>({
+    seguidores: 0,
+    siguiendo: 0,
+    reseñasCount: 0,
+    listasCount: 0,
+    favoritosCount: 0,
+    librosLeidosCount: 0
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/usuarios/me')
-      .then((res) => {
-        setPerfil(res.data);
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        const userId = getUserIdFromToken();
+        
+        if (!userId) {
+          navigate('/LoginPage');
+          return;
+        }
+
+        // Fetch user profile
+        const perfilRes = await axios.get('http://localhost:3000/api/usuarios/me');
+        setPerfil(perfilRes.data);
+
+        // Fetch stats in parallel
+        const [statsRes, reseñasRes, listasRes, todasLasListas, favoritosRes] = await Promise.all([
+          usuarioService.getUserStats(userId),
+          getResenasByUsuario(userId),
+          listaService.getListasByUsuario(userId),
+          listaService.getUserListas(),
+          obtenerFavoritos()
+        ]);
+
+        // Count reviews
+        const reseñasData = Array.isArray(reseñasRes) 
+          ? reseñasRes 
+          : (reseñasRes.reviews || []);
+
+        // Count public lists
+        const listasData = Array.isArray(listasRes) ? listasRes : [];
+
+        // Count favoritos
+        const favoritosData = Array.isArray(favoritosRes) ? favoritosRes : [];
+
+        // Count libros leídos (buscar lista tipo 'read')
+        const listaLeidos = todasLasListas.find(l => l.tipo === 'read');
+        let librosLeidosCount = 0;
+        if (listaLeidos) {
+          const contenidoLeidos = await listaService.getContenidoLista(listaLeidos.id);
+          librosLeidosCount = contenidoLeidos.length;
+        }
+
+        setStats({
+          seguidores: statsRes.seguidores || 0,
+          siguiendo: statsRes.siguiendo || 0,
+          reseñasCount: reseñasData.length || 0,
+          listasCount: listasData.length || 0,
+          favoritosCount: favoritosData.length || 0,
+          librosLeidosCount: librosLeidosCount
+        });
+
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err: any) {
+        console.error('Error fetching profile data:', err);
         setError(err.response?.data?.error || 'Error al cargar perfil');
         setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    fetchProfileData();
+  }, [navigate]);
 
   // Mapeo de avatars (igual que en ConfiguracionUsuario)
   const avatarMap: { [key: string]: string } = {
@@ -82,49 +156,87 @@ const PerfilPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950 transition-colors duration-300">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30 dark:border-white/20 overflow-hidden">
-                {currentAvatarSrc ? (
-                  <img
-                    src={currentAvatarSrc}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-16 h-16 text-white" />
-                )}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white relative overflow-hidden">
+        {/* Decorative background */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="flex flex-col lg:flex-row items-start justify-between gap-8">
+            {/* Left Section: Avatar + User Info */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 flex-1">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                <div className="w-28 h-28 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/40 dark:border-white/30 overflow-hidden shadow-xl">
+                  {currentAvatarSrc ? (
+                    <img
+                      src={currentAvatarSrc}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-14 h-14 text-white" />
+                  )}
+                </div>
+              </div>
+
+              {/* User Info */}
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-1">
+                  ¡Hola, {perfil.nombre || perfil.username}!
+                </h1>
+                <p className="text-lg text-blue-100 dark:text-blue-200 mb-6">
+                  Bienvenido de vuelta a tu perfil
+                </p>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                  <Link
+                    to="/configuracion"
+                    className="inline-flex items-center px-5 py-2.5 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 border border-white/30 dark:border-white/20 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    <span className="font-medium">Configuración</span>
+                  </Link>
+                  <Link
+                    to="/favoritos"
+                    className="inline-flex items-center px-5 py-2.5 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 border border-white/30 dark:border-white/20 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    <span className="font-medium">Mis Favoritos</span>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* User Info */}
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl font-bold mb-2">
-                ¡Hola, {perfil.nombre || perfil.username}!
-              </h1>
-              <p className="text-xl text-blue-100 mb-4">
-                Bienvenido de vuelta a tu perfil
-              </p>
+            {/* Right Section: Comunidad Stats - Integrado */}
+            <div className="w-full lg:w-auto lg:min-w-[300px]">
+              <div className="bg-white/15 dark:bg-white/10 backdrop-blur-lg rounded-2xl p-5 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-bold flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Comunidad
+                  </h3>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Link
-                  to="/configuracion"
-                  className="inline-flex items-center px-6 py-3 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 border border-white/30 dark:border-white/20"
-                >
-                  <Settings className="w-5 h-5 mr-2" />
-                  Configuración
-                </Link>
-                <Link
-                  to="/favoritos"
-                  className="inline-flex items-center px-6 py-3 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 border border-white/30 dark:border-white/20"
-                >
-                  <Heart className="w-5 h-5 mr-2" />
-                  Mis Favoritos
-                </Link>
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    to={`/perfil/${getUserIdFromToken()}/seguidores`}
+                    className="bg-white/15 backdrop-blur-sm hover:bg-white/25 transition-all duration-200 rounded-xl p-4 text-center group cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-1"
+                  >
+                    <UserPlus className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="text-2xl font-bold mb-0.5">{stats.seguidores}</div>
+                    <div className="text-xs text-white/90 font-medium">Seguidores</div>
+                  </Link>
+
+                  <Link
+                    to="/siguiendo"
+                    className="bg-white/15 backdrop-blur-sm hover:bg-white/25 transition-all duration-200 rounded-xl p-4 text-center group cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-1"
+                  >
+                    <Users className="w-5 h-5 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="text-2xl font-bold mb-0.5">{stats.siguiendo}</div>
+                    <div className="text-xs text-white/90 font-medium">Siguiendo</div>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -132,76 +244,76 @@ const PerfilPage = () => {
       </div>
 
       {/* Content Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
           {/* Profile Information Card */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 px-6 py-4">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <User className="w-6 h-6 mr-2" />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 px-6 py-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <User className="w-5 h-5" />
                   Información del Perfil
                 </h2>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-5 sm:p-6 space-y-5">
                 {/* Basic Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Correo electrónico</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{perfil.email}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                  <div className="space-y-5">
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Correo electrónico</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 break-words">{perfil.email}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <AtSign className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Nombre de usuario</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">@{perfil.username}</p>
+                    <div className="flex items-start gap-3">
+                      <AtSign className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Nombre de usuario</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 break-words">@{perfil.username}</p>
                       </div>
                     </div>
 
                     {perfil.nombre && (
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Nombre completo</p>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">{perfil.nombre}</p>
+                      <div className="flex items-start gap-3">
+                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Nombre completo</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100 break-words">{perfil.nombre}</p>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {perfil.ubicacion && (
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Ubicación</p>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">{perfil.ubicacion}</p>
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Ubicación</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100 break-words">{perfil.ubicacion}</p>
                         </div>
                       </div>
                     )}
 
                     {perfil.genero && (
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Género</p>
-                          <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{perfil.genero}</p>
+                      <div className="flex items-start gap-3">
+                        <User className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Género</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100 capitalize break-words">{perfil.genero}</p>
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Miembro desde</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Miembro desde</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 break-words">
                           {perfil.createdAt ? new Date(perfil.createdAt).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'long',
@@ -216,13 +328,17 @@ const PerfilPage = () => {
 
                 {/* Biography Section */}
                 {perfil.biografia && (
-                  <div className="pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-                      <BookOpen className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                      Acerca de mí
-                    </h3>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{perfil.biografia}</p>
+                  <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-white" />
+                      </div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                        Acerca de mí
+                      </h3>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900/50 dark:to-gray-800/50 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">{perfil.biografia}</p>
                     </div>
                   </div>
                 )}
@@ -232,59 +348,148 @@ const PerfilPage = () => {
 
           {/* Stats Sidebar */}
           <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                Estadísticas
-              </h3>
+            {/* Activity Stats */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-2 mb-5 pb-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  Mi Actividad
+                </h3>
+              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800">
-                  <div className="flex items-center">
-                    <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
-                    <span className="text-gray-700 dark:text-gray-300">Libros leídos</span>
+              <div className="space-y-2.5">
+                <div 
+                  className={`group flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 hover:shadow-md cursor-default ${
+                    stats.reseñasCount > 0 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border-green-200 dark:border-green-800/50' 
+                      : 'bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      stats.reseñasCount > 0 
+                        ? 'bg-green-100 dark:bg-green-900/30' 
+                        : 'bg-gray-200 dark:bg-gray-800'
+                    }`}>
+                      <MessageCircle className={`w-4 h-4 ${
+                        stats.reseñasCount > 0 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Reseñas escritas</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.reseñasCount}</p>
+                    </div>
                   </div>
-                  <span className="font-bold text-blue-600 dark:text-blue-400">0</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-100 dark:border-green-800">
-                  <div className="flex items-center">
-                    <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400 mr-3" />
-                    <span className="text-gray-700 dark:text-gray-300">Reseñas</span>
+                <div 
+                  className={`group flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 hover:shadow-md cursor-default ${
+                    stats.listasCount > 0 
+                      ? 'bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/10 dark:to-violet-900/10 border-purple-200 dark:border-purple-800/50' 
+                      : 'bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      stats.listasCount > 0 
+                        ? 'bg-purple-100 dark:bg-purple-900/30' 
+                        : 'bg-gray-200 dark:bg-gray-800'
+                    }`}>
+                      <ListIcon className={`w-4 h-4 ${
+                        stats.listasCount > 0 
+                          ? 'text-purple-600 dark:text-purple-400' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Listas creadas</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.listasCount}</p>
+                    </div>
                   </div>
-                  <span className="font-bold text-green-600 dark:text-green-400">0</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg border border-purple-100 dark:border-purple-800">
-                  <div className="flex items-center">
-                    <Heart className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-3" />
-                    <span className="text-gray-700 dark:text-gray-300">Favoritos</span>
+                <div 
+                  className={`group flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 hover:shadow-md cursor-default ${
+                    stats.favoritosCount > 0 
+                      ? 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/10 dark:to-pink-900/10 border-red-200 dark:border-red-800/50' 
+                      : 'bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      stats.favoritosCount > 0 
+                        ? 'bg-red-100 dark:bg-red-900/30' 
+                        : 'bg-gray-200 dark:bg-gray-800'
+                    }`}>
+                      <Heart className={`w-4 h-4 ${
+                        stats.favoritosCount > 0 
+                          ? 'text-red-600 dark:text-red-400' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Favoritos</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.favoritosCount}</p>
+                    </div>
                   </div>
-                  <span className="font-bold text-purple-600 dark:text-purple-400">0</span>
+                </div>
+
+                <div 
+                  className={`group flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 hover:shadow-md cursor-default ${
+                    stats.librosLeidosCount > 0 
+                      ? 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/10 dark:to-cyan-900/10 border-blue-200 dark:border-blue-800/50' 
+                      : 'bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      stats.librosLeidosCount > 0 
+                        ? 'bg-blue-100 dark:bg-blue-900/30' 
+                        : 'bg-gray-200 dark:bg-gray-800'
+                    }`}>
+                      <BookOpen className={`w-4 h-4 ${
+                        stats.librosLeidosCount > 0 
+                          ? 'text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Libros leídos</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.librosLeidosCount}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Acciones rápidas</h3>
+            <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-lg p-5 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <Edit3 className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Acciones rápidas</h3>
+              </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <Link
                   to="/libros"
-                  className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-medium"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <BookOpen className="w-5 h-5 mr-2" />
-                  Explorar Libros
+                  <BookOpen className="w-4 h-4" />
+                  <span>Explorar Libros</span>
                 </Link>
 
                 <Link
                   to="/crear-libro"
-                  className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-medium"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:from-emerald-600 hover:to-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <Edit3 className="w-5 h-5 mr-2" />
-                  Agregar Libro
+                  <Edit3 className="w-4 h-4" />
+                  <span>Agregar Libro</span>
                 </Link>
               </div>
             </div>

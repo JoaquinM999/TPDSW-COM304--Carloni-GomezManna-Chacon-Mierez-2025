@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
+import { seguimientoService } from '../services/seguimientoService';
 
 interface SeguirUsuarioButtonProps {
   usuarioId: number;
@@ -28,17 +28,8 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
   const verificarSeguimiento = async () => {
     try {
       setChecking(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setChecking(false);
-        return;
-      }
-
-      const response = await axios.get(
-        `http://localhost:3000/api/seguimiento/verificar/${usuarioId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsSiguiendo(response.data.isSiguiendo);
+      const isFollowing = await seguimientoService.isFollowing(usuarioId);
+      setIsSiguiendo(isFollowing);
     } catch (err: any) {
       console.error('Error verificando seguimiento:', err);
       // Si hay error, asumimos que no sigue
@@ -52,27 +43,17 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
       
-      if (!token) {
-        setError('Debes iniciar sesión');
-        return;
-      }
-
-      const response = await axios.post(
-        'http://localhost:3000/api/seguimiento/follow',
-        { seguidoId: usuarioId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const response = await seguimientoService.followUser(usuarioId);
+      
       setIsSiguiendo(true);
       if (onFollowChange) onFollowChange(true);
       
       // Mostrar mensaje de éxito
-      console.log(response.data.message || `Ahora sigues a ${username}`);
+      console.log(response.message || `Ahora sigues a ${username}`);
     } catch (err: any) {
       console.error('Error al seguir:', err);
-      setError(err.response?.data?.error || 'Error al seguir usuario');
+      setError(err.message || 'Error al seguir usuario');
       setTimeout(() => setError(''), 3000);
     } finally {
       setLoading(false);
@@ -83,26 +64,16 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setError('Debes iniciar sesión');
-        return;
-      }
-
-      const response = await axios.post(
-        'http://localhost:3000/api/seguimiento/unfollow',
-        { seguidoId: usuarioId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      
+      const response = await seguimientoService.unfollowUser(usuarioId);
+      
       setIsSiguiendo(false);
       if (onFollowChange) onFollowChange(false);
       
-      console.log(response.data.message || `Dejaste de seguir a ${username}`);
+      console.log(response.message || `Dejaste de seguir a ${username}`);
     } catch (err: any) {
       console.error('Error al dejar de seguir:', err);
-      setError(err.response?.data?.error || 'Error al dejar de seguir');
+      setError(err.message || 'Error al dejar de seguir');
       setTimeout(() => setError(''), 3000);
     } finally {
       setLoading(false);
@@ -129,8 +100,8 @@ const SeguirUsuarioButton: React.FC<SeguirUsuarioButtonProps> = ({
         disabled={loading}
         className={`
           px-4 py-2 rounded-lg font-semibold transition-all
-          ${isSiguiendo 
-            ? 'bg-gray-200 text-gray-700 dark:text-gray-300 hover:bg-red-100 hover:text-red-600' 
+          ${isSiguiendo
+            ? 'bg-gray-200 text-gray-700 dark:text-gray-300 hover:bg-red-100 hover:text-white'
             : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700'
           }
           ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}

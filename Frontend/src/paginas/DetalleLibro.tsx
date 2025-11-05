@@ -61,7 +61,7 @@ interface Reseña {
     total: number;
   };
   respuestas?: Reseña[];
-  resenaPadre?: { usuario: { nombre?: string; username: string } };
+  resenaPadre?: { usuario: { id?: number; nombre?: string; username: string } };
 }
 
 // Estado para useReducer
@@ -121,26 +121,80 @@ const reviewReducer = (state: ReviewState, action: ReviewAction): ReviewState =>
   }
 };
 
-// Componente para renderizar avatar
-const UserAvatar: React.FC<{ usuario: { nombre?: string; username: string; avatar?: string }; size?: string }> = ({ usuario, size = "w-14 h-14" }) => {
-  if (usuario.avatar) {
-    return (
-      <img
-        src={`/assets/${usuario.avatar}.svg`}
-        alt={`Avatar de ${usuario.username || usuario.nombre}`}
-        className={`${size} rounded-full object-cover`}
-      />
-    );
-  }
-  return (
+// Componente para renderizar avatar con link opcional al perfil
+const UserAvatar: React.FC<{ 
+  usuario: { id?: number; nombre?: string; username: string; avatar?: string }; 
+  size?: string;
+  clickable?: boolean;
+  currentUserId?: number | null;
+}> = ({ usuario, size = "w-14 h-14", clickable = true, currentUserId = null }) => {
+  // Determinar la fuente del avatar
+  const getAvatarSrc = () => {
+    if (!usuario.avatar) return null;
+    
+    // Si es una URL completa (http/https), usarla directamente
+    if (usuario.avatar.startsWith('http://') || usuario.avatar.startsWith('https://')) {
+      return usuario.avatar;
+    }
+    
+    // Si tiene extensión, usar directamente desde assets
+    if (usuario.avatar.includes('.')) {
+      return `/assets/${usuario.avatar}`;
+    }
+    
+    // Si no tiene extensión, asumir .svg
+    return `/assets/${usuario.avatar}.svg`;
+  };
+
+  const avatarSrc = getAvatarSrc();
+
+  const avatarContent = avatarSrc ? (
+    <img
+      src={avatarSrc}
+      alt={`Avatar de ${usuario.username || usuario.nombre}`}
+      className={`${size} rounded-full object-cover`}
+      onError={(e) => {
+        // Si falla la carga, mostrar placeholder
+        e.currentTarget.style.display = 'none';
+        if (e.currentTarget.nextElementSibling) {
+          (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+        }
+      }}
+    />
+  ) : (
     <div className={`${size} rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg`}>
       {((usuario.nombre || usuario.username) || "?")
         .split(" ")
-        .map(s => s[0].toUpperCase())
+        .map(s => s[0]?.toUpperCase() || "?")
         .slice(0, 2)
         .join("")}
     </div>
   );
+
+  // Agregar div de fallback si hay imagen
+  const contentWithFallback = avatarSrc ? (
+    <>
+      {avatarContent}
+      <div className={`${size} rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-bold text-lg`} style={{ display: 'none' }}>
+        {((usuario.nombre || usuario.username) || "?")
+          .split(" ")
+          .map(s => s[0]?.toUpperCase() || "?")
+          .slice(0, 2)
+          .join("")}
+      </div>
+    </>
+  ) : avatarContent;
+
+  // Si es clickable, no es el usuario actual y tiene ID, envolver en Link
+  if (clickable && usuario.id && usuario.id !== currentUserId) {
+    return (
+      <Link to={`/perfil/${usuario.id}`} className="hover:opacity-80 transition-opacity">
+        {contentWithFallback}
+      </Link>
+    );
+  }
+
+  return contentWithFallback;
 };
 
 // Componente para mostrar contadores de reacciones
@@ -194,7 +248,13 @@ const DetalleLibro: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // � Función para volver a la página anterior
+  // Helper para obtener el ID del usuario actual
+  const getCurrentUserId = (): number | null => {
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId, 10) : null;
+  };
+  
+  // ⬅ Función para volver a la página anterior
   const handleGoBack = () => {
     // Si hay historial previo en el navegador, usar navigate(-1)
     if (window.history.length > 1) {
@@ -378,10 +438,16 @@ const DetalleLibro: React.FC = () => {
           dispatch({ type: 'SET_REVIEWS_LOADING', payload: true });
           try {
             const reviewsData = await getResenasByLibro(libroIdCandidate);
-
+            
+            console.log("📚 Datos de reseñas recibidos:", reviewsData);
+            
             // Filtrar: mostrar todo excepto FLAGGED (rechazadas)
-            const reviews = reviewsData?.reviews || [];
+            const reviews = reviewsData?.reviews || reviewsData || [];
+            console.log("📝 Total de reseñas antes de filtrar:", reviews.length);
+            console.log("📋 Estados de reseñas:", reviews.map((r: Reseña) => ({ id: r.id, estado: r.estado })));
+            
             const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
+            console.log("✅ Reseñas después de filtrar FLAGGED:", filtered.length);
 
             dispatch({ type: 'SET_REVIEWS', payload: filtered });
 
@@ -522,8 +588,11 @@ const DetalleLibro: React.FC = () => {
           reviewsData = await getResenasByLibro(libro.id);
         }
 
+        console.log("🔀 Cambio de orden - Datos recibidos:", reviewsData);
         const reviews = reviewsData?.reviews || reviewsData || [];
+        console.log("🔀 Cambio de orden - Total reseñas:", reviews.length);
         const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
+        console.log("🔀 Cambio de orden - Reseñas filtradas:", filtered.length);
 
         dispatch({ type: 'SET_REVIEWS', payload: filtered });
 
@@ -653,8 +722,11 @@ const DetalleLibro: React.FC = () => {
     try {
       dispatch({ type: 'SET_REVIEWS_LOADING', payload: true });
       const reviewsData = await getResenasByLibro(libro.id);
-      const reviews = reviewsData?.reviews || [];
+      console.log("🔄 Refresh - Datos recibidos:", reviewsData);
+      const reviews = reviewsData?.reviews || reviewsData || [];
+      console.log("🔄 Refresh - Total reseñas:", reviews.length);
       const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
+      console.log("🔄 Refresh - Reseñas filtradas:", filtered.length);
       dispatch({ type: 'SET_REVIEWS', payload: filtered });
       // actualizar likedByUser y dislikedByUser tras refresh
       const token = getToken();
@@ -1492,16 +1564,29 @@ const DetalleLibro: React.FC = () => {
                 <p className="text-gray-500 dark:text-slate-400 mt-2">¡Sé el primero en compartir tu opinión!</p>
               </div>
             ) : (
-              sortedResenas().map((r) => (
+              sortedResenas().map((r) => {
+                const currentUserId = getCurrentUserId();
+                const isOwnReview = currentUserId === r.usuario.id;
+                
+                return (
                 <article key={r.id} className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-6 hover:shadow-2xl transition-all border border-gray-100 dark:border-slate-700 hover:border-purple-200 dark:hover:border-purple-800">
                 <div className="flex gap-4">
-                  <UserAvatar usuario={r.usuario} />
+                  <UserAvatar usuario={r.usuario} clickable={!isOwnReview} currentUserId={currentUserId} />
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{r.usuario.nombre || r.usuario.username}</h4>
+                          {isOwnReview ? (
+                            <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{r.usuario.nombre || r.usuario.username}</h4>
+                          ) : (
+                            <Link 
+                              to={`/perfil/${r.usuario.id}`} 
+                              className="font-semibold text-lg text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                            >
+                              {r.usuario.nombre || r.usuario.username}
+                            </Link>
+                          )}
                           {r.estado === "PENDING" && (
                             <span className="inline-block bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs px-2 py-1 rounded-full font-medium">
                               Pendiente de moderación
@@ -1627,35 +1712,43 @@ const DetalleLibro: React.FC = () => {
                     )}
 
                     {/* Display replies */}
-                    {r.respuestas && r.respuestas.length > 0 && (
+                    {r.respuestas && r.respuestas.length > 0 && (() => {
+                      const isOwnFirstReply = currentUserId === r.respuestas[0].usuario.id;
+                      
+                      return (
                       <div className="mt-6 space-y-4 border-l-4 border-pink-200 dark:border-pink-800/50 pl-6 ml-4">
                         {/* Always show the first reply */}
                         <div className="bg-gradient-to-br from-pink-50/50 to-rose-50/50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-5 border border-pink-100 dark:border-pink-800/50 shadow-sm">
                           <div className="flex gap-3">
-                            {r.respuestas[0].usuario.avatar ? (
-                              <img
-                                src={`/assets/${r.respuestas[0].usuario.avatar}.svg`}
-                                alt={`Avatar de ${r.respuestas[0].usuario.username || r.respuestas[0].usuario.nombre}`}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
-                                {((r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username) || "?")
-                                  .split(" ")
-                                  .map(s => s[0].toUpperCase())
-                                  .slice(0, 2)
-                                  .join("")}
-                              </div>
-                            )}
+                            <UserAvatar usuario={r.respuestas[0].usuario} size="w-10 h-10" clickable={!isOwnFirstReply} currentUserId={currentUserId} />
 
                             <div className="flex-1">
                               <div className="flex justify-between items-start">
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}</h5>
+                                    {isOwnFirstReply ? (
+                                      <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}</h5>
+                                    ) : (
+                                      <Link 
+                                        to={`/perfil/${r.respuestas[0].usuario.id}`}
+                                        className="font-semibold text-base text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                      >
+                                        {r.respuestas[0].usuario.nombre || r.respuestas[0].usuario.username}
+                                      </Link>
+                                    )}
                                     {r.respuestas[0].resenaPadre && (
                                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        respondiendo a {r.respuestas[0].resenaPadre.usuario.nombre || r.respuestas[0].resenaPadre.usuario.username}
+                                        respondiendo a{' '}
+                                        {!r.respuestas[0].resenaPadre.usuario.id || currentUserId === r.respuestas[0].resenaPadre.usuario.id ? (
+                                          <span>{r.respuestas[0].resenaPadre.usuario.nombre || r.respuestas[0].resenaPadre.usuario.username}</span>
+                                        ) : (
+                                          <Link 
+                                            to={`/perfil/${r.respuestas[0].resenaPadre.usuario.id}`}
+                                            className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                          >
+                                            {r.respuestas[0].resenaPadre.usuario.nombre || r.respuestas[0].resenaPadre.usuario.username}
+                                          </Link>
+                                        )}
                                       </span>
                                     )}
                                   </div>
@@ -1705,33 +1798,41 @@ const DetalleLibro: React.FC = () => {
                         </div>
 
                         {/* Show additional replies only if expanded */}
-                        {reviewState.expandedReplies[r.id.toString()] && r.respuestas.slice(1).map((reply) => (
+                        {reviewState.expandedReplies[r.id.toString()] && r.respuestas.slice(1).map((reply) => {
+                          const isOwnReply = currentUserId === reply.usuario.id;
+                          
+                          return (
                           <div key={reply.id} className="bg-gradient-to-br from-pink-50/50 to-rose-50/50 dark:from-pink-950/20 dark:to-rose-950/20 rounded-2xl p-5 border border-pink-100 dark:border-pink-800/50 shadow-sm">
                             <div className="flex gap-4">
-                              {reply.usuario.avatar ? (
-                                <img
-                                  src={`/assets/${reply.usuario.avatar}.svg`}
-                                  alt={`Avatar de ${reply.usuario.username || reply.usuario.nombre}`}
-                                  className="w-10 h-10 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
-                                  {((reply.usuario.nombre || reply.usuario.username) || "?")
-                                    .split(" ")
-                                    .map(s => s[0].toUpperCase())
-                                    .slice(0, 2)
-                                    .join("")}
-                                </div>
-                              )}
+                              <UserAvatar usuario={reply.usuario} size="w-10 h-10" clickable={!isOwnReply} currentUserId={currentUserId} />
 
                               <div className="flex-1">
                                 <div className="flex justify-between items-start">
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{reply.usuario.nombre || reply.usuario.username}</h5>
+                                      {isOwnReply ? (
+                                        <h5 className="font-semibold text-base text-gray-900 dark:text-gray-100">{reply.usuario.nombre || reply.usuario.username}</h5>
+                                      ) : (
+                                        <Link 
+                                          to={`/perfil/${reply.usuario.id}`}
+                                          className="font-semibold text-base text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                        >
+                                          {reply.usuario.nombre || reply.usuario.username}
+                                        </Link>
+                                      )}
                                       {reply.resenaPadre && (
                                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                                          respondiendo a {reply.resenaPadre.usuario.nombre || reply.resenaPadre.usuario.username}
+                                          respondiendo a{' '}
+                                          {!reply.resenaPadre.usuario.id || currentUserId === reply.resenaPadre.usuario.id ? (
+                                            <span>{reply.resenaPadre.usuario.nombre || reply.resenaPadre.usuario.username}</span>
+                                          ) : (
+                                            <Link 
+                                              to={`/perfil/${reply.resenaPadre.usuario.id}`}
+                                              className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                            >
+                                              {reply.resenaPadre.usuario.nombre || reply.resenaPadre.usuario.username}
+                                            </Link>
+                                          )}
                                         </span>
                                       )}
                                     </div>
@@ -1777,13 +1878,16 @@ const DetalleLibro: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </article>
-            ))
+                );
+              })
           )}
         </div>
       </div>

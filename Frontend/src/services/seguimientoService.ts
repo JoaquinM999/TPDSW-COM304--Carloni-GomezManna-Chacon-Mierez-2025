@@ -16,7 +16,7 @@ export interface Usuario {
 
 export const seguimientoService = {
   async followUser(seguidoId: number): Promise<{ message: string }> {
-    const response = await fetchWithRefresh('/seguimiento', {
+    const response = await fetchWithRefresh('/api/seguimientos/follow', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ export const seguimientoService = {
   },
 
   async unfollowUser(seguidoId: number): Promise<{ message: string }> {
-    const response = await fetchWithRefresh(`/seguimiento/${seguidoId}`, {
+    const response = await fetchWithRefresh(`/api/seguimientos/unfollow/${seguidoId}`, {
       method: 'DELETE',
     });
 
@@ -46,7 +46,7 @@ export const seguimientoService = {
   },
 
   async getSeguidores(usuarioId: number): Promise<Usuario[]> {
-    const response = await fetchWithRefresh(`/seguimiento/seguidores/${usuarioId}`);
+    const response = await fetchWithRefresh(`/api/seguimientos/seguidores/${usuarioId}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -57,7 +57,7 @@ export const seguimientoService = {
   },
 
   async getSeguidos(): Promise<Usuario[]> {
-    const response = await fetchWithRefresh('/seguimiento/seguidos');
+    const response = await fetchWithRefresh('/api/seguimientos/seguidos');
 
     if (!response.ok) {
       const error = await response.json();
@@ -68,7 +68,7 @@ export const seguimientoService = {
   },
 
   async isFollowing(seguidoId: number): Promise<boolean> {
-    const response = await fetchWithRefresh(`/seguimiento/is-following/${seguidoId}`);
+    const response = await fetchWithRefresh(`/api/seguimientos/is-following/${seguidoId}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -80,7 +80,7 @@ export const seguimientoService = {
   },
 
   async getFollowCounts(userId: number): Promise<{ seguidores: number; siguiendo: number }> {
-    const response = await fetchWithRefresh(`/seguimiento/counts/${userId}`);
+    const response = await fetchWithRefresh(`/api/seguimientos/counts/${userId}`);
 
     if (!response.ok) {
       const error = await response.json();

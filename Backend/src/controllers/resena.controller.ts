@@ -28,9 +28,19 @@ export const getResenas = async (req: Request, res: Response) => {
     // 🚫 Excluir reseñas eliminadas (soft delete) por defecto
     where.deletedAt = null;
 
-    // Filtrado por libroId (siempre externalId, ya que libroId viene del frontend como external)
+    // Filtrado por libroId - buscar tanto por externalId como por id interno
     if (libroId) {
-      where.libro = { externalId: libroId.toString() };
+      // Intentar buscar por externalId primero, y si es numérico también por id
+      const libroIdStr = libroId.toString();
+      const isNumeric = /^\d+$/.test(libroIdStr);
+      
+      if (isNumeric) {
+        // Si es numérico, buscar por id O externalId
+        where.libro = { $or: [{ id: +libroIdStr }, { externalId: libroIdStr }] };
+      } else {
+        // Si no es numérico, solo por externalId
+        where.libro = { externalId: libroIdStr };
+      }
     }
 
     if (usuarioId) where.usuario = +usuarioId;
@@ -66,6 +76,7 @@ export const getResenas = async (req: Request, res: Response) => {
       populate: [
         'usuario',
         'libro',
+        'libro.autor',
         'reacciones',
         'reacciones.usuario',
         'resenaPadre.usuario',
@@ -206,7 +217,12 @@ export const getResenas = async (req: Request, res: Response) => {
         libro: resena.libro ? {
           id: resena.libro.id,
           nombre: resena.libro.nombre,
-          externalId: resena.libro.externalId
+          externalId: resena.libro.externalId,
+          imagen: resena.libro.imagen,
+          autor: resena.libro.autor ? {
+            id: resena.libro.autor.id,
+            nombre: resena.libro.autor.nombre
+          } : null
         } : null,
         reacciones: reaccionesArray.map((r: any) => ({
           id: r.id,
@@ -305,7 +321,33 @@ export const createResena = async (req: Request, res: Response) => {
 
     // Buscar libro por externalId o id
     const externalId = libroData.id || libroData.slug || libroId?.toString() || '';
+    
+    // 🔍 Búsqueda mejorada: primero por externalId, luego por nombre + autor para evitar duplicados
     let libro = await em.findOne(Libro, { externalId });
+    
+    // Si no se encuentra por externalId, buscar por nombre y autor (puede ser que ya exista con otro externalId)
+    if (!libro && libroData.titulo) {
+      const nombreSimilar = libroData.titulo.trim();
+      const whereClause: any = { 
+        nombre: nombreSimilar
+      };
+      
+      if (libroData.autores && libroData.autores.length > 0) {
+        whereClause.autor = { nombre: { $like: `${libroData.autores[0].split(' ')[0]}%` } };
+      }
+      
+      libro = await em.findOne(Libro, whereClause as any, { populate: ['autor'] as any });
+      
+      if (libro) {
+        console.log(`📚 Libro encontrado por nombre: "${libro.nombre}" (ID: ${libro.id})`);
+        // Actualizar el externalId si no lo tenía
+        if (!libro.externalId && externalId) {
+          libro.externalId = externalId;
+          await em.persistAndFlush(libro);
+          console.log(`✅ ExternalId actualizado: ${externalId}`);
+        }
+      }
+    }
 
     if (!libro) {
       let autor: Autor | undefined;
@@ -719,7 +761,17 @@ export const getResenasPopulares = async (req: Request, res: Response) => {
     };
 
     if (libroId) {
-      where.libro = { externalId: libroId.toString() };
+      // Buscar tanto por externalId como por id interno
+      const libroIdStr = libroId.toString();
+      const isNumeric = /^\d+$/.test(libroIdStr);
+      
+      if (isNumeric) {
+        // Si es numérico, buscar por id O externalId
+        where.libro = { $or: [{ id: +libroIdStr }, { externalId: libroIdStr }] };
+      } else {
+        // Si no es numérico, solo por externalId
+        where.libro = { externalId: libroIdStr };
+      }
     }
 
     // Obtener todas las reseñas con sus reacciones

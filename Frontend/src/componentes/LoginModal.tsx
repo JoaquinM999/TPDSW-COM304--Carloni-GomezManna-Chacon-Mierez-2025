@@ -67,46 +67,46 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-8 max-w-md w-full mx-4 relative border border-white/20">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/80 to-pink-50/80 backdrop-blur-xl flex items-center justify-center z-50">
+      <div className="bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 relative border border-white/50 ring-1 ring-gray-200/50">
         {/* Botón cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors duration-200 p-1 hover:bg-white/50 rounded-full"
           aria-label="Cerrar modal"
         >
           <X className="w-6 h-6" />
         </button>
 
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center space-x-2 text-2xl font-bold text-blue-600 mb-4">
-            <Book className="w-8 h-8" />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center space-x-2 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            <Book className="w-9 h-9 text-blue-600" />
             <span>BookCode</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900">Tu sesión ha expirado</h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Tu sesión ha expirado</h2>
+          <p className="text-sm text-gray-600">
             Por favor, inicia sesión nuevamente para continuar.
           </p>
         </div>
 
         {/* Mensajes */}
         {error && (
-          <div className="text-red-600 mb-4 text-center font-semibold" role="alert">
+          <div className="bg-red-50/80 backdrop-blur-sm text-red-700 mb-4 p-3 rounded-xl text-center font-medium border border-red-200/50" role="alert">
             {error}
           </div>
         )}
         {success && (
-          <div className="text-green-600 mb-4 text-center font-semibold" role="alert">
+          <div className="bg-green-50/80 backdrop-blur-sm text-green-700 mb-4 p-3 rounded-xl text-center font-medium border border-green-200/50" role="alert">
             {success}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleLoginSubmit} className="space-y-6" noValidate>
+        <form onSubmit={handleLoginSubmit} className="space-y-5" noValidate>
           <div>
-            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 mb-2">
               Correo electrónico
             </label>
             <div className="relative">
@@ -120,14 +120,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.email}
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300/50 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 transition-all duration-200"
                 placeholder="tu@email.com"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 mb-2">
               Contraseña
             </label>
             <div className="relative">
@@ -141,7 +141,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.password}
                 onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300/50 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 transition-all duration-200"
                 placeholder="Tu contraseña"
               />
               <button
@@ -151,9 +151,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 )}
               </button>
             </div>
@@ -162,7 +162,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             {loading ? (
               <span>Cargando...</span>

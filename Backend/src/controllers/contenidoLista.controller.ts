@@ -93,16 +93,26 @@ export const addLibroALista = async (req: Request, res: Response): Promise<void>
     // Buscar o crear categoría por defecto
     let autor: Autor | undefined;
     if (libro.autores && libro.autores.length > 0) {
-      const autorNombreCompleto = libro.autores[0];
-      // Buscar autor por nombre completo para evitar errores de división
-      autor = await orm.em.findOne(Autor, { nombre: autorNombreCompleto }) ?? undefined;
+      const autorNombreCompleto = libro.autores[0].trim();
+      
+      // Dividir nombre y apellido correctamente
+      const partesNombre = autorNombreCompleto.split(' ');
+      const nombre = partesNombre[0] || autorNombreCompleto;
+      const apellido = partesNombre.slice(1).join(' ') || '';
+      
+      // Buscar autor por nombre Y apellido
+      autor = await orm.em.findOne(Autor, { nombre, apellido }) ?? undefined;
+      
       if (!autor) {
+        console.log('📝 Creando nuevo autor:', { nombre, apellido, nombreCompleto: autorNombreCompleto });
         autor = orm.em.create(Autor, {
-          nombre: autorNombreCompleto,
-          apellido: '', // Dejamos el apellido vacío para simplificar
+          nombre,
+          apellido,
           createdAt: new Date()
         });
         await orm.em.persist(autor);
+      } else {
+        console.log('✅ Autor existente encontrado:', { id: autor.id, nombre: autor.nombre, apellido: autor.apellido });
       }
     }
 

@@ -109,7 +109,9 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
     
     // Formatear respuesta compatible con DetalleLibro.tsx
     const response = {
-      id: libro.id.toString(),
+      id: libro.id,
+      externalId: libro.externalId || null, // ✅ CRÍTICO: Devolver externalId
+      source: libro.source || 'local', // ✅ CRÍTICO: Devolver source original
       titulo: libro.nombre || 'Título desconocido',
       title: libro.nombre || 'Título desconocido',
       autores: libro.autor 
@@ -131,8 +133,7 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
       saga: libro.saga ? {
         id: libro.saga.id,
         nombre: libro.saga.nombre
-      } : null,
-      source: 'local' as const
+      } : null
     };
     
     res.json(response);

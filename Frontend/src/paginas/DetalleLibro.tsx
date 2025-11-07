@@ -121,6 +121,120 @@ const reviewReducer = (state: ReviewState, action: ReviewAction): ReviewState =>
   }
 };
 
+// Componente para links de autores (con verificación de existencia en BD y fallback a APIs externas)
+const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => {
+  const [autorId, setAutorId] = useState<number | null>(null);
+  const [autorExterno, setAutorExterno] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const buscarAutor = async () => {
+      try {
+        // 1️⃣ Primero: Buscar en BD local
+        const responseBD = await fetch(
+          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`
+        );
+        
+        if (responseBD.ok) {
+          const autores = await responseBD.json();
+          // Buscar coincidencia exacta en el array de resultados
+          const autorExacto = autores.find((a: any) => {
+            const nombreAutor = `${a.nombre} ${a.apellido}`.trim().toLowerCase();
+            return nombreAutor === nombreCompleto.toLowerCase();
+          });
+          
+          if (autorExacto) {
+            console.log('✅ Autor encontrado en BD:', autorExacto);
+            setAutorId(autorExacto.id);
+            setLoading(false);
+            return; // Salir si encontramos en BD
+          }
+        }
+
+        // 2️⃣ Fallback: Buscar en Google Books si no está en BD
+        console.log('🔍 Autor no encontrado en BD, buscando en APIs externas:', nombreCompleto);
+        const responseExterno = await fetch(
+          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=true`
+        );
+        
+        if (responseExterno.ok) {
+          const autoresExternos = await responseExterno.json();
+          // Buscar coincidencia exacta o aproximada
+          const autorExternoExacto = autoresExternos.find((a: any) => {
+            if (a.external) {
+              const nombreAutor = a.name?.trim().toLowerCase() || '';
+              return nombreAutor === nombreCompleto.toLowerCase();
+            }
+            return false;
+          });
+          
+          if (autorExternoExacto) {
+            console.log('✅ Autor encontrado en API externa:', autorExternoExacto);
+            setAutorExterno(autorExternoExacto);
+          }
+        }
+      } catch (error) {
+        console.log('❌ Error al buscar el autor:', nombreCompleto, error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    buscarAutor();
+  }, [nombreCompleto]);
+
+  if (loading) {
+    return (
+      <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md text-base font-semibold text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-700">
+        <User className="w-4 h-4 animate-pulse" />
+        {nombreCompleto}
+      </span>
+    );
+  }
+
+  // Si existe en BD, enlazar a perfil interno
+  if (autorId) {
+    return (
+      <Link
+        to={`/perfil-autor/${autorId}`}
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
+      >
+        <User className="w-4 h-4" />
+        {nombreCompleto}
+      </Link>
+    );
+  }
+
+  // Si existe en API externa, enlazar a DetalleAutor pasando el nombre como parámetro
+  // La página DetalleAutor ya maneja búsqueda en APIs externas
+  if (autorExterno) {
+    return (
+      <Link
+        to={`/autores/${encodeURIComponent(nombreCompleto)}`}
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
+        title="Ver perfil del autor (información de Google Books)"
+      >
+        <User className="w-4 h-4" />
+        {nombreCompleto}
+        <span className="text-xs opacity-60">📚</span>
+      </Link>
+    );
+  }
+
+  // Si no existe en ningún lado, igual permitir hacer clic para buscar en DetalleAutor
+  // DetalleAutor intentará buscar en Google Books y Wikipedia
+  return (
+    <Link
+      to={`/autores/${encodeURIComponent(nombreCompleto)}`}
+      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-600 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
+      title="Buscar información del autor"
+    >
+      <User className="w-4 h-4" />
+      {nombreCompleto}
+    </Link>
+  );
+};
+
 // Componente para renderizar avatar con link opcional al perfil
 const UserAvatar: React.FC<{ 
   usuario: { id?: number; nombre?: string; username: string; avatar?: string }; 
@@ -364,8 +478,25 @@ const DetalleLibro: React.FC = () => {
         if (response.ok) {
           // ✅ Libro encontrado en base de datos local
           data = await response.json();
+          
+          // ✅ Validar y preservar el source original para evitar duplicados
+          const validSource = (data.source === "hardcover" || data.source === "google") 
+            ? data.source 
+            : "google"; // Si no tiene source válido, usar google como fallback
+          
+          // ✅ CRÍTICO: Usar externalId si existe, sino usar id
+          const libroId = data.externalId || data.id.toString();
+          
+          console.log('📚 Libro cargado desde BD:', { 
+            id: libroId,
+            internalId: data.id,
+            externalId: data.externalId,
+            source: validSource,
+            originalSource: data.source 
+          });
+
           setLibro({
-            id: data.id.toString(),
+            id: libroId,
             titulo: data.titulo || data.title,
             title: data.titulo || data.title,
             autores: data.autores?.length ? data.autores : ["Autor desconocido"],
@@ -375,7 +506,7 @@ const DetalleLibro: React.FC = () => {
             enlace: data.enlace || null,
             slug: data.slug,
             activities_count: data.activities_count,
-            source: data.source || "local",
+            source: validSource,
           });
         } else {
           // 🔄 FALLBACK 1: Intentar Hardcover API
@@ -434,9 +565,12 @@ const DetalleLibro: React.FC = () => {
 
         // ahora que tenemos data (si existe id/string), buscamos reseñas y rating usando el id que vino en "data" o en la respuesta
         const libroIdCandidate = data?.id ?? (data && data.id ? data.id : undefined);
+        console.log("🔍 Libro ID candidato para buscar reseñas:", libroIdCandidate);
+        console.log("🔍 Data completa:", data);
         if (libroIdCandidate) {
           dispatch({ type: 'SET_REVIEWS_LOADING', payload: true });
           try {
+            console.log("🔍 Llamando a getResenasByLibro con ID:", libroIdCandidate);
             const reviewsData = await getResenasByLibro(libroIdCandidate);
             
             console.log("📚 Datos de reseñas recibidos:", reviewsData);
@@ -528,9 +662,22 @@ const DetalleLibro: React.FC = () => {
       if (!isAuthenticated() || !libro) return;
       try {
         const favoritos = await obtenerFavoritos();
-        // Ahora favoritos es un array de objetos { id, externalId, source }
-        // Encontrar el favorito correspondiente al libro actual
-        const fav = favoritos.find(fav => fav.externalId === libro.id && fav.source === libro.source);
+        console.log('🔍 Buscando favorito para libro:', { 
+          libroId: libro.id, 
+          libroSource: libro.source,
+          favoritos: favoritos.map(f => ({ id: f.id, externalId: f.externalId, source: f.source }))
+        });
+        
+        // Buscar el favorito usando externalId Y source
+        // El libro puede tener como id:
+        // 1. Un externalId de Google/Hardcover (string)
+        // 2. Un ID numérico interno (cuando viene de la BD)
+        const fav = favoritos.find(fav => 
+          (fav.externalId === libro.id && fav.source === libro.source) ||
+          (fav.externalId === libro.id.toString() && fav.source === libro.source)
+        );
+        
+        console.log('✅ Favorito encontrado:', fav ? { id: fav.id, externalId: fav.externalId } : 'No encontrado');
         setEsFavorito(fav ? fav.id : null);
       } catch (error) {
         console.error("Error fetching favorito status:", error);
@@ -641,19 +788,58 @@ const DetalleLibro: React.FC = () => {
         await quitarFavorito(esFavorito);
         setEsFavorito(null);
       } else {
+        // ✅ Validar que el source sea válido para evitar duplicados
+        const validSource = (libro.source === "hardcover" || libro.source === "google") 
+          ? libro.source 
+          : "google"; // Fallback a google si viene de la BD sin source válido
+
+        console.log('🔍 Agregando a favoritos:', { 
+          id: libro.id, 
+          source: validSource,
+          originalSource: libro.source 
+        });
+
         const favoriteId = await agregarFavorito({
           id: libro.id,
           titulo: libro.titulo,
+          autores: libro.autores, // ✅ Agregar autores
           descripcion: libro.descripcion,
           imagen: libro.imagen,
           enlace: libro.enlace,
-          source: libro.source!,
+          source: validSource,
         });
         setEsFavorito(favoriteId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error toggling favorito:", error);
-      alert("Error al actualizar favorito. Inténtalo de nuevo.");
+      
+      // Manejar error 409 (Conflict) - el libro ya está en favoritos
+      if (error.response?.status === 409) {
+        alert("Este libro ya está en tus favoritos.");
+        // Refrescar el estado de favoritos
+        const favoritos = await obtenerFavoritos();
+        console.log('🔄 Refrescando favoritos después de error 409:', favoritos);
+        
+        // Buscar el favorito existente
+        const fav = favoritos.find(fav => 
+          (fav.externalId === libro.id && fav.source === libro.source) ||
+          (fav.externalId === libro.id.toString() && fav.source === libro.source)
+        );
+        
+        if (fav) {
+          console.log('✅ Favorito encontrado después de error 409:', fav.id);
+          setEsFavorito(fav.id);
+        } else {
+          // Si el backend devuelve el ID del favorito en el error, usarlo
+          const favoritoId = error.response?.data?.favoritoId;
+          if (favoritoId) {
+            console.log('✅ Usando favorito ID del error:', favoritoId);
+            setEsFavorito(favoritoId);
+          }
+        }
+      } else {
+        alert("Error al actualizar favorito. Inténtalo de nuevo.");
+      }
     }
   };
 
@@ -1304,14 +1490,7 @@ const DetalleLibro: React.FC = () => {
 
                 <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                   {libro.autores.map((a, i) => (
-                    <Link
-                      key={i}
-                      to={`/autores/${encodeURIComponent(a)}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
-                    >
-                      <User className="w-4 h-4" />
-                      {a}
-                    </Link>
+                    <AutorLink key={i} nombreCompleto={a} />
                   ))}
                 </div>
 

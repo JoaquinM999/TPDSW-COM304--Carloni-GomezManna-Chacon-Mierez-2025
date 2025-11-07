@@ -23,6 +23,8 @@ export const getResenas = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const { libroId, usuarioId, estado } = req.query;
 
+    console.log('🔍 getResenas - libroId recibido:', libroId);
+
     const where: any = {};
 
     // 🚫 Excluir reseñas eliminadas (soft delete) por defecto
@@ -34,12 +36,16 @@ export const getResenas = async (req: Request, res: Response) => {
       const libroIdStr = libroId.toString();
       const isNumeric = /^\d+$/.test(libroIdStr);
       
+      console.log('🔍 libroIdStr:', libroIdStr, 'isNumeric:', isNumeric);
+      
       if (isNumeric) {
         // Si es numérico, buscar por id O externalId
         where.libro = { $or: [{ id: +libroIdStr }, { externalId: libroIdStr }] };
+        console.log('🔍 Buscando por ID numérico O externalId');
       } else {
         // Si no es numérico, solo por externalId
         where.libro = { externalId: libroIdStr };
+        console.log('🔍 Buscando solo por externalId');
       }
     }
 
@@ -72,6 +78,8 @@ export const getResenas = async (req: Request, res: Response) => {
       }
     }
 
+    console.log('🔍 WHERE clause para buscar reseñas:', JSON.stringify(where, null, 2));
+    
     const resenas = await em.find(Resena, where, {
       populate: [
         'usuario',
@@ -88,6 +96,8 @@ export const getResenas = async (req: Request, res: Response) => {
       ],
       orderBy: { createdAt: 'DESC' },
     });
+    
+    console.log('🔍 Reseñas encontradas:', resenas.length);
 
     // 📊 Agregar contadores de reacciones a cada reseña
     const agregarContadores = (resena: Resena) => {

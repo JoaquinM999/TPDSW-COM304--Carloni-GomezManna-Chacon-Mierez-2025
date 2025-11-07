@@ -35,6 +35,7 @@ export const obtenerFavoritos = async (): Promise<{
 export const agregarFavorito = async (libroData: {
   id: string;
   titulo: string;
+  autores: string[]; // ✅ Agregado campo autores
   descripcion: string | null;
   imagen: string | null;
   enlace: string | null;
@@ -51,6 +52,7 @@ export const agregarFavorito = async (libroData: {
       externalId: libroData.id,
       source: libroData.source,
       nombre: libroData.titulo,
+      autores: libroData.autores, // ✅ Pasar autores al backend
       sinopsis: libroData.descripcion,
       imagen: libroData.imagen,
       enlace: libroData.enlace,

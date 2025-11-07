@@ -21,9 +21,11 @@ export class RecomendacionService {
 
   /**
    * Obtiene recomendaciones personalizadas para un usuario
+   * @returns Array de libros con sus puntuaciones
    */
-  async getRecomendacionesPersonalizadas(usuarioId: number, limit: number = 10): Promise<Libro[]> {
+  async getRecomendacionesPersonalizadas(usuarioId: number, limit: number = 10): Promise<LibroConPuntuacion[]> {
     const cacheKey = `recomendaciones:usuario:${usuarioId}`;
+    const em = this.orm.em.fork();
 
     // Intentar obtener del caché
     if (redis) {
@@ -31,7 +33,30 @@ export class RecomendacionService {
         const cached = await redis.get(cacheKey);
         if (cached) {
           console.log('📦 Recomendaciones desde caché para usuario:', usuarioId);
-          return JSON.parse(cached);
+          const cachedData = JSON.parse(cached);
+          
+          // Re-hidratar los libros desde la base de datos
+          const librosIds = cachedData.map((item: any) => item.libro?.id).filter(Boolean);
+          if (librosIds.length > 0) {
+            const libros = await em.find(Libro, 
+              { id: { $in: librosIds } },
+              { populate: ['autor', 'categoria', 'editorial'] }
+            );
+            
+            // Crear mapa de libros por ID
+            const librosMap = new Map(libros.map(libro => [libro.id, libro]));
+            
+            // Reconstruir recomendaciones con entidades hidratadas
+            const recomendaciones = cachedData
+              .map((item: any) => ({
+                libro: librosMap.get(item.libro?.id),
+                score: item.score,
+                razon: item.razon
+              }))
+              .filter((item: any) => item.libro); // Filtrar los que no se encontraron
+            
+            return recomendaciones;
+          }
         }
       } catch (error) {
         console.error('Error al leer caché de recomendaciones:', error);
@@ -39,7 +64,6 @@ export class RecomendacionService {
     }
 
     console.log('🔍 Calculando recomendaciones para usuario:', usuarioId);
-    const em = this.orm.em.fork();
 
     // 1. Obtener favoritos del usuario
     const favoritos = await em.find(Favorito, 
@@ -57,8 +81,13 @@ export class RecomendacionService {
     if (favoritos.length === 0 && resenas.length === 0) {
       console.log('👤 Usuario nuevo - mostrando libros populares');
       const populares = await this.getLibrosPopulares(limit);
-      this.cacheRecomendaciones(cacheKey, populares);
-      return populares;
+      const popularesConScore: LibroConPuntuacion[] = populares.map(libro => ({
+        libro,
+        score: 0.5, // Score base para libros populares
+        razon: 'Libro popular'
+      }));
+      this.cacheRecomendaciones(cacheKey, popularesConScore);
+      return popularesConScore;
     }
 
     // 3. Analizar preferencias
@@ -87,8 +116,7 @@ export class RecomendacionService {
     // 8. Ordenar por score y limitar
     const recomendaciones = librosConScore
       .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map(item => item.libro);
+      .slice(0, limit);
 
     // Cachear resultado
     this.cacheRecomendaciones(cacheKey, recomendaciones);
@@ -181,11 +209,11 @@ export class RecomendacionService {
     candidatos: Libro[],
     preferencias: any
   ): LibroConPuntuacion[] {
-    return candidatos.map(libro => {
+    const scores = candidatos.map(libro => {
       let score = 0;
       let razon = '';
 
-      // Puntuación por categoría
+      // Puntuación por categoría (máx 50 puntos)
       if (libro.categoria) {
         const categoriaMatch = preferencias.categorias.find((c: any) => c.id === libro.categoria!.id);
         if (categoriaMatch) {
@@ -195,7 +223,7 @@ export class RecomendacionService {
         }
       }
 
-      // Puntuación por autor
+      // Puntuación por autor (máx 30 puntos)
       if (libro.autor) {
         const autorMatch = preferencias.autores.find((a: any) => a.id === libro.autor!.id);
         if (autorMatch) {
@@ -205,17 +233,27 @@ export class RecomendacionService {
         }
       }
 
-      // Bonus por recencia (libros nuevos en BD)
+      // Bonus por recencia (máx 20 puntos)
       if (libro.createdAt) {
         const diasDesdeCreacion = (Date.now() - libro.createdAt.getTime()) / (1000 * 60 * 60 * 24);
         if (diasDesdeCreacion < 30) {
+          score += 20;
+          razon += 'Nuevo (+20) ';
+        } else if (diasDesdeCreacion < 90) {
           score += 10;
-          razon += 'Nuevo (+10) ';
+          razon += 'Reciente (+10) ';
         }
       }
 
       return { libro, score, razon: razon.trim() || 'Match general' };
     });
+
+    // Normalizar scores a rango 0-1
+    const maxScore = Math.max(...scores.map(s => s.score), 1);
+    return scores.map(item => ({
+      ...item,
+      score: item.score / maxScore
+    }));
   }
 
   /**
@@ -246,7 +284,7 @@ export class RecomendacionService {
   /**
    * Cachea las recomendaciones en Redis
    */
-  private async cacheRecomendaciones(key: string, libros: Libro[]) {
+  private async cacheRecomendaciones(key: string, libros: LibroConPuntuacion[]) {
     if (redis) {
       try {
         await redis.setex(key, this.cacheTTL, JSON.stringify(libros));

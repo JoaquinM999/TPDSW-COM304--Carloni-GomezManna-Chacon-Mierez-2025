@@ -108,16 +108,26 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
     if (!libro) {
       let autor: Autor | undefined;
       if (libroData.autores && libroData.autores.length > 0) {
-        const autorNombreCompleto = libroData.autores[0];
-        // Buscar autor por nombre completo para evitar errores de división
-        autor = await orm.em.findOne(Autor, { nombre: autorNombreCompleto }) ?? undefined;
+        const autorNombreCompleto = libroData.autores[0].trim();
+        
+        // Dividir nombre y apellido correctamente
+        const partesNombre = autorNombreCompleto.split(' ');
+        const nombre = partesNombre[0] || autorNombreCompleto;
+        const apellido = partesNombre.slice(1).join(' ') || '';
+        
+        // Buscar autor por nombre Y apellido
+        autor = await orm.em.findOne(Autor, { nombre, apellido }) ?? undefined;
+        
         if (!autor) {
+          console.log('📝 Creando nuevo autor en favorito:', { nombre, apellido, nombreCompleto: autorNombreCompleto });
           autor = orm.em.create(Autor, {
-            nombre: autorNombreCompleto,
-            apellido: '', // Dejamos el apellido vacío para simplificar
+            nombre,
+            apellido,
             createdAt: new Date()
           });
           await orm.em.persist(autor);
+        } else {
+          console.log('✅ Autor existente encontrado en favorito:', { id: autor.id, nombre: autor.nombre, apellido: autor.apellido });
         }
       }
 
@@ -137,13 +147,35 @@ export const addFavorito = async (req: AuthRequest, res: Response): Promise<void
     const libroId = libro.id; // Obtenemos el ID correcto, ya sea existente o nuevo.
 
     // 4. CREAR EL FAVORITO (usando el usuarioId del token)
-    const favoritoExistente = await orm.em.findOne(Favorito, { usuario: usuarioId, libro: libroId });
+    // ✅ Verificar si ya existe un favorito para este usuario y libro
+    const favoritoExistente = await orm.em.findOne(
+      Favorito, 
+      { 
+        usuario: usuarioId, 
+        libro: { 
+          $or: [
+            { id: libroId }, // Buscar por ID interno
+            { externalId: libroData.externalId, source: libroData.source } // O por externalId + source
+          ]
+        } 
+      },
+      { populate: ['libro'] }
+    );
 
     if (favoritoExistente) {
-      res.status(409).json({ error: 'Este libro ya está en tus favoritos.' });
+      console.log('⚠️ Favorito ya existe:', { 
+        favoritoId: favoritoExistente.id, 
+        libroId: favoritoExistente.libro.id,
+        externalId: libroData.externalId 
+      });
+      res.status(409).json({ 
+        error: 'Este libro ya está en tus favoritos.',
+        favoritoId: favoritoExistente.id 
+      });
       return;
     }
 
+    console.log('✅ Creando nuevo favorito:', { usuarioId, libroId, externalId: libroData.externalId });
     const nuevoFavorito = orm.em.create(Favorito, { usuario: usuarioId, libro: libroId, fechaAgregado: new Date() });
     await orm.em.persistAndFlush(nuevoFavorito);
 

@@ -161,7 +161,7 @@ export const getAutores = async (req: Request, res: Response) => {
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/[.,]/g, '')
             .split(/\s+/)
-            .filter(p => p.length > 0);
+            .filter((p: string) => p.length > 0);
           
           // Generar variaciones ordenadas alfabéticamente para capturar "García Márquez Gabriel" y "Gabriel García Márquez"
           const clavePrincipal = palabras.sort().join('');
@@ -303,19 +303,105 @@ export const getAutorById = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const autorId = +req.params.id;
+    const identifier = req.params.id;
 
-    console.log('🔍 getAutorById - ID:', autorId);
+    console.log('🔍 getAutorById - Identifier:', identifier);
 
-    // Validación robusta del ID
-    if (isNaN(autorId) || autorId < 1) {
-      return res.status(400).json({ error: 'ID de autor inválido. Debe ser un número positivo' });
+    // Intentar convertir a número
+    const autorId = +identifier;
+
+    let autor: Autor | null = null;
+
+    // Si es un número válido, buscar por ID
+    if (!isNaN(autorId) && autorId > 0) {
+      console.log('🔢 Buscando por ID numérico:', autorId);
+      autor = await em.findOne(Autor, { id: autorId });
+    } 
+    // Si no es un número, buscar por nombre completo
+    else {
+      console.log('📝 Buscando por nombre completo:', identifier);
+      const decodedName = decodeURIComponent(identifier);
+      
+      // Intentar dividir en nombre y apellido
+      const parts = decodedName.trim().split(' ');
+      
+      if (parts.length >= 2) {
+        // Asumimos que el último elemento es el apellido y el resto es el nombre
+        const apellido = parts[parts.length - 1];
+        const nombre = parts.slice(0, -1).join(' ');
+        
+        console.log('🔍 Buscando autor - Nombre:', nombre, 'Apellido:', apellido);
+        
+        // Buscar exacto primero
+        autor = await em.findOne(Autor, { 
+          nombre: nombre,
+          apellido: apellido 
+        });
+        
+        // Si no encuentra exacto, intentar búsqueda flexible
+        if (!autor) {
+          console.log('⚠️ No encontrado exacto, intentando búsqueda flexible');
+          autor = await em.findOne(Autor, { 
+            $and: [
+              { nombre: { $like: `%${nombre}%` } },
+              { apellido: { $like: `%${apellido}%` } }
+            ]
+          });
+        }
+      } else {
+        // Si solo hay una palabra, buscar en ambos campos
+        console.log('🔍 Una sola palabra, buscando en nombre y apellido:', decodedName);
+        autor = await em.findOne(Autor, { 
+          $or: [
+            { nombre: { $like: `%${decodedName}%` } },
+            { apellido: { $like: `%${decodedName}%` } }
+          ]
+        });
+      }
     }
     
-    const autor = await em.findOne(Autor, { id: autorId });
-    
     if (!autor) {
-      console.log('❌ Autor no encontrado');
+      console.log('❌ Autor no encontrado en BD');
+      
+      // Si llegamos aquí y el identifier no es numérico, intentar buscar en APIs externas
+      if (isNaN(autorId)) {
+        console.log('🌐 Buscando autor en APIs externas:', identifier);
+        const decodedName = decodeURIComponent(identifier);
+        
+        try {
+          // Buscar en paralelo en Google Books y OpenLibrary
+          const [googleAuthors, openLibraryAuthors] = await Promise.all([
+            searchGoogleBooksAuthorsReadOnly(decodedName).catch(() => []),
+            searchOpenLibraryAuthorsReadOnly(decodedName).catch(() => [])
+          ]);
+          
+          // Combinar resultados y buscar coincidencia exacta
+          const allAuthors = [...googleAuthors, ...openLibraryAuthors];
+          const nombreCompleto = (a: ExternalAuthorDTO) => `${a.nombre} ${a.apellido}`.trim().toLowerCase();
+          const autorExterno = allAuthors.find(a => 
+            nombreCompleto(a) === decodedName.toLowerCase().trim()
+          ) || allAuthors[0]; // Si no hay coincidencia exacta, tomar el primero
+          
+          if (autorExterno) {
+            console.log('✅ Autor encontrado en API externa:', autorExterno);
+            // Devolver el autor externo con formato compatible
+            return res.json({
+              id: 0, // ID temporal para indicar que es externo
+              nombre: autorExterno.nombre,
+              apellido: autorExterno.apellido,
+              foto: autorExterno.foto || null,
+              biografia: autorExterno.biografia || null,
+              googleBooksId: autorExterno.googleBooksId || null,
+              openLibraryKey: autorExterno.openLibraryKey || null,
+              external: true, // Marcar como externo
+              createdAt: new Date().toISOString()
+            });
+          }
+        } catch (apiError: any) {
+          console.error('❌ Error al buscar en APIs externas:', apiError.message);
+        }
+      }
+      
       return res.status(404).json({ error: 'Autor no encontrado' });
     }
     

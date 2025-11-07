@@ -74,11 +74,67 @@ const DetalleAutor = () => {
     try {
       setLoading(true);
       
-      // Fetch autor básico
-      const autorRes = await fetch(`http://localhost:3000/api/autor/${id}`);
-      if (!autorRes.ok) throw new Error('Autor no encontrado');
-      const autorData = await autorRes.json();
-      setAutor(autorData);
+      // Detectar si el ID es numérico o un nombre
+      const isNumericId = !isNaN(Number(id));
+      
+      let autorData;
+      let nombreCompleto: string;
+
+      if (isNumericId) {
+        // Caso 1: ID numérico - buscar en BD
+        const autorRes = await fetch(`http://localhost:3000/api/autor/${id}`);
+        if (!autorRes.ok) throw new Error('Autor no encontrado');
+        autorData = await autorRes.json();
+        setAutor(autorData);
+        nombreCompleto = `${autorData.nombre} ${autorData.apellido}`;
+
+        // Fetch estadísticas solo si tenemos un ID numérico válido
+        try {
+          const statsRes = await fetch(`http://localhost:3000/api/autor/${id}/stats`);
+          if (statsRes.ok) {
+            const statsData = await statsRes.json();
+            setEstadisticas(statsData);
+          }
+        } catch (err) {
+          console.warn('No se pudieron cargar las estadísticas:', err);
+        }
+      } else {
+        // Caso 2: Nombre de autor - buscar en APIs externas
+        nombreCompleto = decodeURIComponent(id || '');
+        console.log('🔍 Buscando autor por nombre:', nombreCompleto);
+        
+        // Buscar primero en la BD por si existe
+        try {
+          const searchRes = await fetch(
+            `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`
+          );
+          
+          if (searchRes.ok) {
+            const autores = await searchRes.json();
+            const autorEncontrado = autores.find((a: any) => {
+              const nombreAutor = `${a.nombre} ${a.apellido}`.trim().toLowerCase();
+              return nombreAutor === nombreCompleto.toLowerCase();
+            });
+            
+            if (autorEncontrado) {
+              // Redirigir a la URL con ID numérico
+              navigate(`/autores/${autorEncontrado.id}`, { replace: true });
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('Error buscando autor en BD:', err);
+        }
+
+        // Si no está en BD, crear un objeto temporal para mostrar info de APIs externas
+        autorData = {
+          id: 0, // ID temporal
+          nombre: nombreCompleto.split(' ')[0] || '',
+          apellido: nombreCompleto.split(' ').slice(1).join(' ') || '',
+          createdAt: new Date().toISOString(),
+        };
+        setAutor(autorData);
+      }
 
       // Si el autor tiene biografía de las APIs, usarla directamente
       if (autorData.biografia) {
@@ -86,7 +142,6 @@ const DetalleAutor = () => {
         setLoadingBio(false);
       } else {
         // Fetch biografía de Wikipedia como fallback
-        const nombreCompleto = `${autorData.nombre} ${autorData.apellido}`;
         fetchBiografia(nombreCompleto);
       }
 
@@ -95,15 +150,7 @@ const DetalleAutor = () => {
         setFotoReal(autorData.foto);
       }
 
-      // Fetch estadísticas
-      const statsRes = await fetch(`http://localhost:3000/api/autor/${id}/stats`);
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setEstadisticas(statsData);
-      }
-
       // Fetch datos de Google Books (foto y libros)
-      const nombreCompleto = `${autorData.nombre} ${autorData.apellido}`;
       fetchGoogleBooksData(nombreCompleto);
       
       setLoading(false);

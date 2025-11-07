@@ -1,9 +1,5 @@
 # 🔴 PRIORIDAD CRÍTICA (Bugs que rompen funcionalidad)
 
-ver q se duplico un libro al reseñarlo desde alguna pagina
-
-y fijarse que el detalle libro desde las recomendaciones personalizadas no anda pq pasa mal el id o los datos. verificar.
-
 las votaciones dentro de esa sección de la pagina ppal no se guardan en ningún lado pq no hay una tabla en la bdd para hacer funcional esa sección entonces son datos que se pierden
 
 ---

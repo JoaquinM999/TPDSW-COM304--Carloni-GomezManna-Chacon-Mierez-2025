@@ -2,6 +2,8 @@
 
 las votaciones dentro de esa sección de la pagina ppal no se guardan en ningún lado pq no hay una tabla en la bdd para hacer funcional esa sección entonces son datos que se pierden
 
+acomodar las querys de la pagina ppal
+
 ---
 
 # 🟠 PRIORIDAD ALTA (Funcionalidades importantes)
@@ -10,8 +12,6 @@ las votaciones dentro de esa sección de la pagina ppal no se guardan en ningún
 
 hacer funcionar la creación de libros para la bdd desde admin
 
-acomodar las querys de la pagina ppal
-
 hacer funcionar lo de los correos
 
 ver lo de la actividad para las notificaciones
@@ -19,8 +19,6 @@ ver lo de la actividad para las notificaciones
 ---
 
 # 🟡 PRIORIDAD MEDIA (Mejoras y features nuevas)
-
-
 
 idea de dar corazon como insignia solo a una reseña por libro, de cada usuario
 

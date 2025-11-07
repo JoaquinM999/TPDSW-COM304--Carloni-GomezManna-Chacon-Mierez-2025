@@ -14,22 +14,25 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   className = '',
 }) => {
   const countRef = useRef<HTMLSpanElement>(null);
-  const hasAnimated = useRef(false);
+  const prevEndRef = useRef<number>(0);
 
   useEffect(() => {
-    if (hasAnimated.current || !countRef.current) return;
+    if (!countRef.current || end === 0) return;
 
-    hasAnimated.current = true;
+    // Si el valor no ha cambiado, no animar de nuevo
+    if (prevEndRef.current === end) return;
+
     const element = countRef.current;
-    const start = 0;
-    const increment = end / (duration / 16); // 60 FPS
+    const start = prevEndRef.current;
+    const increment = (end - start) / (duration / 16); // 60 FPS
     let current = start;
 
     const timer = setInterval(() => {
       current += increment;
-      if (current >= end) {
+      if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
         element.textContent = end.toLocaleString() + suffix;
         clearInterval(timer);
+        prevEndRef.current = end;
       } else {
         element.textContent = Math.floor(current).toLocaleString() + suffix;
       }

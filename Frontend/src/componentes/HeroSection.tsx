@@ -66,17 +66,21 @@ export const HeroSection: React.FC = () => {
     const loadStats = async () => {
       setIsLoadingStats(true);
       try {
+        console.log('📊 Cargando estadísticas...');
         const data = await getStatsWithCache();
+        console.log('✅ Estadísticas recibidas:', data);
         setPlatformStats(data);
       } catch (error) {
-        console.error('Error loading platform stats:', error);
+        console.error('❌ Error loading platform stats:', error);
         // Usar valores por defecto si falla
-        setPlatformStats({
+        const fallbackStats = {
           librosResenados: 50000,
           reseniasTotales: 250000,
           lectoresActivos: 15000,
           librosFavoritos: 180000,
-        });
+        };
+        console.log('⚠️ Usando valores por defecto:', fallbackStats);
+        setPlatformStats(fallbackStats);
       } finally {
         setIsLoadingStats(false);
       }

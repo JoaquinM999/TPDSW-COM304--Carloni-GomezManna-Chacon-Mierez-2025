@@ -3,7 +3,7 @@
  * Proporciona métricas para el HeroSection
  */
 
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 export interface PlatformStats {
   librosResenados: number;
@@ -17,6 +17,7 @@ export interface PlatformStats {
  */
 export const getStats = async (): Promise<PlatformStats> => {
   try {
+    console.log('🌐 Llamando a API:', `${API_URL}/stats`);
     const response = await fetch(`${API_URL}/stats`, {
       method: 'GET',
       headers: {
@@ -24,22 +25,27 @@ export const getStats = async (): Promise<PlatformStats> => {
       },
     });
 
+    console.log('📡 Respuesta API status:', response.status);
+
     if (!response.ok) {
       throw new Error(`Stats API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('📊 Datos recibidos de la API:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching platform stats:', error);
+    console.error('❌ Error fetching platform stats:', error);
     
     // Fallback a valores por defecto si falla la API
-    return {
+    const fallback = {
       librosResenados: 50000,
       reseniasTotales: 250000,
       lectoresActivos: 15000,
       librosFavoritos: 180000,
     };
+    console.log('⚠️ Usando fallback:', fallback);
+    return fallback;
   }
 };
 

@@ -38,6 +38,23 @@ const PollitoSpline: React.FC = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
+  // Suprimir warnings de WebGL de Spline (son informativos, no errores)
+  useEffect(() => {
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      const message = args.join(' ');
+      // Filtrar warnings específicos de THREE.js/Spline
+      if (message.includes('THREE.WebGLProgram') || message.includes('forcing loop to unroll')) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
+
   if (!showSpline) return null;
 
   return (

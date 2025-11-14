@@ -3,6 +3,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import LibroCard from "../componentes/LibroCard";
 import { getResenasByLibro } from "../services/resenaService";
+import { buildApiUrl } from "../utils/apiHelpers";
 
 interface Libro {
   id: string;
@@ -113,9 +114,9 @@ export default function TodosLosLibros() {
 
         const startIndex = (pagina - 1) * librosPorPagina;
         const cb = Date.now(); // cache buster
-        const url = `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(
+        const url = buildApiUrl(`/google-books/buscar?q=${encodeURIComponent(
           q
-        )}&orderBy=relevance&maxResults=${librosPorPagina}&startIndex=${startIndex}&cb=${cb}`;
+        )}&orderBy=relevance&maxResults=${librosPorPagina}&startIndex=${startIndex}&cb=${cb}`);
 
         // Guardar URL visible en UI para debug
         setLastUrl(url);

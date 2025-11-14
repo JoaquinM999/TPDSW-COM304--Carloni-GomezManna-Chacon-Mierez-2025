@@ -30,6 +30,7 @@
     "node-fetch": "^3.3.2",
     "redis": "^5.8.2",
     "reflect-metadata": "^0.1.13",
+    "sentiment": "^5.0.2",
     "tailwindcss": "^4.1.11",
     "vite": "^7.1.5"
   },
@@ -38,6 +39,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/sentiment": "^5.0.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { buildApiUrl } from "../utils/apiHelpers";
 
 interface PopularBook {
   id: string;
@@ -25,7 +26,7 @@ export const FeaturedContent: React.FC = () => {
     const loadPopularBooks = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/api/resena/populares?limit=4');
+        const response = await fetch(buildApiUrl('/resena/populares?limit=4'));
         
         if (!response.ok) {
           throw new Error('Error fetching popular books');

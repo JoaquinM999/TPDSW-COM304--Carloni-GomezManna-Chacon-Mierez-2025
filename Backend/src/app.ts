@@ -37,12 +37,27 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173", 
   "http://localhost:5174",
-  // Agregar tu URL de Vercel aquí cuando despliegues
   process.env.FRONTEND_URL || ""
 ].filter(Boolean); // Eliminar strings vacíos
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (como Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    // Verificar si el origin está en la lista de permitidos
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Permitir cualquier subdominio de vercel.app para desarrollo
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+    
+    // Rechazar otros orígenes
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 

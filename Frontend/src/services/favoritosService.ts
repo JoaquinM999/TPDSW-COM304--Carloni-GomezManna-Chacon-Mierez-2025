@@ -1,9 +1,10 @@
 // src/services/favoritosService.ts
 import axios from 'axios';
 import { getToken } from './authService';
+import { API_ROOT_URL } from '../config/api.config';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: API_ROOT_URL,
 });
 
 export const obtenerFavoritos = async (): Promise<{

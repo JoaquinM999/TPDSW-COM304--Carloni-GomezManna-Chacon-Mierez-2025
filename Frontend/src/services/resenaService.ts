@@ -1,7 +1,8 @@
 // src/services/resenaService.ts
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_BASE_URL } from '../config/api.config';
 
-const API_URL = 'http://localhost:3000/api/resena';
+const API_URL = `${API_BASE_URL}/resena`;
 
 interface LibroData {
   id: string;

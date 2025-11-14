@@ -1,7 +1,8 @@
 // src/services/recomendacionService.ts
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_BASE_URL } from '../config/api.config';
 
-const API_URL = 'http://localhost:3000/api/recomendaciones';
+const API_URL = `${API_BASE_URL}/recomendaciones`;
 
 export interface RecomendacionResponse {
   libros: {

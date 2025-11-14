@@ -1,7 +1,8 @@
 // src/services/userService.ts
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_BASE_URL } from '../config/api.config';
 
-const API_URL = 'http://localhost:3000/api/usuarios';
+const API_URL = `${API_BASE_URL}/usuarios`;
 
 export const getUsuarios = async () => {
   const response = await fetchWithRefresh(API_URL);

@@ -1,4 +1,5 @@
 // src/Servicios/authService.ts
+import { API_BASE_URL } from '../config/api.config';
 
 export const saveTokens = (token: string, refreshToken?: string) => {
   localStorage.setItem('accessToken', token);
@@ -15,7 +16,7 @@ export const getNewAccessToken = async (): Promise<string> => {
     throw new Error('No refresh token available, please login again');
   }
 
-  const response = await fetch('http://localhost:3000/api/auth/refresh-token', {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -34,7 +35,7 @@ export const getNewAccessToken = async (): Promise<string> => {
 };
 
 export const login = async (email: string, password: string): Promise<void> => {
-  const response = await fetch('http://localhost:3000/api/auth/login', {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -50,7 +51,7 @@ export const login = async (email: string, password: string): Promise<void> => {
 };
 
 export const register = async (username: string, email: string, password: string): Promise<void> => {
-  const response = await fetch('http://localhost:3000/api/auth/register', {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password }),
@@ -128,7 +129,7 @@ export const updateCurrentUser = async (data: any): Promise<void> => {
     throw new Error('No authentication token available');
   }
 
-  const response = await fetch('http://localhost:3000/api/usuarios/me', {
+  const response = await fetch(`${API_BASE_URL}/usuarios/me`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -145,7 +146,7 @@ export const updateCurrentUser = async (data: any): Promise<void> => {
 };
 
 export const checkUserExists = async (username?: string, email?: string): Promise<{ usernameExists?: boolean; emailExists?: boolean }> => {
-  const response = await fetch('http://localhost:3000/api/usuarios/check-exists', {
+  const response = await fetch(`${API_BASE_URL}/usuarios/check-exists`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email }),

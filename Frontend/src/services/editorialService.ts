@@ -1,5 +1,7 @@
 // src/services/editorialService.ts
-const API_URL = 'http://localhost:3000/api/editorial';
+import { API_BASE_URL } from '../config/api.config';
+
+const API_URL = `${API_BASE_URL}/editorial`;
 
 export const getEditoriales = async () => {
   const response = await fetch(API_URL);

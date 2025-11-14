@@ -1,8 +1,9 @@
 // src/services/libroService.ts
+import { API_BASE_URL } from '../config/api.config';
 
 // ✅ Obtener todos los libros
 export const getLibros = async () => {
-  const response = await fetch('http://localhost:3000/api/libro');
+  const response = await fetch(`${API_BASE_URL}/libro`);
   if (!response.ok) {
     throw new Error('No se pudieron obtener los libros');
   }
@@ -12,7 +13,7 @@ export const getLibros = async () => {
 // 👉 Obtener libros por IDs (para favoritos, listas, etc.)
 export const getLibrosPorIds = async (ids: number[]) => {
   const promesas = ids.map(id =>
-    fetch(`http://localhost:3000/api/libro/${id}`).then(res => {
+    fetch(`${API_BASE_URL}/libro/${id}`).then(res => {
       if (!res.ok) throw new Error('Error al cargar libro ' + id);
       return res.json();
     })
@@ -22,7 +23,7 @@ export const getLibrosPorIds = async (ids: number[]) => {
 
 // ✅ Obtener libros por categoría
 export const getLibrosPorCategoria = async (categoriaId: number) => {
-  const response = await fetch(`http://localhost:3000/api/libro/categoria/${categoriaId}`);
+  const response = await fetch(`${API_BASE_URL}/libro/categoria/${categoriaId}`);
   if (!response.ok) {
     throw new Error('No se pudieron cargar los libros por categoría');
   }
@@ -31,7 +32,7 @@ export const getLibrosPorCategoria = async (categoriaId: number) => {
 
 // ✅ Buscar libros
 export const searchLibros = async (query: string) => {
-  const response = await fetch(`http://localhost:3000/api/libro/search?q=${encodeURIComponent(query)}`);
+  const response = await fetch(`${API_BASE_URL}/libro/search?q=${encodeURIComponent(query)}`);
   if (!response.ok) {
     throw new Error('Error al buscar libros');
   }
@@ -40,7 +41,7 @@ export const searchLibros = async (query: string) => {
 
 // ✅ Obtener nuevos lanzamientos (últimos 30 días)
 export const getNuevosLanzamientos = async (limit: number = 20) => {
-  const response = await fetch(`http://localhost:3000/api/libro/nuevos?limit=${limit}`);
+  const response = await fetch(`${API_BASE_URL}/libro/nuevos?limit=${limit}`);
   if (!response.ok) {
     throw new Error('Error al obtener nuevos lanzamientos');
   }

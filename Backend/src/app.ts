@@ -33,9 +33,17 @@ import { authenticateJWT } from './middleware/auth.middleware';
 const app = express(); 
 app.use(express.json());
 
-// ✅ Habilitar CORS para React (localhost:5173 y 5174)
+// ✅ Habilitar CORS para React (desarrollo y producción)
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "http://localhost:5174",
+  // Agregar tu URL de Vercel aquí cuando despliegues
+  process.env.FRONTEND_URL || ""
+].filter(Boolean); // Eliminar strings vacíos
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"]
+  origin: allowedOrigins,
+  credentials: true
 }));
 
 // Rutas principales

@@ -26,6 +26,7 @@ import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/f
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
 import LibroImagen from "../componentes/LibroImagen";
 import { LISTA_NOMBRES, LISTA_TIPOS } from "../constants/listas";
+import { buildApiUrl } from "../utils/apiHelpers";
 
 interface Libro {
   id: string;
@@ -132,7 +133,7 @@ const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => 
       try {
         // 1️⃣ Primero: Buscar en BD local
         const responseBD = await fetch(
-          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`
+          buildApiUrl(`/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`)
         );
         
         if (responseBD.ok) {
@@ -154,7 +155,7 @@ const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => 
         // 2️⃣ Fallback: Buscar en Google Books si no está en BD
         console.log('🔍 Autor no encontrado en BD, buscando en APIs externas:', nombreCompleto);
         const responseExterno = await fetch(
-          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=true`
+          buildApiUrl(`/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=true`)
         );
         
         if (responseExterno.ok) {
@@ -473,7 +474,7 @@ const DetalleLibro: React.FC = () => {
         let data: any = null;
 
         // 🆕 PRIORIDAD 1: Intentar buscar en base de datos local primero
-        response = await fetch(`http://localhost:3000/api/libro/slug/${slug}`);
+        response = await fetch(buildApiUrl(`/libro/slug/${slug}`));
         
         if (response.ok) {
           // ✅ Libro encontrado en base de datos local
@@ -510,7 +511,7 @@ const DetalleLibro: React.FC = () => {
           });
         } else {
           // 🔄 FALLBACK 1: Intentar Hardcover API
-          response = await fetch(`http://localhost:3000/api/hardcover/libro/${slug}`);
+          response = await fetch(buildApiUrl(`/hardcover/libro/${slug}`));
           
           if (response.ok) {
             data = await response.json();
@@ -529,11 +530,11 @@ const DetalleLibro: React.FC = () => {
             });
           } else {
             // 🔄 FALLBACK 2: Intentar Google Books API
-            response = await fetch(`http://localhost:3000/api/google-books/${slug}`);
+            response = await fetch(buildApiUrl(`/google-books/${slug}`));
             if (!response.ok) {
               const searchQuery = slug.replace(/-/g, " ");
               response = await fetch(
-                `http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(searchQuery)}&maxResults=1`
+                buildApiUrl(`/google-books/buscar?q=${encodeURIComponent(searchQuery)}&maxResults=1`)
               );
               if (!response.ok) throw new Error("Libro no encontrado");
 

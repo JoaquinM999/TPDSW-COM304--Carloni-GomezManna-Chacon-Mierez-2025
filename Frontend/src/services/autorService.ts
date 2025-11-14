@@ -1,5 +1,7 @@
 // src/services/autorService.ts
-const API_URL = 'http://localhost:3000/api/autor';
+import { API_BASE_URL } from '../config/api.config';
+
+const API_URL = `${API_BASE_URL}/autor`;
 
 export const getAutores = async () => {
   const response = await fetch(API_URL);
@@ -72,7 +74,7 @@ export const deleteAutor = async (id: number, token: string) => {
 // ✅ Buscar autores con opción de búsqueda externa
 export const searchAutores = async (query: string, includeExternal: boolean = false) => {
   const response = await fetch(
-    `http://localhost:3000/api/autor/search?q=${encodeURIComponent(query)}&includeExternal=${includeExternal}`
+    `${API_URL}/search?q=${encodeURIComponent(query)}&includeExternal=${includeExternal}`
   );
   if (!response.ok) {
     throw new Error('Error al buscar autores');

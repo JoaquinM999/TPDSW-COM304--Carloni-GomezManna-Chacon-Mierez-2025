@@ -1,5 +1,7 @@
 // src/services/permisoService.ts
-const API_URL = 'http://localhost:3000/api/permisos';
+import { API_BASE_URL } from '../config/api.config';
+
+const API_URL = `${API_BASE_URL}/permisos`;
 
 export const getPermisos = async () => {
   const response = await fetch(API_URL);

@@ -1,7 +1,8 @@
 // src/services/reaccionService.ts
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_BASE_URL } from '../config/api.config';
 
-const API_URL = 'http://localhost:3000/api/reaccion';
+const API_URL = `${API_BASE_URL}/reaccion`;
 
 export const getReaccionesByResena = async (resenaId: number) => {
   const response = await fetch(`${API_URL}/resena/${resenaId}`, {

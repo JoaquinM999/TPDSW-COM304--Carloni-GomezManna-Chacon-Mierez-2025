@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Book, Mail, Lock, ArrowRight } from 'lucide-react';
 import { saveTokens } from '../services/authService';
 import axios from 'axios';
+import { buildApiUrl } from '../utils/apiHelpers';
 
 const LoginPage: React.FC = () => {
   const [showPasswordLogin, setShowPasswordLogin] = useState(false);
@@ -39,7 +40,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post(buildApiUrl('/auth/login'), {
         email: loginData.email,
         password: loginData.password,
       });

@@ -4,8 +4,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --project Backend/tsconfig.json Backend/src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "cd Backend && tsc",
+    "start": "node Backend/dist/index.js"
   },
   "dependencies": {
     "@mikro-orm/cli": "^6.5.2",

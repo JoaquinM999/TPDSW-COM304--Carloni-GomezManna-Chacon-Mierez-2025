@@ -42,6 +42,11 @@ const config: Options<MySqlDriver> = {
     pathTs: './migrations',
   },
   allowGlobalContext: true,
+  driverOptions: {
+    connection: {
+      ssl: { rejectUnauthorized: false },
+    },
+  },
 };
 
 export default defineConfig(config);

@@ -3,6 +3,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, Flame } from "lucide-react";
+import { API_BASE_URL } from '../config/api.config';
 import LibroCard from "../componentes/LibroCard";
 
 interface LibroTrending {
@@ -31,7 +32,7 @@ export default function LibrosPopulares() {
       setLoadingTrending(true);
 
       try {
-        const res = await fetch("http://localhost:3000/api/hardcover/trending");
+        const res = await fetch(`${API_BASE_URL}/hardcover/trending`);
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
         const response = await res.json();
 

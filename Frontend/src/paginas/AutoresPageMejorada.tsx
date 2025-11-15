@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import AutorCard from '../componentes/AutorCard';
+import { API_BASE_URL } from '../config/api.config';
 import { searchAutores as searchAutoresAPI } from '../services/autorService';
 
 interface Autor {
@@ -44,7 +45,7 @@ const AutoresPage: React.FC = () => {
       if (searchTerm.trim().length >= 2 && includeExternal) {
         console.log('🌐 Búsqueda híbrida con APIs externas:', searchTerm);
         const response = await fetch(
-          `http://localhost:3000/api/autor/search?q=${encodeURIComponent(searchTerm)}&includeExternal=true`
+          `${API_BASE_URL}/autor/search?q=${encodeURIComponent(searchTerm)}&includeExternal=true`
         );
         
         if (!response.ok) {
@@ -70,7 +71,7 @@ const AutoresPage: React.FC = () => {
         // Sin búsqueda externa o texto corto, usar endpoint paginado normal
         console.log('📚 Búsqueda local:', searchTerm);
         const response = await fetch(
-          `http://localhost:3000/api/autor?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
+          `${API_BASE_URL}/autor?page=${pageNum}&limit=20&search=${encodeURIComponent(searchTerm)}`
         );
         
         if (!response.ok) {

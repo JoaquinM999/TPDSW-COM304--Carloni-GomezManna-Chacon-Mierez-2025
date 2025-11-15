@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api.config';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { User, Mail, AtSign, Calendar, MapPin, BookOpen, Edit3, Settings, Heart, MessageCircle, Users, UserPlus, List as ListIcon, TrendingUp } from 'lucide-react';
 import { getUserIdFromToken } from '../services/authService';
@@ -36,16 +37,28 @@ const PerfilPage = () => {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        const userId = getUserIdFromToken();
         
-        if (!userId) {
+        // Verificar si hay token (buscar en accessToken primero, luego en token como fallback)
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        console.log('🔑 Token encontrado:', token ? 'Sí' : 'No');
+        
+        if (!token) {
+          console.log('❌ No hay token, redirigiendo a login');
           navigate('/LoginPage');
           return;
         }
 
+        console.log('📡 Haciendo petición a:', `${API_BASE_URL}/usuarios/me`);
+        
         // Fetch user profile
-        const perfilRes = await axios.get('http://localhost:3000/api/usuarios/me');
+        const perfilRes = await axios.get(`${API_BASE_URL}/usuarios/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('✅ Perfil recibido:', perfilRes.data);
         setPerfil(perfilRes.data);
+        
+        const userId = perfilRes.data.id;
 
         // Fetch stats in parallel
         const [statsRes, reseñasRes, listasRes, todasLasListas, favoritosRes] = await Promise.all([
@@ -87,6 +100,15 @@ const PerfilPage = () => {
         setLoading(false);
       } catch (err: any) {
         console.error('Error fetching profile data:', err);
+        
+        // Si es error 401, redirigir al login
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          navigate('/LoginPage');
+          return;
+        }
+        
         setError(err.response?.data?.error || 'Error al cargar perfil');
         setLoading(false);
       }

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Heart, BookOpen, ExternalLink, Globe, Calendar, MapPin, Award, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from '../config/api.config';
 import DOMPurify from "dompurify";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import ObrasTimeline from "../componentes/ObrasTimeline";
@@ -67,9 +68,9 @@ const AutorDetallePageMejorada: React.FC = () => {
       try {
         // Fetch paralelo de todas las fuentes
         const [openLibraryData, authorName] = await Promise.all([
-          fetch(`http://localhost:3000/api/external-authors/author/${id}`).then(res => res.json()),
+          fetch(`${API_BASE_URL}/external-authors/author/${id}`).then(res => res.json()),
           // Obtener nombre del autor primero
-          fetch(`http://localhost:3000/api/external-authors/author/${id}`).then(res => res.json())
+          fetch(`${API_BASE_URL}/external-authors/author/${id}`).then(res => res.json())
             .then(data => data.author.name)
         ]);
 

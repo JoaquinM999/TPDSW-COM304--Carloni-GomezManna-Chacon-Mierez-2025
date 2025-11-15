@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api.config';
 
 interface Actividad {
   id: number;
@@ -72,7 +73,7 @@ const FeedActividadPage: React.FC = () => {
       }
 
       const response = await axios.get(
-        'http://localhost:3000/api/feed',
+        `${API_BASE_URL}/feed`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params

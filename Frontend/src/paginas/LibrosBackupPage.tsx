@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { API_BASE_URL } from '../config/api.config';
 
 interface Libro {
   id: string;
@@ -34,7 +35,7 @@ export default function TodosLosLibros() {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:3000/api/google-books/buscar?q=subject:fantasy&orderBy=relevance&maxResults=40&startIndex=${
+          `${API_BASE_URL}/google-books/buscar?q=subject:fantasy&orderBy=relevance&maxResults=40&startIndex=${
             (pagina - 1) * librosPorPagina
           }`
         );
@@ -57,7 +58,7 @@ export default function TodosLosLibros() {
     const fetchTrending = async () => {
       setLoadingTrending(true);
       try {
-        const res = await fetch("http://localhost:3000/api/hardcover/trending");
+        const res = await fetch(`${API_BASE_URL}/hardcover/trending`);
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
         const response = await res.json();
 

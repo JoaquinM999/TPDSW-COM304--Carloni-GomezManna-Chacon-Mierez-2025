@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from '../config/api.config';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   User,
@@ -59,7 +60,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/usuarios/me");
+        const response = await axios.get(`${API_BASE_URL}/usuarios/me`);
         const data = response.data;
 
         const profileData = {
@@ -139,7 +140,7 @@ const ConfiguracionUsuario: React.FC<ConfiguracionUsuarioProps> = () => {
 
     setSaving(true);
     try {
-      await axios.put("http://localhost:3000/api/usuarios/me", formData);
+      await axios.put(`${API_BASE_URL}/usuarios/me`, formData);
       setOriginalData(formData);
       setMessage("Configuración actualizada correctamente");
       setTimeout(() => setMessage(""), 5000);

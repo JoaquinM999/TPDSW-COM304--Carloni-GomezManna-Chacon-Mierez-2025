@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../config/api.config';
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -82,7 +83,7 @@ const DetalleAutor = () => {
 
       if (isNumericId) {
         // Caso 1: ID numérico - buscar en BD
-        const autorRes = await fetch(`http://localhost:3000/api/autor/${id}`);
+        const autorRes = await fetch(`${API_BASE_URL}/autor/${id}`);
         if (!autorRes.ok) throw new Error('Autor no encontrado');
         autorData = await autorRes.json();
         setAutor(autorData);
@@ -90,7 +91,7 @@ const DetalleAutor = () => {
 
         // Fetch estadísticas solo si tenemos un ID numérico válido
         try {
-          const statsRes = await fetch(`http://localhost:3000/api/autor/${id}/stats`);
+          const statsRes = await fetch(`${API_BASE_URL}/autor/${id}/stats`);
           if (statsRes.ok) {
             const statsData = await statsRes.json();
             setEstadisticas(statsData);
@@ -106,7 +107,7 @@ const DetalleAutor = () => {
         // Buscar primero en la BD por si existe
         try {
           const searchRes = await fetch(
-            `http://localhost:3000/api/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`
+            `${API_BASE_URL}/autor/search?q=${encodeURIComponent(nombreCompleto)}&includeExternal=false`
           );
           
           if (searchRes.ok) {

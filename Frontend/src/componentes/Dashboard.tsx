@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAccessToken, getNewAccessToken } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api.config';
 
 const DashboardPage = () => {
   const [mensaje, setMensaje] = useState('');
@@ -14,7 +15,7 @@ const DashboardPage = () => {
         token = await getNewAccessToken();
       }
 
-      const response = await fetch('http://localhost:3000/api/protected', {
+      const response = await fetch(`${API_BASE_URL}/protected`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config/api.config';
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -77,7 +78,7 @@ const DetalleAutor = () => {
       setLoading(true);
       
       // Fetch autor básico
-      const autorRes = await fetch(`http://localhost:3000/api/autor/${id}`);
+      const autorRes = await fetch(`${API_BASE_URL}/autor/${id}`);
       if (!autorRes.ok) throw new Error('Autor no encontrado');
       const autorData = await autorRes.json();
       setAutor(autorData);
@@ -92,14 +93,14 @@ const DetalleAutor = () => {
       }
 
       // Fetch estadísticas
-      const statsRes = await fetch(`http://localhost:3000/api/autor/${id}/stats`);
+      const statsRes = await fetch(`${API_BASE_URL}/autor/${id}/stats`);
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setEstadisticas(statsData);
       }
 
       // Fetch libros del autor
-      const librosRes = await fetch(`http://localhost:3000/api/libro?autor=${id}`);
+      const librosRes = await fetch(`${API_BASE_URL}/libro?autor=${id}`);
       if (librosRes.ok) {
         const librosData = await librosRes.json();
         setLibros(librosData.libros || librosData);

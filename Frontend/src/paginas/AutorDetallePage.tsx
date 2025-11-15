@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Heart, BookOpen, ExternalLink } from "lucide-react";
+import { API_BASE_URL } from '../config/api.config';
 
 interface AuthorDetails {
   author: {
@@ -115,7 +116,7 @@ const AutorDetallePage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:3000/api/external-authors/author/${id}`);
+        const response = await fetch(`${API_BASE_URL}/external-authors/author/${id}`);
         if (!response.ok) throw new Error('Error al obtener detalles del autor');
         const data: AuthorDetails = await response.json();
         setAuthorDetails(data);

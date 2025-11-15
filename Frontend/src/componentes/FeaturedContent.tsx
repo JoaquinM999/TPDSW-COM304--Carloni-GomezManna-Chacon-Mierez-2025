@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Star, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { buildApiUrl } from "../utils/apiHelpers";
+import { API_BASE_URL } from '../config/api.config';
 
 interface PopularBook {
   id: string;
@@ -79,7 +80,7 @@ export const FeaturedContent: React.FC = () => {
             // 1. Si tiene externalId de Google Books
             if (libro.externalId && libro.source === 'google') {
               try {
-                const bookUrl = `http://localhost:3000/api/google-books/${libro.externalId}`;
+                const bookUrl = `${API_BASE_URL}/google-books/${libro.externalId}`;
                 const bookResponse = await fetch(bookUrl);
                 if (bookResponse.ok) {
                   const bookData = await bookResponse.json();
@@ -95,7 +96,7 @@ export const FeaturedContent: React.FC = () => {
             else if (libro.externalId && libro.source === 'hardcover') {
               try {
                 // Para Hardcover, necesitamos buscar en trending y encontrar el libro por su ID
-                const trendingUrl = `http://localhost:3000/api/hardcover/trending`;
+                const trendingUrl = `${API_BASE_URL}/hardcover/trending`;
                 const trendingResponse = await fetch(trendingUrl);
                 if (trendingResponse.ok) {
                   const trendingData = await trendingResponse.json();

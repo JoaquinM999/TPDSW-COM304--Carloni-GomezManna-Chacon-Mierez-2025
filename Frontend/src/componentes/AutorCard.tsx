@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Award } from 'lucide-react';
 import { fetchAuthorWithCache, WikipediaAuthorData, WikidataAuthorData } from '../services/wikipediaService';
+import { API_BASE_URL } from '../config/api.config';
 
 interface AutorCardProps {
   id?: string;
@@ -181,7 +182,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
                 setSaving(true);
                 try {
                   console.log('💾 Guardando autor externo en BD:', name);
-                  const response = await fetch('http://localhost:3000/api/autor/external/save', {
+                  const response = await fetch(`${API_BASE_URL}/autor/external/save`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',

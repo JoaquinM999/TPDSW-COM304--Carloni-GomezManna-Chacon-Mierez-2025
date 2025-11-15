@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Book, Mail, Lock, ArrowRight, X } from 'lucide-react';
 import { saveTokens } from '../services/authService';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.config';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email: loginData.email,
         password: loginData.password,
       });

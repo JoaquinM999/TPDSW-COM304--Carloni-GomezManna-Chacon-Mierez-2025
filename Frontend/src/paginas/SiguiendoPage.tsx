@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api.config';
 import SeguirUsuarioButton from '../componentes/SeguirUsuarioButton';
 
 interface Usuario {
@@ -36,7 +37,7 @@ const SiguiendoPage: React.FC = () => {
       }
 
       const response = await axios.get(
-        'http://localhost:3000/api/seguimiento/siguiendo',
+        `${API_BASE_URL}/seguimiento/siguiendo`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

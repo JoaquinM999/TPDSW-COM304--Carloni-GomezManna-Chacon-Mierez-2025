@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { listaService, Lista, ContenidoLista } from '../services/listaService';
 import toast, { Toaster } from 'react-hot-toast';
+import { API_BASE_URL } from '../config/api.config';
+import axios from 'axios';
 import { LoadingSkeleton, ListHeaderSkeleton, ToolbarSkeleton } from '../componentes/LoadingSkeleton';
 import LibroImagen from '../componentes/LibroImagen';
 import { 
@@ -38,7 +40,6 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import axios from 'axios';
 
 type OrderBy = 'alfabetico' | 'fecha' | 'rating' | 'personalizado';
 type ViewMode = 'grid' | 'list';
@@ -239,7 +240,7 @@ export default function DetalleListaMejorada() {
       }));
 
       await axios.put(
-        `http://localhost:3000/api/lista/${listaId}/reordenar`,
+        `${API_BASE_URL}/lista/${listaId}/reordenar`,
         { orden },
         { headers: { Authorization: `Bearer ${token}` } }
       );

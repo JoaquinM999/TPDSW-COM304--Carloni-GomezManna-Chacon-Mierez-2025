@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BookOpen, Check, X, Search, Plus, Globe } from "lucide-react";
+import { API_BASE_URL } from '../config/api.config';
 import { isAdmin } from "../utils/jwtUtils";
 import { createSaga } from "../services/sagaService";
 import { getLibros } from "../services/libroService";
@@ -131,7 +132,7 @@ const CrearSagaAdmin: React.FC = () => {
         // Search Google Books
         const fetchGoogleBooks = async () => {
           try {
-            const response = await axios.get(`http://localhost:3000/api/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
+            const response = await axios.get(`${API_BASE_URL}/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
             const results = response.data;
             setGoogleBooks(results);
             setFilteredGoogleBooks(results);
@@ -182,7 +183,7 @@ const CrearSagaAdmin: React.FC = () => {
       const allLibroIds = new Set(selectedLibros);
       for (const googleBookId of selectedGoogleBooks) {
         try {
-          const response = await axios.post(`http://localhost:3000/api/google-books/add`, {
+          const response = await axios.post(`${API_BASE_URL}/google-books/add`, {
             googleBookId
           }, {
             headers: {

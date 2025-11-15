@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { searchAutores as searchAutoresAPI } from '../services/autorService';
+import { API_BASE_URL } from '../config/api.config';
 
 interface Autor {
   id?: string;
@@ -81,8 +82,8 @@ const AutoresPage: React.FC = () => {
     try {
       // Usar la API local de autores que ya tiene el ordenamiento por popularidad
       const url = searchQuery.trim() 
-        ? `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=${pageNum}&limit=${limitNum}`
-        : `http://localhost:3000/api/autor?page=${pageNum}&limit=${limitNum}`;
+        ? `${API_BASE_URL}/autor?search=${encodeURIComponent(searchQuery)}&page=${pageNum}&limit=${limitNum}`
+        : `${API_BASE_URL}/autor?page=${pageNum}&limit=${limitNum}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -152,7 +153,7 @@ const AutoresPage: React.FC = () => {
           console.error('Error en búsqueda híbrida, usando fallback:', searchError);
           // Fallback al endpoint normal
           const response = await fetch(
-            `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
+            `${API_BASE_URL}/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
           );
           if (response.ok) {
             const result = await response.json();
@@ -164,7 +165,7 @@ const AutoresPage: React.FC = () => {
       } else {
         // Búsqueda local normal
         const response = await fetch(
-          `http://localhost:3000/api/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
+          `${API_BASE_URL}/autor?search=${encodeURIComponent(searchQuery)}&page=1&limit=8`
         );
         if (response.ok) {
           const result = await response.json();
@@ -257,7 +258,7 @@ const AutoresPage: React.FC = () => {
     if (autor.external) {
       try {
         console.log('💾 Guardando autor externo en BD:', autor.name);
-        const response = await fetch('http://localhost:3000/api/autor/external/save', {
+        const response = await fetch(`${API_BASE_URL}/autor/external/save`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -45,17 +45,22 @@ app.use(cors({
     // Permitir requests sin origin (como Postman, curl)
     if (!origin) return callback(null, true);
     
+    console.log('🌐 CORS request from origin:', origin);
+    
     // Verificar si el origin está en la lista de permitidos
     if (allowedOrigins.includes(origin)) {
+      console.log('✅ Origin allowed from list');
       return callback(null, true);
     }
     
-    // Permitir cualquier subdominio de vercel.app para desarrollo
-    if (origin.includes('.vercel.app')) {
+    // Permitir cualquier subdominio de vercel.app
+    if (origin.endsWith('.vercel.app') || origin.includes('vercel.app')) {
+      console.log('✅ Origin allowed: Vercel deployment');
       return callback(null, true);
     }
     
     // Rechazar otros orígenes
+    console.log('❌ Origin rejected:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true

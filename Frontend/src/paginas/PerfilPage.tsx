@@ -60,13 +60,28 @@ const PerfilPage = () => {
         
         const userId = perfilRes.data.id;
 
-        // Fetch stats in parallel
+        // Fetch stats in parallel (con manejo de errores individual)
         const [statsRes, reseñasRes, listasRes, todasLasListas, favoritosRes] = await Promise.all([
-          usuarioService.getUserStats(userId),
-          getResenasByUsuario(userId),
-          listaService.getListasByUsuario(userId),
-          listaService.getUserListas(),
-          obtenerFavoritos()
+          usuarioService.getUserStats(userId).catch(err => {
+            console.error('Error loading stats:', err);
+            return { seguidores: 0, siguiendo: 0 };
+          }),
+          getResenasByUsuario(userId).catch(err => {
+            console.error('Error loading reviews:', err);
+            return [];
+          }),
+          listaService.getListasByUsuario(userId).catch(err => {
+            console.error('Error loading user lists:', err);
+            return [];
+          }),
+          listaService.getUserListas().catch(err => {
+            console.error('Error loading all lists:', err);
+            return [];
+          }),
+          obtenerFavoritos().catch(err => {
+            console.error('Error loading favorites:', err);
+            return [];
+          })
         ]);
 
         // Count reviews

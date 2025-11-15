@@ -26,12 +26,42 @@ async function main() {
   app.set('orm', orm);
 
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Servidor en puerto ${PORT}`);
   });
+
+  // Graceful shutdown - cerrar conexiones correctamente
+  const shutdown = async (signal: string) => {
+    console.log(`\n${signal} recibido. Cerrando servidor...`);
+    
+    server.close(async () => {
+      console.log('🔌 Servidor HTTP cerrado');
+      
+      try {
+        await orm.close();
+        console.log('🗄️ Conexiones de base de datos cerradas');
+        
+        await redis.quit();
+        console.log('🔴 Redis desconectado');
+        
+        process.exit(0);
+      } catch (error) {
+        console.error('❌ Error al cerrar conexiones:', error);
+        process.exit(1);
+      }
+    });
+
+    // Forzar cierre después de 10 segundos
+    setTimeout(() => {
+      console.error('⚠️ Forzando cierre después de 10 segundos...');
+      process.exit(1);
+    }, 10000);
+  };
+
+  // Capturar señales de terminación
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
-
-
 
 main().catch(console.error);
 

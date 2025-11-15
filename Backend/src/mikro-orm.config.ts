@@ -42,6 +42,12 @@ const config: Options<MySqlDriver> = {
     pathTs: './migrations',
   },
   allowGlobalContext: true,
+  pool: {
+    min: 1,
+    max: 3,
+    acquireTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000,
+  },
   driverOptions: {
     connection: {
       ssl: { rejectUnauthorized: false },

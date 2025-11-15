@@ -72,10 +72,7 @@ export class SplineErrorBoundary extends Component<Props, State> {
             
             <div className="space-y-2">
               <p className="text-gray-700 font-semibold">
-                El pollito 3D está tomando un descanso
-              </p>
-              <p className="text-sm text-gray-500">
-                Pero aún puedes disfrutar de esta versión especial ✨
+                Cargando contenido...
               </p>
             </div>
           </div>

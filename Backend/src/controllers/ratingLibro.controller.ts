@@ -38,10 +38,17 @@ export const createOrUpdateRatingLibro = async (req: Request, res: Response) => 
     return res.status(400).json({ error: 'Libro ID, promedio de rating y cantidad de reseñas son requeridos' });
   }
 
-  const libro = await orm.em.findOne(Libro, { id: libroId });
+
+  let libro;
+  if (typeof libroId === 'number') {
+    libro = await orm.em.findOne(Libro, { id: libroId });
+  } else {
+    libro = await orm.em.findOne(Libro, { externalId: String(libroId) });
+  }
+  
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-  let rating = await orm.em.findOne(RatingLibro, { libro: libroId });
+  let rating = await orm.em.findOne(RatingLibro, { libro: libro.id });
 
   if (rating) {
     // Update existing rating
@@ -49,7 +56,7 @@ export const createOrUpdateRatingLibro = async (req: Request, res: Response) => 
     rating.cantidadResenas = cantidadResenas;
     rating.fechaActualizacion = new Date();
   } else {
-    // Create new rating
+
     rating = orm.em.create(RatingLibro, {
       libro,
       avgRating,
@@ -67,6 +74,27 @@ export const deleteRatingLibro = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const rating = await orm.em.findOne(RatingLibro, { id: +req.params.id });
   if (!rating) return res.status(404).json({ error: 'Rating no encontrado' });
+
+  await orm.em.removeAndFlush(rating);
+  res.json({ mensaje: 'Rating eliminado' });
+};
+
+export const deleteRatingLibroByLibroId = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const libroIdParam = req.params.libroId;
+  
+ 
+  let libro;
+  if (!isNaN(Number(libroIdParam))) {
+    libro = await orm.em.findOne(Libro, { id: +libroIdParam });
+  } else {
+    libro = await orm.em.findOne(Libro, { externalId: libroIdParam });
+  }
+  
+  if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
+  
+  const rating = await orm.em.findOne(RatingLibro, { libro: libro.id });
+  if (!rating) return res.status(404).json({ error: 'Rating no encontrado para este libro' });
 
   await orm.em.removeAndFlush(rating);
   res.json({ mensaje: 'Rating eliminado' });

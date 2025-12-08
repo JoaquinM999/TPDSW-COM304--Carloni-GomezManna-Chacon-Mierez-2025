@@ -25,6 +25,7 @@ import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
 import LibroImagen from "../componentes/LibroImagen";
+import { QuickRating } from "../componentes/QuickRating";
 import { LISTA_NOMBRES, LISTA_TIPOS } from "../constants/listas";
 import { buildApiUrl } from "../utils/apiHelpers";
 
@@ -1719,15 +1720,26 @@ const DetalleLibro: React.FC = () => {
           </div>
 
           {isAuthenticated() && (
-            <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl p-8 mb-10 border-2 border-blue-100 dark:border-blue-900">
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-slate-100">Escribe tu reseña</h3>
-            <NewReviewForm
-              libroId={libro.id}
-              onAdded={refreshResenas}
-              onOptimisticAdd={(r) => addResenaLocally(r)}
-            />
-          </div>
-        )}
+            <>
+              {/* Calificación Rápida */}
+              <div className="mb-6">
+                <QuickRating 
+                  libroId={libro.id} 
+                  onRatingChange={refreshResenas}
+                />
+              </div>
+
+              {/* Formulario de Reseña Completa */}
+              <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl p-8 mb-10 border-2 border-blue-100 dark:border-blue-900">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-slate-100">Escribe tu reseña</h3>
+                <NewReviewForm
+                  libroId={libro.id}
+                  onAdded={refreshResenas}
+                  onOptimisticAdd={(r) => addResenaLocally(r)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="space-y-6">
             {reviewState.reviewsLoading ? (

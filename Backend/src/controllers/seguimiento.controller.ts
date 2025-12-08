@@ -4,6 +4,7 @@ import { MikroORM } from '@mikro-orm/mysql';
 import { Seguimiento } from '../entities/seguimiento.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { ActividadService } from '../services/actividad.service';
+import { NotificacionService } from '../services/notificacion.service';
 
 export const followUser = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
@@ -45,6 +46,19 @@ export const followUser = async (req: Request, res: Response) => {
   } catch (actividadError) {
     console.error('Error al crear registro de actividad:', actividadError);
     // No fallar el seguimiento si falla el registro de actividad
+  }
+
+  // Crear notificación para el usuario seguido
+  try {
+    const notificacionService = new NotificacionService(orm.em);
+    await notificacionService.notificarNuevoSeguidor(
+      seguido.id,
+      seguidor.nombre || 'Un usuario',
+      seguidor.id
+    );
+  } catch (notifError) {
+    console.error('Error al crear notificación:', notifError);
+    // No fallar el seguimiento si falla la notificación
   }
 
   res.status(201).json({ message: `Ahora sigues a ${seguido.username}` });

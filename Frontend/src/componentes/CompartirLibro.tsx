@@ -68,27 +68,27 @@ export const CompartirLibro: React.FC<CompartirLibroProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.3 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4"
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Share2 className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   Compartir libro
                 </h3>
                 <button
                   onClick={() => setAbierto(false)}
-                  className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   aria-label="Cerrar"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
 
               {/* Información del libro */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
-                <p className="font-bold text-gray-800 line-clamp-2 mb-1">{titulo}</p>
-                <p className="text-sm text-gray-600">{autores.join(', ')}</p>
+              <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border-2 border-purple-200 dark:border-purple-700">
+                <p className="font-bold text-gray-800 dark:text-gray-200 line-clamp-2 mb-1">{titulo}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{autores.join(', ')}</p>
               </div>
 
               {/* Botones de redes sociales */}

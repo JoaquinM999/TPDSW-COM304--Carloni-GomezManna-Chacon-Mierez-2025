@@ -3,16 +3,17 @@ import { Router } from 'express';
 import {
   getLibros, getLibroById, getLibroBySlug, createLibro, updateLibro, deleteLibro,
   getLibrosByCategoria, getLibrosByEstrellasMinimas, getReviewsByBookIdController, searchLibros,
-  getListasForLibro, getNuevosLanzamientos // 💡 1. Importa la nueva función del controlador
+  getListasForLibro, getNuevosLanzamientos, getOrCreateLibroFromExternal
 } from '../controllers/libro.controller';
-import { authenticateJWT } from '../middleware/auth.middleware'; // 💡 2. Importa el middleware de autenticación
+import { authenticateJWT } from '../middleware/auth.middleware';
 
 const router = Router();
 
 router.get('/', getLibros);
 router.get('/search', searchLibros);
-router.get('/nuevos', getNuevosLanzamientos); // Debe ir ANTES de /:id
-router.get('/slug/:slug', getLibroBySlug); // 🆕 Nuevo endpoint para buscar por slug
+router.get('/nuevos', getNuevosLanzamientos);
+router.post('/ensure-exists/:externalId', getOrCreateLibroFromExternal); // NUEVO: Crear libro desde API externa
+router.get('/slug/:slug', getLibroBySlug);
 router.get('/categoria/:categoriaId', getLibrosByCategoria);
 router.get('/estrellas', getLibrosByEstrellasMinimas);
 

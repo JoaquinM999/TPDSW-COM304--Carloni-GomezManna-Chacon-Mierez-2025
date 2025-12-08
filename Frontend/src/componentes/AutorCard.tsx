@@ -56,7 +56,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
     loadEnrichedData();
   }, [name, showEnrichedData]);
 
-  // Formatear fechas para mostrar época
+
   const getLifeSpan = () => {
     if (!enrichedData) return null;
     
@@ -93,7 +93,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
                 alt={name}
                 className="w-20 h-20 rounded-full object-cover shadow-md group-hover:ring-4 group-hover:ring-cyan-200 dark:group-hover:ring-cyan-600 transition-all duration-300"
                 onError={(e) => {
-                  // Si falla la imagen, ocultar el elemento y mostrar las iniciales
+
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent) {
@@ -112,7 +112,7 @@ const AutorCard: React.FC<AutorCardProps> = ({
               </div>
             </>
           ) : (
-            // Mostrar iniciales directamente si no hay foto
+
             <div className="w-20 h-20 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 dark:from-cyan-400 dark:via-blue-600 dark:to-indigo-700 shadow-lg group-hover:ring-4 group-hover:ring-cyan-200 dark:group-hover:ring-cyan-600 transition-all duration-300 group-hover:scale-110">
               <span className="text-2xl font-bold text-white dark:text-slate-100 select-none">
                 {name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()}
@@ -171,13 +171,13 @@ const AutorCard: React.FC<AutorCardProps> = ({
           {/* Botón de acción */}
           <button
             onClick={async () => {
-              // Si el autor ya tiene ID (está en la BD), navegar directamente
+
               if (id && !external) {
                 navigate(`/autores/${id}`);
                 return;
               }
 
-              // Si es externo, guardarlo primero
+
               if (external) {
                 setSaving(true);
                 try {

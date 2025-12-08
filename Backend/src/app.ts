@@ -20,53 +20,50 @@ import { seguimientoRoutes } from './routes/seguimiento.routes';
 import { recomendacionRoutes } from './routes/recomendacion.routes';
 import { protectedRoutes } from './routes/protected.route';
 import { externalAuthorRoutes } from './routes/externalAuthor.routes';
-
-// 🔹 Nuevas rutas
 import { actividadRoutes } from './routes/actividad.routes';
 import { permisoRoutes } from './routes/permiso.routes';
 import { ratingLibroRoutes } from './routes/ratingLibro.routes';
 import { feedRoutes } from './routes/feed.routes';
 import { statsRoutes } from './routes/stats.routes';
+import votacionRoutes from './routes/votacion.routes';
+import newsletterRoutes from './routes/newsletter.routes';
+import { notificacionRoutes } from './routes/notificacion.routes';
 
 import { authenticateJWT } from './middleware/auth.middleware';
 
 const app = express(); 
 app.use(express.json());
 
-// ✅ Habilitar CORS para React (desarrollo y producción)
 const allowedOrigins = [
   "http://localhost:5173", 
   "http://localhost:5174",
   process.env.FRONTEND_URL || ""
-].filter(Boolean); // Eliminar strings vacíos
+].filter(Boolean); 
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir requests sin origin (como Postman, curl)
     if (!origin) return callback(null, true);
     
     console.log('🌐 CORS request from origin:', origin);
     
-    // Verificar si el origin está en la lista de permitidos
     if (allowedOrigins.includes(origin)) {
       console.log('✅ Origin allowed from list');
       return callback(null, true);
     }
     
-    // Permitir cualquier subdominio de vercel.app
     if (origin.endsWith('.vercel.app') || origin.includes('vercel.app')) {
       console.log('✅ Origin allowed: Vercel deployment');
       return callback(null, true);
     }
     
-    // Rechazar otros orígenes
+
     console.log('❌ Origin rejected:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true
 }));
 
-// Rutas principales
+
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes); 
 app.use('/api/favoritos', favoritosRoutes);
@@ -85,15 +82,15 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/google-books', googleBooksRoutes);
 app.use('/api/hardcover', hardcoverRoutes);
 app.use('/api/external-authors', externalAuthorRoutes);
-
-// 🔹 Nuevos endpoints
 app.use('/api/actividades', actividadRoutes);
 app.use('/api/permisos', permisoRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/rating-libro', ratingLibroRoutes);
-app.use('/api/stats', statsRoutes); // Stats para HeroSection
+app.use('/api/stats', statsRoutes); 
+app.use('/api/votacion', votacionRoutes);
+app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/notificaciones', notificacionRoutes);
 
-// Global error handler middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({

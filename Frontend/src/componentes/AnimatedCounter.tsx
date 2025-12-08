@@ -19,7 +19,7 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   useEffect(() => {
     if (!countRef.current || end === 0) return;
 
-    // Si el valor no ha cambiado, no animar de nuevo
+ 
     if (prevEndRef.current === end) return;
 
     const element = countRef.current;

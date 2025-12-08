@@ -55,13 +55,13 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
       {/* Botón de toggle */}
       <motion.button
         onClick={() => setAbierto(!abierto)}
-        className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-2 border-purple-200 hover:border-purple-400"
+        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 dark:hover:border-purple-500"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Abrir filtros"
       >
-        <Filter className="w-5 h-5 text-purple-600" />
-        <span className="font-semibold text-gray-700">Filtros</span>
+        <Filter className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        <span className="font-semibold text-gray-700 dark:text-gray-300">Filtros</span>
         {filtrosActivos > 0 && (
           <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
             {filtrosActivos}
@@ -78,19 +78,19 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full mt-2 right-0 z-50 w-80 bg-white rounded-2xl shadow-2xl border-2 border-purple-200 overflow-hidden"
+            className="absolute top-full mt-2 right-0 z-50 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-2 border-purple-200 dark:border-purple-700 overflow-hidden"
           >
             <div className="p-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   Filtrar recomendaciones
                 </h3>
                 {filtrosActivos > 0 && (
                   <button
                     onClick={limpiarFiltros}
-                    className="text-sm text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1"
+                    className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-semibold flex items-center gap-1"
                   >
                     <X className="w-4 h-4" />
                     Limpiar
@@ -99,7 +99,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
               </div>
 
               {/* Rating mínimo */}
-              <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Rating mínimo
                 </label>
@@ -111,7 +111,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                       className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 ${
                         filtros.ratingMinimo === rating
                           ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-md scale-110'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -132,7 +132,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
 
               {/* Categorías */}
               {categoriasDisponibles.length > 0 && (
-                <div className="mb-4 pb-4 border-b border-gray-200">
+                <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => setSeccionAbierta(seccionAbierta === 'categorias' ? null : 'categorias')}
                     className="w-full flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
@@ -155,7 +155,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                               filtros.categorias.includes(categoria)
                                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -194,7 +194,7 @@ export const RecomendacionesFiltros: React.FC<RecomendacionesFiltrosProps> = ({
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                               filtros.autores.includes(autor)
                                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

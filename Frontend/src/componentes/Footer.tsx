@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Facebook,
   Twitter,
@@ -7,8 +8,15 @@ import {
   Mail,
   Phone,
   MapPin,
+  Send,
+  CheckCircle,
+  BookOpen,
+  Users,
+  MessageSquare,
+  Star,
+  TrendingUp,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import FeaturesSection from "./FeaturesSection";
 
 interface FooterProps {
@@ -16,46 +24,326 @@ interface FooterProps {
   showSocialMedia?: boolean;
   showNewsletter?: boolean;
   showFeatures?: boolean;
+  showStats?: boolean;
   customLinks?: Array<{ title: string; links: Array<{ name: string; href: string }> }>;
 }
+
+// Componente de contador animado
+const AnimatedCounter: React.FC<{ end: number; duration?: number; suffix?: string }> = ({
+  end,
+  duration = 2,
+  suffix = '',
+}) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / (duration * 1000), 1);
+      
+      setCount(Math.floor(progress * end));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  return <span>{count.toLocaleString()}{suffix}</span>;
+};
+
+// Componente de Newsletter mejorado
+const NewsletterSection: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus('loading');
+    setErrorMessage('');
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, nombre: nombre || undefined }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus('success');
+        setEmail('');
+        setNombre('');
+        
+        // Resetear después de 5 segundos
+        setTimeout(() => setStatus('idle'), 5000);
+      } else {
+        setStatus('error');
+        setErrorMessage(data.message || 'Error al suscribirse');
+        setTimeout(() => setStatus('idle'), 5000);
+      }
+    } catch (error) {
+      console.error('Error al suscribirse:', error);
+      setStatus('error');
+      setErrorMessage('Error de conexión. Intenta de nuevo.');
+      setTimeout(() => setStatus('idle'), 5000);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+      className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-700 dark:via-indigo-700 dark:to-purple-700 py-16 shadow-xl relative overflow-hidden"
+    >
+      {/* Fondo animado */}
+      <motion.div
+        className="absolute inset-0 opacity-20"
+        animate={{
+          backgroundPosition: ['0% 0%', '100% 100%'],
+        }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)',
+          backgroundSize: '50px 50px',
+        }}
+      />
+
+      <div className="relative max-w-5xl mx-auto px-6 sm:px-12 text-center text-white">
+        <motion.div
+          initial={{ scale: 0 }}
+          whileInView={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+          className="inline-block mb-4"
+        >
+          <Mail className="w-16 h-16 mx-auto drop-shadow-lg" />
+        </motion.div>
+
+        <h3 className="text-4xl font-extrabold tracking-tight mb-4 drop-shadow-lg">
+          📚 Únete a Nuestra Comunidad
+        </h3>
+        <p className="max-w-2xl mx-auto mb-8 text-lg text-blue-50">
+          Recibe recomendaciones personalizadas, novedades exclusivas y descuentos especiales directamente en tu inbox. ¡Más de 10,000 lectores ya se unieron!
+        </p>
+
+        <AnimatePresence mode="wait">
+          {status === 'success' ? (
+            <motion.div
+              key="success"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <motion.div
+                animate={{ rotate: 360, scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6 }}
+              >
+                <CheckCircle className="w-20 h-20 text-green-300" />
+              </motion.div>
+              <h4 className="text-2xl font-bold">¡Bienvenido a bordo! 🎉</h4>
+              <p className="text-blue-100">Revisa tu email para confirmar tu suscripción</p>
+            </motion.div>
+          ) : status === 'error' ? (
+            <motion.div
+              key="error"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h4 className="text-2xl font-bold">Oops...</h4>
+              <p className="text-blue-100">{errorMessage}</p>
+            </motion.div>
+          ) : (
+            <motion.form
+              key="form"
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4 max-w-xl mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-grow relative">
+                  <input
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    placeholder="Tu nombre (opcional)"
+                    className="w-full px-4 py-4 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-500 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md focus:outline-none focus:ring-4 focus:ring-white/50 transition shadow-xl"
+                    disabled={status === 'loading'}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-grow relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    required
+                    className="w-full pl-12 pr-4 py-4 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-500 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md focus:outline-none focus:ring-4 focus:ring-white/50 transition shadow-xl"
+                    disabled={status === 'loading'}
+                  />
+                </div>
+                <motion.button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="rounded-xl bg-white text-indigo-600 font-bold px-8 py-4 hover:bg-gray-100 shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {status === 'loading' ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Send className="w-5 h-5" />
+                      </motion.div>
+                      Enviando...
+                    </>
+                  ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Suscribirse Gratis
+                  </>
+                )}
+                </motion.button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
+
+        {status === 'idle' && (
+          <p className="mt-4 text-sm text-blue-100">
+            ✨ Sin spam. Cancela cuando quieras.
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+// Componente de Estadísticas
+const StatsSection: React.FC = () => {
+  const stats = [
+    { icon: BookOpen, label: 'Libros', value: 15847, color: 'text-blue-400', suffix: '+' },
+    { icon: Users, label: 'Usuarios Activos', value: 3256, color: 'text-green-400', suffix: '+' },
+    { icon: MessageSquare, label: 'Reseñas', value: 8932, color: 'text-purple-400', suffix: '+' },
+    { icon: Star, label: 'Rating Promedio', value: 4.7, color: 'text-yellow-400', suffix: '★' },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+      className="bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black py-16"
+    >
+      <div className="max-w-7xl mx-auto px-6 sm:px-12">
+        <motion.h3
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          className="text-3xl font-bold text-center mb-12 text-white"
+        >
+          <TrendingUp className="inline-block w-8 h-8 mr-2 mb-1" />
+          Nuestra Comunidad en Números
+        </motion.h3>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.5 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="text-center p-6 rounded-2xl bg-gray-800/50 dark:bg-gray-800/30 backdrop-blur-sm border border-gray-700 hover:border-gray-600 transition-all"
+            >
+              <motion.div
+                animate={{ 
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="inline-block mb-4"
+              >
+                <stat.icon className={`w-12 h-12 ${stat.color} mx-auto`} />
+              </motion.div>
+              <div className={`text-4xl font-extrabold ${stat.color} mb-2`}>
+                <AnimatedCounter end={stat.value} suffix={stat.suffix} />
+              </div>
+              <p className="text-gray-400 font-medium">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export const Footer: React.FC<FooterProps> = ({
   siteName = "TPDSW-Libros",
   showSocialMedia = true,
   showNewsletter = true,
   showFeatures = true,
+  showStats = true,
   customLinks = [],
 }) => {
   const defaultLinks = [
     {
       title: "Explorar",
       links: [
-        { name: "Libros Populares", href: "#" },
-        { name: "Nuevos Lanzamientos", href: "#" },
-        { name: "Autores Destacados", href: "#" },
-        { name: "Géneros", href: "#" },
-        { name: "Listas de Lectura", href: "#" },
+        { name: "Catálogo de Libros", href: "/libros" },
+        { name: "Nuevos Lanzamientos", href: "/libros/nuevos" },
+        { name: "Libros Populares", href: "/libros/populares" },
+        { name: "Libros Recomendados", href: "/libros/recomendados" },
+        { name: "Autores", href: "/autores" },
+        { name: "Sagas", href: "/sagas" },
+        { name: "Categorías", href: "/categorias" },
       ],
     },
     {
-      title: "Comunidad",
+      title: "Mi Cuenta",
       links: [
-        { name: "Foro de Discusión", href: "#" },
-        { name: "Grupos de Lectura", href: "#" },
-        { name: "Mis Listas", href: "#" },
-        { name: "Libros Favoritos", href: "#" },
-        { name: "Eventos", href: "#" },
-        { name: "Reseñadores Destacados", href: "#" },
+        { name: "Mi Perfil", href: "/perfil" },
+        { name: "Mis Favoritos", href: "/favoritos" },
+        { name: "Actividad", href: "/feed" },
+        { name: "Siguiendo", href: "/siguiendo" },
+        { name: "Configuración", href: "/configuracion" },
       ],
     },
     {
-      title: "Ayuda",
+      title: "Crear",
       links: [
-        { name: "Centro de Ayuda", href: "#" },
-        { name: "Contacto", href: "#" },
-        { name: "Términos de Uso", href: "#" },
-        { name: "Política de Privacidad", href: "#" },
-        { name: "Preguntas Frecuentes", href: "#" },
+        { name: "Crear Libro", href: "/crear-libro" },
+        { name: "Crear Categoría", href: "/crear-categoria" },
+        { name: "Crear Editorial", href: "/crear-editorial" },
+        { name: "Crear Saga", href: "/crear-saga" },
       ],
     },
   ];
@@ -63,10 +351,10 @@ export const Footer: React.FC<FooterProps> = ({
   const linksToShow = customLinks.length > 0 ? customLinks : defaultLinks;
 
   const socialMedia = [
-    { icon: Facebook, href: "#", label: "Facebook", color: "#3b5998" },
-    { icon: Twitter, href: "#", label: "Twitter", color: "#1da1f2" },
-    { icon: Instagram, href: "#", label: "Instagram", color: "#e4405f" },
-    { icon: Youtube, href: "#", label: "YouTube", color: "#ff0000" },
+    { icon: Facebook, href: "#", label: "Facebook", color: "hover:text-[#3b5998]" },
+    { icon: Twitter, href: "#", label: "Twitter", color: "hover:text-[#1da1f2]" },
+    { icon: Instagram, href: "#", label: "Instagram", color: "hover:text-[#e4405f]" },
+    { icon: Youtube, href: "#", label: "YouTube", color: "hover:text-[#ff0000]" },
   ];
 
   return (
@@ -98,56 +386,13 @@ export const Footer: React.FC<FooterProps> = ({
       `}</style>
 
       <footer className="bg-gray-900 dark:bg-gray-950 text-white select-none overflow-hidden relative z-10">
-        {showNewsletter && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900 py-16 shadow-lg relative overflow-hidden"
-          >
-            {/* Fondo animado suave */}
-            <motion.div
-              className="absolute inset-0 opacity-10"
-              animate={{
-                rotate: [0, 360],
-              }}
-              transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-              style={{
-                background:
-                  "radial-gradient(circle at center, rgba(255,255,255,0.6), transparent 70%)",
-              }}
-            />
-            <div className="relative max-w-5xl mx-auto px-6 sm:px-12 text-center text-gray-900 dark:text-gray-100">
-              <h3 className="text-3xl font-extrabold tracking-tight mb-4 drop-shadow-sm select-text">
-                Mantente al día con las últimas reseñas y novedades
-              </h3>
-              <p className="max-w-xl mx-auto mb-10 select-text text-gray-700 dark:text-gray-300">
-                Recibe recomendaciones exclusivas, lanzamientos y noticias directamente en tu inbox.
-              </p>
-              <form className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
-                <motion.input
-                  type="email"
-                  placeholder="Tu email"
-                  aria-label="Correo electrónico"
-                  className="flex-grow rounded-lg px-5 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md focus:outline-none focus:ring-4 focus:ring-indigo-400 dark:focus:ring-indigo-500 focus:ring-opacity-70 transition shadow-md"
-                  whileFocus={{ scale: 1.03, boxShadow: "0 0 12px 3px rgba(99,102,241,0.8)" }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                />
-                <motion.button
-                  type="submit"
-                  className="rounded-lg bg-indigo-600 dark:bg-indigo-500 text-white font-semibold px-8 py-3 hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-lg transition"
-                  whileHover={{ scale: 1.1, boxShadow: "0 0 15px 5px rgba(99,102,241,0.7)" }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  Suscribirse
-                </motion.button>
-              </form>
-            </div>
-          </motion.div>
-        )}
+        {/* Newsletter mejorado */}
+        {showNewsletter && <NewsletterSection />}
 
+        {/* Estadísticas animadas */}
+        {showStats && <StatsSection />}
+
+        {/* Features */}
         {showFeatures && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -205,7 +450,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             {showSocialMedia && (
-              <div className="flex space-x-6 mt-6">
+              <div className="flex space-x-4 mt-6">
                 {socialMedia.map(({ icon: Icon, href, label, color }, i) => (
                   <motion.a
                     key={i}
@@ -213,14 +458,20 @@ export const Footer: React.FC<FooterProps> = ({
                     aria-label={label}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className={`p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700 dark:bg-gray-800/30 dark:hover:bg-gray-700/50 shadow-lg backdrop-blur-sm border border-gray-700 hover:border-gray-600 transition-all group ${color}`}
                     whileHover={{
-                      scale: 1.3,
-                      color: color,
-                      textShadow: `0 0 8px ${color}`,
+                      scale: 1.15,
+                      rotate: [0, -5, 5, -5, 0],
+                      transition: { duration: 0.3 }
                     }}
-                    className="p-3 rounded-lg bg-gray-800 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 shadow-lg transition flex items-center justify-center"
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <Icon className="w-6 h-6" />
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Icon className="w-6 h-6 group-hover:drop-shadow-[0_0_8px_currentColor] transition-all" />
+                    </motion.div>
                   </motion.a>
                 ))}
               </div>
@@ -248,8 +499,8 @@ export const Footer: React.FC<FooterProps> = ({
                     className="cursor-pointer flex items-center gap-2 select-text"
                     title={`Ir a ${name}`}
                   >
-                    <a
-                      href={href}
+                    <Link
+                      to={href}
                       className="flex items-center gap-1 text-gray-400 dark:text-gray-400 hover:text-blue-400 dark:hover:text-blue-400 transition-colors duration-200 no-underline"
                     >
                       {name}
@@ -262,7 +513,7 @@ export const Footer: React.FC<FooterProps> = ({
                       >
                         →
                       </motion.span>
-                    </a>
+                    </Link>
                   </motion.li>
                 ))}
               </ul>

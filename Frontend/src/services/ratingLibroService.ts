@@ -19,7 +19,7 @@ export const getRatingLibroById = async (id: number) => {
   return await response.json();
 };
 
-export const getRatingLibroByLibroId = async (libroId: string) => {
+export const getRatingLibroByLibroId = async (libroId: string | number) => {
   const response = await fetch(`${API_URL}/libro/${encodeURIComponent(libroId)}`);
   if (!response.ok) {
     throw new Error('No se pudo obtener el rating del libro');
@@ -47,6 +47,22 @@ export const createOrUpdateRatingLibro = async (ratingData: any, token: string) 
 
 export const deleteRatingLibro = async (id: number, token: string) => {
   const response = await fetch(`${API_URL}/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Error al eliminar el rating del libro');
+  }
+
+  return await response.json();
+};
+
+export const deleteRatingLibroByLibroId = async (libroId: string | number, token: string) => {
+  const response = await fetch(`${API_URL}/libro/${libroId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,

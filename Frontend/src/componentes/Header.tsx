@@ -1,11 +1,13 @@
 // src/componentes/Header.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, Star, Book, Bell, Search, Users, Settings, AlertCircle, Shield } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { User, Menu, X, Star, Book, Search, Users, Settings, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAuthenticated, logoutUser } from "../services/authService";
 import { isAdmin } from "../utils/jwtUtils";
 import { ThemeToggle } from "./ThemeToggle";
+import { QuickAccess } from "./QuickAccess";
+import { NotificationBell } from "./NotificationBell";
 
 // Tipos
 interface HeaderProps {
@@ -33,18 +35,6 @@ const StackedBooksIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 // Datos
-const categorias = [
-  "Todas",
-  "Ficción",
-  "No Ficción",
-  "Ciencia",
-  "Historia",
-  "Biografía",
-  "Tecnología",
-  "Fantasía",
-  "Desarrollo Personal",
-];
-
 const dropdownItems = {
   Libros: [
     { name: "Nuevos lanzamientos", href: "/libros/nuevos" },
@@ -103,7 +93,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [menuState, setMenuState] = useState({
     user: false,
-    notifications: false,
     dropdown: null as string | null,
   });
   const [showSearch, setShowSearch] = useState(false);
@@ -115,12 +104,19 @@ export const Header: React.FC<HeaderProps> = ({
 
   const isMobileOrTablet = useIsMobileOrTablet();
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuth = isAuthenticated();
 
   const closeAllMenus = useCallback(() => {
-    setMenuState({ user: false, notifications: false, dropdown: null });
+    setMenuState({ user: false, dropdown: null });
     if (isMobileOrTablet) setShowSearch(false);
   }, [isMobileOrTablet]);
+
+  // Helper para verificar si una ruta está activa
+  const isActiveRoute = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -171,31 +167,51 @@ export const Header: React.FC<HeaderProps> = ({
           <nav className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 space-x-4 xl:space-x-6">
             {navigationItems
               .filter((item) => ["Libros", "Autores", "Categorías", "Sagas"].includes(item.name))
-              .map((item) => (
-                <div
-                  key={item.name}
-                  className="relative flex items-center px-2 py-2 cursor-pointer text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
-                  onMouseEnter={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: item.name }))}
-                  onMouseLeave={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: null }))}
-                  onClick={() =>
-                    isMobileOrTablet &&
-                    setMenuState((prev) => ({
-                      ...prev,
-                      dropdown: prev.dropdown === item.name ? null : item.name,
-                    }))
-                  }
-                >
-                  <Link to={item.href} className="flex items-center space-x-1">
-                    {item.icon && <item.icon className="w-4 h-4" />}
-                    <span>{item.name}</span>
-                  </Link>
-                  <AnimatePresence>
-                    {menuState.dropdown === item.name && dropdownItems[item.name as keyof typeof dropdownItems] && (
-                      <DropdownMenu items={dropdownItems[item.name as keyof typeof dropdownItems]} />
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
+              .map((item) => {
+                const isActive = isActiveRoute(item.href);
+                return (
+                  <div
+                    key={item.name}
+                    className="relative flex items-center px-2 py-2 cursor-pointer transition-colors duration-200"
+                    onMouseEnter={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: item.name }))}
+                    onMouseLeave={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: null }))}
+                    onClick={() =>
+                      isMobileOrTablet &&
+                      setMenuState((prev) => ({
+                        ...prev,
+                        dropdown: prev.dropdown === item.name ? null : item.name,
+                      }))
+                    }
+                  >
+                    <Link 
+                      to={item.href} 
+                      className={`flex items-center space-x-1 relative ${
+                        isActive 
+                          ? 'text-green-600 dark:text-green-400 font-semibold' 
+                          : 'text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400'
+                      }`}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4" />}
+                      <span>{item.name}</span>
+                      {/* Indicador visual de página activa */}
+                      {isActive && (
+                        <motion.div
+                          className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-green-600 to-green-400 dark:from-green-500 dark:to-green-300 rounded-full"
+                          layoutId="activeIndicator"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                    </Link>
+                    <AnimatePresence>
+                      {menuState.dropdown === item.name && dropdownItems[item.name as keyof typeof dropdownItems] && (
+                        <DropdownMenu items={dropdownItems[item.name as keyof typeof dropdownItems]} />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
           </nav>
 
           {/* Iconos derecha */}
@@ -242,41 +258,11 @@ export const Header: React.FC<HeaderProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Notifications */}
-            {showNotifications && (
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    setMenuState((prev) => ({ ...prev, notifications: !prev.notifications, user: false }))
-                  }
-                  className="relative p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none transition-colors duration-200"
-                >
-                  <motion.div
-                    className="inline-block relative"
-                    whileHover={{ rotate: [0, -10, 10, -7, 7, -5, 5, 0] }}
-                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                  >
-                    <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200" />
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
-                  </motion.div>
-                </button>
-                <AnimatePresence>
-                  {menuState.notifications && (
-                    <motion.div
-                      className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 p-4 z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                        <AlertCircle className="w-5 h-5" />
-                        <span>No hay notificaciones recientes</span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+            {/* Quick Access */}
+            <QuickAccess />
+
+            {/* Notifications - Nuevo componente integrado */}
+            {showNotifications && isAuth && <NotificationBell />}
 
             {/* User */}
             <div className="relative">
@@ -360,26 +346,51 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.nav
-            className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: "hidden" }}
-          >
+          <>
+            {/* Backdrop con blur */}
+            <motion.div
+              className="lg:hidden fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Menu deslizante */}
+            <motion.nav
+              className="lg:hidden fixed top-16 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-xl z-50 overflow-y-auto max-h-[calc(100vh-4rem)]"
+              initial={{ x: "-100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "-100%", opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
             <ul className="flex flex-col px-4 py-2 space-y-2">
-              {navigationItems.map((item) => (
-                <li key={item.name}>
-                  <Link
-                    to={item.href}
-                    className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 text-gray-700 dark:text-gray-300 transition-colors duration-200"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.icon && <item.icon className="w-5 h-5" />}
-                    <span>{item.name}</span>
-                  </Link>
-                </li>
-              ))}
+              {navigationItems.map((item) => {
+                const isActive = isActiveRoute(item.href);
+                return (
+                  <li key={item.name}>
+                    <Link
+                      to={item.href}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded transition-colors duration-200 ${
+                        isActive
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold'
+                          : 'hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-700 dark:hover:text-green-400 text-gray-700 dark:text-gray-300'
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.icon && <item.icon className="w-5 h-5" />}
+                      <span>{item.name}</span>
+                      {isActive && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="ml-auto w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full"
+                        />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
               {isAuth && (
                 <>
                   <li>
@@ -440,6 +451,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </ul>
           </motion.nav>
+          </>
         )}
       </AnimatePresence>
     </header>

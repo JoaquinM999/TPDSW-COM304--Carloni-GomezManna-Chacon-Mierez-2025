@@ -193,9 +193,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <button
               onClick={clearSearch}
               aria-label="Borrar búsqueda"
-              className="hover:bg-gray-100 dark:bg-gray-700 rounded-full p-1 transition-colors"
+              className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors"
             >
-              <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
             </button>
           )}
         </div>
@@ -206,7 +206,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <motion.div
             id="search-results"
             role="listbox"
-            className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden backdrop-blur-sm"
+            className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -214,8 +214,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           >
             {/* Header con contador */}
             {suggestions.length > 0 && (
-              <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                <p className="text-xs font-medium text-blue-700 flex items-center gap-1">
+              <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-blue-100 dark:border-blue-800">
+                <p className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   {suggestions.length} resultado{suggestions.length !== 1 ? 's' : ''} encontrado{suggestions.length !== 1 ? 's' : ''}
                 </p>
@@ -235,10 +235,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center gap-3 transition-all duration-200 ${
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 flex items-center gap-3 transition-all duration-200 ${
                       selectedIndex === index 
-                        ? 'bg-blue-50 border-l-4 border-l-blue-500' 
-                        : 'hover:bg-gray-50 dark:bg-gray-700 border-l-4 border-l-transparent'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-l-blue-500' 
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700 border-l-4 border-l-transparent'
                     }`}
                   >
                     {/* Imagen de portada o ícono */}
@@ -255,11 +255,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                           }}
                         />
                       ) : null}
-                      <div className={item.image ? 'hidden' : 'flex items-center justify-center w-12 h-16 rounded bg-gradient-to-br from-blue-100 to-indigo-100'}>
+                      <div className={item.image ? 'hidden' : 'flex items-center justify-center w-12 h-16 rounded bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900'}>
                         {item.type === 'book' ? (
-                          <Book className="w-6 h-6 text-blue-600" />
+                          <Book className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         ) : item.type === 'author' ? (
-                          <User className="w-6 h-6 text-green-600" />
+                          <User className="w-6 h-6 text-green-600 dark:text-green-400" />
                         ) : null}
                       </div>
                     </div>
@@ -279,16 +279,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     {/* Badge de tipo */}
                     <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                       item.type === 'book' 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : 'bg-green-100 text-green-700'
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' 
+                        : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                     }`}>
                       {item.type === 'book' ? 'Libro' : 'Autor'}
                     </div>
                   </motion.div>
                 ))
               ) : query.length > 0 && !isLoading ? (
-                <div className="px-4 py-8 text-center text-gray-500">
-                  <Search className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <Search className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                   <p className="text-sm">No se encontraron resultados</p>
                   <p className="text-xs mt-1">Intenta con otro término de búsqueda</p>
                 </div>
@@ -310,7 +310,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                         setQuery(term);
                         inputRef.current?.focus();
                       }}
-                      className="px-3 py-1 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-full text-xs text-gray-700 dark:text-gray-300 hover:text-blue-700 transition-colors"
+                      className="px-3 py-1 bg-white dark:bg-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 rounded-full text-xs text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                     >
                       {term}
                     </button>

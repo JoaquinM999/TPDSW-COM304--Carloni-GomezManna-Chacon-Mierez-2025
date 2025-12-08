@@ -132,7 +132,7 @@ export default function NuevosLanzamientos() {
               </h1>
             </div>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              Descubre los libros más recientes añadidos a nuestra colección en los últimos 30 días
+              Descubre los libros más recientes añadidos a nuestra colección en los últimos 6 meses
             </p>
             <div className="flex items-center justify-center gap-2 mt-4">
               <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />

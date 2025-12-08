@@ -6,6 +6,7 @@ import { Star, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { buildApiUrl } from "../utils/apiHelpers";
 import { API_BASE_URL } from '../config/api.config';
+import { VoteButtons } from './VoteButtons';
 
 interface PopularBook {
   id: string;
@@ -267,6 +268,11 @@ export const FeaturedContent: React.FC = () => {
                 >
                   {book.autores.join(", ")}
                 </p>
+                
+                {/* Botones de votación */}
+                <div className="my-3">
+                  <VoteButtons libroId={Number(book.id)} size="sm" showStats={true} />
+                </div>
                 
                 {/* Info extra: categoría y contador de reseñas */}
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-auto pt-3 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between gap-2">

@@ -25,6 +25,9 @@ import { Seguimiento } from './entities/seguimiento.entity';
 import { Actividad } from './entities/actividad.entity';
 import { Permiso } from './entities/permiso.entity';
 import { RatingLibro } from './entities/ratingLibro.entity';
+import { Newsletter } from './entities/newsletter.entity';
+import { PasswordResetToken } from './entities/passwordResetToken.entity';
+import { Notificacion } from './entities/notificacion.entity';
 
 const config: Options<MySqlDriver> = {
   host: process.env.DB_HOST ?? 'localhost',
@@ -34,7 +37,8 @@ const config: Options<MySqlDriver> = {
   dbName: process.env.DB_NAME,
   entities: [
     Usuario, Autor, Categoria, Editorial, Libro, Resena, ContenidoLista, Favorito,
-    Lista, Reaccion, Saga, Seguimiento, Actividad, Permiso, RatingLibro
+    Lista, Reaccion, Saga, Seguimiento, Actividad, Permiso, RatingLibro, Newsletter,
+    PasswordResetToken, Notificacion
   ],
   debug: process.env.NODE_ENV !== 'production',
   migrations: {

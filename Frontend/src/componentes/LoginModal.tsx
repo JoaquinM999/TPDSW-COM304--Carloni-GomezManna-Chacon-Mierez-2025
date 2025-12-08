@@ -68,12 +68,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/80 to-pink-50/80 backdrop-blur-xl flex items-center justify-center z-50">
-      <div className="bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 relative border border-white/50 ring-1 ring-gray-200/50">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50/80 via-purple-50/80 to-pink-50/80 dark:from-gray-900/80 dark:via-gray-800/80 dark:to-gray-900/80 backdrop-blur-xl flex items-center justify-center z-50">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 relative border border-white/50 dark:border-gray-700/50 ring-1 ring-gray-200/50 dark:ring-gray-700/50">
         {/* Botón cerrar */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors duration-200 p-1 hover:bg-white/50 rounded-full"
+          className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 p-1 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-full"
           aria-label="Cerrar modal"
         >
           <X className="w-6 h-6" />
@@ -82,12 +82,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            <Book className="w-9 h-9 text-blue-600" />
+            <Book className="w-9 h-9 text-blue-600 dark:text-blue-400" />
             <span>BookCode</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Tu sesión ha expirado</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Tu sesión ha expirado</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Por favor, inicia sesión nuevamente para continuar.
           </p>
         </div>
@@ -107,7 +107,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
         {/* Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-5" noValidate>
           <div>
-            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Correo electrónico
             </label>
             <div className="relative">
@@ -121,14 +121,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.email}
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300/50 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 transition-all duration-200"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                 placeholder="tu@email.com"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password-modal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Contraseña
             </label>
             <div className="relative">
@@ -142,7 +142,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
                 required
                 value={loginData.password}
                 onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                className="block w-full pl-10 pr-10 py-3 border border-gray-300/50 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 transition-all duration-200"
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                 placeholder="Tu contraseña"
               />
               <button

@@ -117,7 +117,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
             required
             value={data.genero}
             onChange={(e) => updateData({ genero: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
           >
             <option value="">Selecciona tu género</option>
             <option value="masculino">Masculino</option>
@@ -145,7 +145,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
           <button
             type="button"
             onClick={onPrev}
-            className="flex-1 flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            className="flex-1 flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             disabled={loading}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

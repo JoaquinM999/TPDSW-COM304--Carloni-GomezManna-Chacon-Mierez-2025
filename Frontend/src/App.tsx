@@ -6,6 +6,8 @@ import { FeaturedContent } from './componentes/FeaturedContent';
 import { Footer } from './componentes/Footer';
 import { ScrollToTop } from './componentes/ScrollToTop';
 import LoginModal from './componentes/LoginModal';
+import { ToastProvider } from './componentes/ToastProvider';
+import { PageTransition } from './componentes/PageTransition';
 import axios from 'axios';
 import { setupAxiosInterceptors } from './services/authService';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -68,32 +70,32 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
     {
       title: 'Contenido',
       links: [
-        { name: 'Libros Bestsellers', href: '#' },
-        { name: 'Sagas Populares', href: '#' },
-        { name: 'Autores Destacados', href: '#' },
-        { name: 'Críticas Profesionales', href: '#' },
-        { name: 'Próximos Lanzamientos', href: '#' },
+        { name: 'Libros Populares', href: '/libros/populares' },
+        { name: 'Sagas Populares', href: '/sagas' },
+        { name: 'Autores Destacados', href: '/autores' },
+        { name: 'Nuevos Lanzamientos', href: '/libros/nuevos' },
+        { name: 'Recomendados', href: '/libros/recomendados' },
       ],
     },
     {
       title: 'Herramientas',
       links: [
-        { name: 'Crear Lista', href: '#' },
-        { name: 'Comparar Libros', href: '#' },
-        { name: 'Calculadora de Lectura', href: '#' },
-        { name: 'Recomendador IA', href: '#' },
-        { name: 'Mis Favoritos', href: '#' },
-        { name: 'Estadísticas', href: '#' },
+        { name: 'Crear Libro', href: '/crear-libro' },
+        { name: 'Crear Saga', href: '/crear-saga' },
+        { name: 'Crear Categoría', href: '/crear-categoria' },
+        { name: 'Crear Editorial', href: '/crear-editorial' },
+        { name: 'Mis Favoritos', href: '/favoritos' },
+        { name: 'Mi Actividad', href: '/feed' },
       ],
     },
     {
-      title: 'Soporte',
+      title: 'Cuenta',
       links: [
-        { name: 'Guía de Usuario', href: '#' },
-        { name: 'API Developers', href: '#' },
-        { name: 'Status del Sistema', href: '#' },
-        { name: 'Reportar Bug', href: '#' },
-        { name: 'Solicitar Función', href: '#' },
+        { name: 'Mi Perfil', href: '/perfil' },
+        { name: 'Configuración', href: '/configuracion' },
+        { name: 'Siguiendo', href: '/siguiendo' },
+        { name: 'Iniciar Sesión', href: '/LoginPage' },
+        { name: 'Registrarse', href: '/registro' },
       ],
     },
   ];
@@ -116,64 +118,66 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
       )}
 
       <main>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-              >
-                {!hideNewsletterAndFeatures && (
-                  <>
-                    <HeroSection />
-                    <FeaturedContent />
-                  </>
-                )}
-              </motion.div>
-            }
-          />
+        <PageTransition>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  {!hideNewsletterAndFeatures && (
+                    <>
+                      <HeroSection />
+                      <FeaturedContent />
+                    </>
+                  )}
+                </motion.div>
+              }
+            />
 
-          {/* Autores */}
-          <Route path="/autores" element={<AutoresPage />} />
-          <Route path="/autores/:id" element={<DetalleAutor />} />
+            {/* Autores */}
+            <Route path="/autores" element={<AutoresPage />} />
+            <Route path="/autores/:id" element={<DetalleAutor />} />
 
-          {/* Sagas */}
-          <Route path="/sagas" element={<SagasPage />} />
-          <Route path="/sagas/:id" element={<SagaDetallePage />} />
+            {/* Sagas */}
+            <Route path="/sagas" element={<SagasPage />} />
+            <Route path="/sagas/:id" element={<SagaDetallePage />} />
 
-          {/* Nuevas rutas */}
-          <Route path="/libros/nuevos" element={<NuevosLanzamientos />} />
-          <Route path="/libros/recomendados" element={<LibrosRecomendados />} />
-          <Route path="/libros/populares" element={<LibrosPopulares />} />
+            {/* Nuevas rutas */}
+            <Route path="/libros/nuevos" element={<NuevosLanzamientos />} />
+            <Route path="/libros/recomendados" element={<LibrosRecomendados />} />
+            <Route path="/libros/populares" element={<LibrosPopulares />} />
 
-          {/* Listas */}
-          <Route path="/lista/:id" element={<DetalleLista />} />
+            {/* Listas */}
+            <Route path="/lista/:id" element={<DetalleLista />} />
 
-          {/* Rutas originales */}
-          <Route path="/LoginPage" element={<LoginPage />} />
-          <Route path="/registro" element={<RegistrationPage />} />
-          <Route path="/perfil" element={<PerfilPage />} />
-          <Route path="/perfil/:id" element={<PerfilUsuario />} />
-          <Route path="/configuracion" element={<ConfiguracionUsuario />} />
-          <Route path="/categorias" element={<CategoriasPage />} />
-          <Route path="/libro/:slug" element={<DetalleLibro />} />
-          <Route path="/favoritos" element={<FavoritosPage />} />
-          <Route path="/libros" element={<LibrosPage />} />
-          <Route path="/crear-libro" element={<CrearLibro />} />
-          <Route path="/crear-categoria" element={<CrearCategoria />} />
-          <Route path="/crear-editorial" element={<CrearEditorial />} />
-          <Route path="/crear-saga" element={<CrearSaga />} />
-          <Route path="/admin/crear-saga" element={<CrearSagaAdmin />} />
-          <Route path="/admin/moderation" element={<AdminModerationPage />} />
-          <Route path="/admin/moderation/stats" element={<ModerationDashboard />} />
-          <Route path="/admin/actividad" element={<AdminActividadPage />} />
-          <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
-          <Route path="/admin/permiso" element={<AdminPermisoPage />} />
-          <Route path="/siguiendo" element={<SiguiendoPage />} />
-          <Route path="/feed" element={<FeedActividadPage />} />
-        </Routes>
+            {/* Rutas originales */}
+            <Route path="/LoginPage" element={<LoginPage />} />
+            <Route path="/registro" element={<RegistrationPage />} />
+            <Route path="/perfil" element={<PerfilPage />} />
+            <Route path="/perfil/:id" element={<PerfilUsuario />} />
+            <Route path="/configuracion" element={<ConfiguracionUsuario />} />
+            <Route path="/categorias" element={<CategoriasPage />} />
+            <Route path="/libro/:slug" element={<DetalleLibro />} />
+            <Route path="/favoritos" element={<FavoritosPage />} />
+            <Route path="/libros" element={<LibrosPage />} />
+            <Route path="/crear-libro" element={<CrearLibro />} />
+            <Route path="/crear-categoria" element={<CrearCategoria />} />
+            <Route path="/crear-editorial" element={<CrearEditorial />} />
+            <Route path="/crear-saga" element={<CrearSaga />} />
+            <Route path="/admin/crear-saga" element={<CrearSagaAdmin />} />
+            <Route path="/admin/moderation" element={<AdminModerationPage />} />
+            <Route path="/admin/moderation/stats" element={<ModerationDashboard />} />
+            <Route path="/admin/actividad" element={<AdminActividadPage />} />
+            <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
+            <Route path="/admin/permiso" element={<AdminPermisoPage />} />
+            <Route path="/siguiendo" element={<SiguiendoPage />} />
+            <Route path="/feed" element={<FeedActividadPage />} />
+          </Routes>
+        </PageTransition>
       </main>
 
       {!hideLayout && (
@@ -214,9 +218,11 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
-        <Layout showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <Layout showLoginModal={showLoginModal} setShowLoginModal={setShowLoginModal} />
+        </Router>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

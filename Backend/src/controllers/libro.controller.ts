@@ -376,14 +376,14 @@ export const getNuevosLanzamientos = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const limit = parseInt(req.query.limit as string) || 20;
 
-    // Fecha de hace 30 días
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Fecha de hace 180 días (6 meses) para mostrar más libros
+    const monthsAgo = new Date();
+    monthsAgo.setDate(monthsAgo.getDate() - 180);
 
-    // Obtener libros creados en los últimos 30 días
+    // Obtener libros creados en los últimos 6 meses
     const libros = await em.find(
       Libro,
-      { createdAt: { $gte: thirtyDaysAgo } },
+      { createdAt: { $gte: monthsAgo } },
       {
         populate: ['autor', 'categoria', 'editorial', 'resenas'],
         orderBy: { createdAt: 'DESC' },
@@ -438,5 +438,100 @@ export const getNuevosLanzamientos = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('❌ Error al obtener nuevos lanzamientos:', error);
     res.status(500).json({ error: 'Error al obtener nuevos lanzamientos' });
+  }
+};
+
+/**
+ * Obtener o crear un libro desde una API externa (Google Books)
+ * Si el libro no existe en la BD, lo crea automáticamente
+ */
+export const getOrCreateLibroFromExternal = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
+  const em = orm.em.fork();
+
+  try {
+    const { externalId } = req.params;
+
+    if (!externalId) {
+      return res.status(400).json({ error: 'externalId es requerido' });
+    }
+
+    console.log(`🔍 Buscando libro con externalId: ${externalId}`);
+
+    // 1. Verificar si el libro ya existe en la BD
+    let libro = await em.findOne(Libro, { externalId }, { 
+      populate: ['autor', 'categoria', 'editorial', 'saga'] 
+    });
+
+    if (libro) {
+      console.log(`✅ Libro encontrado en BD: ${libro.nombre}`);
+      return res.json(libro);
+    }
+
+    // 2. Si no existe, obtener datos de Google Books
+    console.log(`📡 Obteniendo datos de Google Books API...`);
+    const googleBook = await getBookById(externalId);
+
+    if (!googleBook) {
+      return res.status(404).json({ error: 'Libro no encontrado en Google Books' });
+    }
+
+    // 3. Crear o buscar el autor
+    let autorEntity = null;
+    if (googleBook.autores && googleBook.autores.length > 0) {
+      const autorNombreCompleto = googleBook.autores[0];
+      const partesNombre = autorNombreCompleto.split(' ');
+      const nombre = partesNombre[0] || autorNombreCompleto;
+      const apellido = partesNombre.slice(1).join(' ') || '';
+
+      autorEntity = await em.findOne(Autor, { nombre, apellido });
+      if (!autorEntity) {
+        console.log(`👤 Creando nuevo autor: ${nombre} ${apellido}`);
+        autorEntity = em.create(Autor, { 
+          nombre, 
+          apellido,
+          createdAt: new Date() 
+        });
+        await em.persistAndFlush(autorEntity);
+      }
+    }
+
+    // 4. Obtener categoría por defecto o crear una
+    let categoriaEntity = await em.findOne(Categoria, { nombre: 'General' });
+    if (!categoriaEntity) {
+      categoriaEntity = em.create(Categoria, { 
+        nombre: 'General',
+        createdAt: new Date() 
+      });
+      await em.persistAndFlush(categoriaEntity);
+    }
+
+    // 5. Crear el libro en la BD
+    console.log(`📚 Creando libro en BD: ${googleBook.titulo}`);
+    libro = em.create(Libro, {
+      nombre: googleBook.titulo,
+      sinopsis: googleBook.descripcion || '',
+      imagen: googleBook.imagen || '',
+      enlace: googleBook.enlace || '',
+      externalId: externalId,
+      slug: externalId, // Usamos externalId como slug
+      source: 'google',
+      autor: autorEntity,
+      categoria: categoriaEntity,
+      createdAt: new Date(),
+    });
+
+    await em.persistAndFlush(libro);
+
+    console.log(`✅ Libro creado exitosamente: ${libro.nombre} (ID: ${libro.id})`);
+
+    // 6. Retornar el libro recién creado con relaciones
+    await em.populate(libro, ['autor', 'categoria', 'editorial', 'saga']);
+    
+    return res.status(201).json(libro);
+
+  } catch (error) {
+    console.error('❌ Error al obtener/crear libro desde API externa:', error);
+    res.status(500).json({ error: 'Error al procesar el libro' });
   }
 };

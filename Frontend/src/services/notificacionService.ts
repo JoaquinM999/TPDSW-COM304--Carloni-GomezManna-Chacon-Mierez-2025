@@ -17,7 +17,7 @@ export interface Notificacion {
  */
 export const obtenerNotificaciones = async (limit: number = 20): Promise<Notificacion[]> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No autenticado');
     }
@@ -46,7 +46,7 @@ export const obtenerNotificaciones = async (limit: number = 20): Promise<Notific
  */
 export const contarNoLeidas = async (): Promise<number> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       return 0;
     }
@@ -75,7 +75,7 @@ export const contarNoLeidas = async (): Promise<number> => {
  */
 export const marcarComoLeida = async (id: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No autenticado');
     }
@@ -102,7 +102,7 @@ export const marcarComoLeida = async (id: number): Promise<void> => {
  */
 export const marcarTodasComoLeidas = async (): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No autenticado');
     }
@@ -129,7 +129,7 @@ export const marcarTodasComoLeidas = async (): Promise<void> => {
  */
 export const eliminarNotificacion = async (id: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No autenticado');
     }

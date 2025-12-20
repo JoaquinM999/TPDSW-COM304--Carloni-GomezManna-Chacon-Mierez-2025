@@ -88,7 +88,7 @@ const NewsletterSection: React.FC = () => {
         setEmail('');
         setNombre('');
         
-        // Resetear después de 5 segundos
+        
         setTimeout(() => setStatus('idle'), 5000);
       } else {
         setStatus('error');
@@ -246,7 +246,7 @@ const NewsletterSection: React.FC = () => {
   );
 };
 
-// Componente de Estadísticas
+
 const StatsSection: React.FC = () => {
   const stats = [
     { icon: BookOpen, label: 'Libros', value: 15847, color: 'text-blue-400', suffix: '+' },
@@ -341,9 +341,6 @@ export const Footer: React.FC<FooterProps> = ({
       title: "Crear",
       links: [
         { name: "Crear Libro", href: "/crear-libro" },
-        { name: "Crear Categoría", href: "/crear-categoria" },
-        { name: "Crear Editorial", href: "/crear-editorial" },
-        { name: "Crear Saga", href: "/crear-saga" },
       ],
     },
   ];

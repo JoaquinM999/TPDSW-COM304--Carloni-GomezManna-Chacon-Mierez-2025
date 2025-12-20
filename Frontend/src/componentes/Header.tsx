@@ -9,14 +9,14 @@ import { ThemeToggle } from "./ThemeToggle";
 import { QuickAccess } from "./QuickAccess";
 import { NotificationBell } from "./NotificationBell";
 
-// Tipos
+
 interface HeaderProps {
   siteName?: string;
   showNotifications?: boolean;
   userAuthenticated?: boolean;
 }
 
-// Icono personalizado
+
 const StackedBooksIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
@@ -169,27 +169,30 @@ export const Header: React.FC<HeaderProps> = ({
               .filter((item) => ["Libros", "Autores", "Categorías", "Sagas"].includes(item.name))
               .map((item) => {
                 const isActive = isActiveRoute(item.href);
+                const hasDropdown = dropdownItems[item.name as keyof typeof dropdownItems];
                 return (
                   <div
                     key={item.name}
-                    className="relative flex items-center px-2 py-2 cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: item.name }))}
+                    className="relative flex items-center px-2 py-2 transition-colors duration-200"
+                    onMouseEnter={() => !isMobileOrTablet && hasDropdown && setMenuState((prev) => ({ ...prev, dropdown: item.name }))}
                     onMouseLeave={() => !isMobileOrTablet && setMenuState((prev) => ({ ...prev, dropdown: null }))}
-                    onClick={() =>
-                      isMobileOrTablet &&
-                      setMenuState((prev) => ({
-                        ...prev,
-                        dropdown: prev.dropdown === item.name ? null : item.name,
-                      }))
-                    }
                   >
                     <Link 
                       to={item.href} 
-                      className={`flex items-center space-x-1 relative ${
+                      className={`flex items-center space-x-1 relative cursor-pointer ${
                         isActive 
                           ? 'text-green-600 dark:text-green-400 font-semibold' 
                           : 'text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400'
                       }`}
+                      onClick={(e) => {
+                        if (isMobileOrTablet && hasDropdown) {
+                          e.preventDefault();
+                          setMenuState((prev) => ({
+                            ...prev,
+                            dropdown: prev.dropdown === item.name ? null : item.name,
+                          }));
+                        }
+                      }}
                     >
                       {item.icon && <item.icon className="w-4 h-4" />}
                       <span>{item.name}</span>
@@ -205,8 +208,8 @@ export const Header: React.FC<HeaderProps> = ({
                       )}
                     </Link>
                     <AnimatePresence>
-                      {menuState.dropdown === item.name && dropdownItems[item.name as keyof typeof dropdownItems] && (
-                        <DropdownMenu items={dropdownItems[item.name as keyof typeof dropdownItems]} />
+                      {menuState.dropdown === item.name && hasDropdown && (
+                        <DropdownMenu items={hasDropdown} />
                       )}
                     </AnimatePresence>
                   </div>

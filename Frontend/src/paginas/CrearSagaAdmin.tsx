@@ -2,11 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, Check, X, Search, Plus, Globe } from "lucide-react";
+import { BookOpen, Check, X, Plus, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 import { API_BASE_URL } from '../config/api.config';
 import { isAdmin } from "../utils/jwtUtils";
 import { createSaga } from "../services/sagaService";
-import { getLibros } from "../services/libroService";
 import axios from "axios";
 import LibroCard from "../componentes/LibroCard";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -48,8 +47,12 @@ const CrearSagaAdmin: React.FC = () => {
   const [searchSource, setSearchSource] = useState<'local' | 'google'>('local');
   const [filteredLibros, setFilteredLibros] = useState<Libro[]>([]);
   const [filteredGoogleBooks, setFilteredGoogleBooks] = useState<GoogleBook[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalLibros, setTotalLibros] = useState<number>(0);
+  const librosPerPage = 12;
 
-  // Check admin authorization
+
   useEffect(() => {
     if (!isAdmin()) {
       setIsAuthorized(false);
@@ -59,32 +62,37 @@ const CrearSagaAdmin: React.FC = () => {
     setIsAuthorized(true);
   }, [navigate]);
 
-  // Load libros
   useEffect(() => {
     const fetchLibros = async () => {
       try {
-        const data = await getLibros();
-        setLibros(data);
-        setFilteredLibros(data);
+        const response = await axios.get(`${API_BASE_URL}/libro`, {
+          params: {
+            page: currentPage,
+            limit: librosPerPage,
+            search: debouncedSearchTerm || undefined,
+          },
+        });
+
+        const { libros: librosData, total, totalPages: pages } = response.data;
+        console.log('Libros response:', response.data);
+        setLibros(librosData);
+        setFilteredLibros(librosData);
+        setTotalLibros(total);
+        setTotalPages(pages);
       } catch (err) {
         setError("Error al cargar los libros");
       }
     };
 
-    if (isAuthorized) {
+    if (isAuthorized && searchSource === 'local') {
       fetchLibros();
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, currentPage, debouncedSearchTerm, searchSource]);
 
-  // Debounce searchTerm
   useEffect(() => {
-    const id = window.setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.trim());
-    }, 300);
-    return () => window.clearTimeout(id);
-  }, [searchTerm]);
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, searchSource]);
 
-  // Build finalQuery
   useEffect(() => {
     let q = "";
     if (debouncedSearchTerm && debouncedSearchTerm.length) {
@@ -112,41 +120,41 @@ const CrearSagaAdmin: React.FC = () => {
     setFinalQuery(q);
   }, [debouncedSearchTerm, searchFilter]);
 
-  // Filter libros based on search
+
   useEffect(() => {
-    if (searchTerm.trim() === "") {
+    if (searchSource === 'local' && !debouncedSearchTerm) {
       setFilteredLibros(libros);
-      setFilteredGoogleBooks([]);
-    } else {
-      if (searchSource === 'local') {
-        const filtered = libros.filter(
-          (libro) =>
-            (libro.titulo?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-            (libro.autores || []).some((autor) =>
-              (autor?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-            )
-        );
-        setFilteredLibros(filtered);
-        setFilteredGoogleBooks([]);
-      } else {
-        // Search Google Books
-        const fetchGoogleBooks = async () => {
-          try {
-            const response = await axios.get(`${API_BASE_URL}/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
-            const results = response.data;
-            setGoogleBooks(results);
-            setFilteredGoogleBooks(results);
-            setFilteredLibros([]);
-          } catch (err) {
-            console.error('Error searching Google Books:', err);
-            setFilteredGoogleBooks([]);
-            setFilteredLibros([]);
-          }
-        };
+    } else if (searchSource === 'local' && debouncedSearchTerm) {
+      const filtered = libros.filter(
+        (libro) =>
+          (libro.titulo?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+          (libro.autores || []).some((autor) =>
+            (autor?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase())
+          )
+      );
+      setFilteredLibros(filtered);
+    } else if (searchSource === 'google') {
+      const fetchGoogleBooks = async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
+          const results = response.data;
+          setGoogleBooks(results);
+          setFilteredGoogleBooks(results);
+          setFilteredLibros([]);
+        } catch (err) {
+          console.error('Error searching Google Books:', err);
+          setFilteredGoogleBooks([]);
+          setFilteredLibros([]);
+        }
+      };
+      if (debouncedSearchTerm) {
         fetchGoogleBooks();
+      } else {
+        setFilteredGoogleBooks([]);
+        setFilteredLibros([]);
       }
     }
-  }, [searchTerm, libros, searchSource, finalQuery]);
+  }, [searchTerm, libros, searchSource, finalQuery, debouncedSearchTerm]);
 
   const handleLibroSelect = (libroId: number) => {
     const newSelected = new Set(selectedLibros);
@@ -179,7 +187,6 @@ const CrearSagaAdmin: React.FC = () => {
         throw new Error("No se encontró el token de autenticación");
       }
 
-      // Add Google Books to local library first
       const allLibroIds = new Set(selectedLibros);
       for (const googleBookId of selectedGoogleBooks) {
         try {
@@ -194,7 +201,6 @@ const CrearSagaAdmin: React.FC = () => {
           allLibroIds.add(addedBook.id);
         } catch (err: any) {
           console.error(`Error adding Google Book ${googleBookId}:`, err);
-          // Continue with other books if one fails
         }
       }
 
@@ -215,7 +221,6 @@ const CrearSagaAdmin: React.FC = () => {
       setSelectedLibros(new Set());
       setSelectedGoogleBooks(new Set());
 
-      // Redirect to sagas page after success
       setTimeout(() => {
         navigate("/sagas");
       }, 2000);
@@ -517,6 +522,86 @@ const CrearSagaAdmin: React.FC = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Pagination Controls - Only show for local books */}
+        {searchSource === 'local' && totalPages > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center mt-8 mb-6"
+          >
+            <div className="flex items-center gap-2">
+              {/* Previous Button */}
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                  currentPage === 1
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-cyan-500 text-white hover:bg-cyan-600 hover:shadow-lg'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Anterior
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        currentPage === pageNum
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  currentPage === totalPages
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-cyan-500 text-white hover:bg-cyan-600 hover:shadow-lg'
+                }`}
+              >
+                Siguiente →
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Results Info */}
+        {searchSource === 'local' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4"
+          >
+            Mostrando {filteredLibros.length} de {totalLibros} libros
+            {totalPages > 1 && ` (Página ${currentPage} de ${totalPages})`}
+          </motion.div>
+        )}
 
         {filteredLibros.length === 0 && filteredGoogleBooks.length === 0 && searchTerm && (
           <div className="text-center py-12">

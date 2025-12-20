@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { RequestContext } from '@mikro-orm/core';
-import orm from '../index';
+import { RequestContext, MikroORM } from '@mikro-orm/core';
 import { NotificacionService } from '../services/notificacion.service';
 
 /**
  * Obtener notificaciones del usuario autenticado
  */
 export const obtenerNotificaciones = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
       const usuarioId = (req as any).usuarioId;
@@ -27,6 +27,7 @@ export const obtenerNotificaciones = async (req: Request, res: Response) => {
  * Contar notificaciones no leídas
  */
 export const contarNoLeidas = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
       const usuarioId = (req as any).usuarioId;
@@ -46,6 +47,7 @@ export const contarNoLeidas = async (req: Request, res: Response) => {
  * Marcar notificación como leída
  */
 export const marcarComoLeida = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
       const usuarioId = (req as any).usuarioId;
@@ -66,6 +68,7 @@ export const marcarComoLeida = async (req: Request, res: Response) => {
  * Marcar todas las notificaciones como leídas
  */
 export const marcarTodasComoLeidas = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
       const usuarioId = (req as any).usuarioId;
@@ -85,6 +88,7 @@ export const marcarTodasComoLeidas = async (req: Request, res: Response) => {
  * Eliminar notificación
  */
 export const eliminarNotificacion = async (req: Request, res: Response) => {
+  const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
       const usuarioId = (req as any).usuarioId;

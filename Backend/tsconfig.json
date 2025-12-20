@@ -14,5 +14,5 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
-  "exclude": ["test", "node_modules", "dist", "mikro-orm.config.ts"]
+  "exclude": ["test", "node_modules", "dist", "mikro-orm.config.ts", "src/__tests__"]
 }

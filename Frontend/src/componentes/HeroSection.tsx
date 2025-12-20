@@ -7,10 +7,10 @@ import { SplineErrorBoundary } from './SplineErrorBoundary';
 import { AnimatedCounter } from './AnimatedCounter';
 import { getStatsWithCache, PlatformStats } from '../services/statsService';
 
-// Lazy load del componente Spline
+
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
-// Skeleton/Placeholder para Spline mientras carga - Loading simple y limpio
+
 const SplineSkeleton: React.FC = () => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -21,7 +21,7 @@ const SplineSkeleton: React.FC = () => (
   </motion.div>
 );
 
-// Componente del pollito con animación al aparecer
+
 const PollitoSpline: React.FC = () => {
   const [showSpline, setShowSpline] = useState(
     typeof window !== 'undefined' && window.innerWidth >= 1024

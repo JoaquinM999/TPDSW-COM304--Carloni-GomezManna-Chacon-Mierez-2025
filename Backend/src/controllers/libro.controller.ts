@@ -13,67 +13,73 @@ import { Resena } from '../entities/resena.entity';
 export const getLibros = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
-  
-  // Filtro opcional por autor
-  const { autor, autorId } = req.query;
-  const filtro: any = {};
-  
-  if (autor || autorId) {
-    const idAutor = (autor || autorId) as string;
-    filtro.autor = +idAutor; // Convertir a número
-  }
-  
-  // Replace 'ratingLibro' (non-existing relation) with 'resenas' to match entity relations
-  const libros = await em.find(Libro, filtro, { populate: ['autor', 'categoria', 'editorial', 'saga', 'resenas'] });
 
-  const librosTransformados = await Promise.all(libros.map(async (libro) => {
-    let autores = ['Autor desconocido'];
+  try {
+    // Pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+    const offset = (page - 1) * limit;
 
-    if (libro.autor) {
-      autores = [`${libro.autor.nombre} ${libro.autor.apellido}`.trim()];
-    } else if (libro.externalId) {
-      try {
-        const googleBook = await getBookById(libro.externalId);
-        if (googleBook && googleBook.autores && googleBook.autores.length > 0) {
-          autores = googleBook.autores;
+    // Search parameter
+    const search = req.query.search as string;
 
-          // --- LÓGICA DE AUTOCORRECCIÓN ---
-          const autorNombreCompleto = googleBook.autores[0];
-          const partesNombre = autorNombreCompleto.split(' ');
-          const nombre = partesNombre[0] || autorNombreCompleto;
-          const apellido = partesNombre.slice(1).join(' ') || '';
+    // Filtro opcional por autor
+    const { autor, autorId } = req.query;
+    const filtro: any = {};
 
-          let autorEntity = await em.findOne(Autor, { nombre, apellido });
-          if (!autorEntity) {
-            autorEntity = em.create(Autor, { nombre, apellido, createdAt: new Date() });
-            await em.persist(autorEntity);
-          }
-          libro.autor = autorEntity;
-          await em.flush();
-        }
-      } catch (error) {
-        console.error('Error fetching author from Google Books for book correction:', error);
+    if (autor || autorId) {
+      const idAutor = (autor || autorId) as string;
+      filtro.autor = +idAutor; // Convertir a número
+    }
+
+    // Add search filter if provided
+    if (search && search.trim()) {
+      filtro.nombre = { $like: `%${search.trim()}%` };
+    }
+
+    // Get total count for pagination
+    const total = await em.count(Libro, filtro);
+
+    // Get paginated results
+    const libros = await em.find(Libro, filtro, {
+      populate: ['autor', 'categoria', 'editorial', 'saga'],
+      limit,
+      offset,
+      orderBy: { createdAt: 'DESC' } // Most recent first
+    });
+
+    const librosTransformados = libros.map((libro) => {
+      let autores = ['Autor desconocido'];
+
+      if (libro.autor) {
+        autores = [`${libro.autor.nombre} ${libro.autor.apellido}`.trim()];
       }
-    }
 
-    // Compute average rating from the populated 'resenas' relation
-    let avgRating = 0;
-    if (libro.resenas.isInitialized() && libro.resenas.length > 0) {
-      const resenasArray = libro.resenas.getItems();
-      const sum = resenasArray.reduce((s, r) => s + (r?.estrellas ?? 0), 0);
-      avgRating = sum / resenasArray.length;
-    }
+      return {
+        id: libro.id,
+        titulo: libro.nombre,
+        autores,
+        imagen: libro.imagen,
+        averageRating: 0, // Simplified for now
+      };
+    });
 
-    return {
-      id: libro.id,
-      titulo: libro.nombre,
-      autores,
-      imagen: libro.imagen,
-      averageRating: avgRating,
-    };
-  }));
+    const totalPages = Math.ceil(total / limit);
 
-  res.json(librosTransformados);
+    console.log(`getLibros: page=${page}, limit=${limit}, total=${total}, totalPages=${totalPages}, librosCount=${librosTransformados.length}`);
+
+    res.json({
+      libros: librosTransformados,
+      total,
+      totalPages,
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    });
+  } catch (error) {
+    console.error('Error in getLibros:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 };
 
 export const getLibroById = async (req: Request, res: Response) => {

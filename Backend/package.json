@@ -12,8 +12,13 @@
     "seed:sagas": "npm run build && node dist/seed-sagas.js",
     "create:admin": "ts-node-dev src/scripts/create-admin-user.ts",
     "fix:autores": "ts-node-dev --transpile-only fix-autores.ts",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --testNamePattern=\"unit\"",
+    "test:integration": "vitest run --testNamePattern=\"integration\"",
+    "test:e2e": "vitest run --testNamePattern=\"e2e\""
   },
   "dependencies": {
     "@mikro-orm/cli": "6.5.9",
@@ -51,15 +56,18 @@
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lru-cache": "^7.10.9",
-    "@types/node": "^24.3.1",
+    "@types/node": "^24.10.4",
     "@types/node-fetch": "^2.6.13",
     "@types/sentiment": "^5.0.4",
     "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
     "jest": "^29.7.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.16"
   }
 }

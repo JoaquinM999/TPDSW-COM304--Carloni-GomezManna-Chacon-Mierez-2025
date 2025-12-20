@@ -9,6 +9,14 @@ import jwtConfig from '../shared/jwt.config';
 import { StringValue } from 'ms';
 import { registerUser } from '../services/auth.service';
 import { sendPasswordReset } from '../services/email.service';
+import {
+  validateLoginCredentials,
+  validatePasswordResetRequest,
+  validatePasswordResetData,
+  validateRefreshToken,
+  AUTH_MESSAGES,
+  sanitizeEmail
+} from '../utils/authValidationHelpers';
 
 // Función auxiliar para generar un token de acceso
 const generateToken = (user: Usuario): string => {
@@ -44,15 +52,21 @@ export const loginUser = async (req: Request, res: Response) => {
     const orm = req.app.get('orm') as MikroORM;
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // ✅ Validar credenciales usando helper
+    const validation = validateLoginCredentials({ email, password });
+    if (!validation.isValid) {
+      return res.status(validation.statusCode || 400).json({ error: validation.error });
     }
 
-    const user = await orm.em.findOne(Usuario, { email });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const user = await orm.em.findOne(Usuario, { email: sanitizeEmail(email) });
+    if (!user) {
+      return res.status(401).json({ error: AUTH_MESSAGES.INVALID_CREDENTIALS });
+    }
 
     const validPassword = await user.validatePassword(password);
-    if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!validPassword) {
+      return res.status(401).json({ error: AUTH_MESSAGES.INVALID_CREDENTIALS });
+    }
 
     const token = generateToken(user);
 
@@ -65,9 +79,9 @@ export const loginUser = async (req: Request, res: Response) => {
     user.refreshToken = refreshToken;
     await orm.em.persistAndFlush(user);
 
-    res.json({ token, refreshToken, message: 'Login successful' });
+    res.json({ token, refreshToken, message: AUTH_MESSAGES.LOGIN_SUCCESS });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: AUTH_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -77,26 +91,28 @@ export const refreshTokenUser = async (req: Request, res: Response) => {
     const orm = req.app.get('orm') as MikroORM;
     const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token missing' });
+    // ✅ Validar refresh token usando helper
+    const validation = validateRefreshToken(refreshToken);
+    if (!validation.isValid) {
+      return res.status(validation.statusCode || 400).json({ error: validation.error });
     }
 
     let decoded: JwtPayload;
     try {
       decoded = await verifyToken(refreshToken, jwtConfig.secret!);
     } catch {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      return res.status(401).json({ error: AUTH_MESSAGES.TOKEN_INVALID });
     }
 
     const user = await orm.em.findOne(Usuario, { id: decoded.id });
     if (!user || user.refreshToken !== refreshToken) {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      return res.status(401).json({ error: AUTH_MESSAGES.TOKEN_INVALID });
     }
 
     const newAccessToken = generateToken(user);
     res.json({ token: newAccessToken });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: AUTH_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -110,17 +126,18 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email requerido' });
+    // ✅ Validar solicitud usando helper
+    const validation = validatePasswordResetRequest({ email });
+    if (!validation.isValid) {
+      return res.status(validation.statusCode || 400).json({ error: validation.error });
     }
 
-    const user = await em.findOne(Usuario, { email });
+    const sanitizedEmail = sanitizeEmail(email);
+    const user = await em.findOne(Usuario, { email: sanitizedEmail });
     
     // Por seguridad, siempre responder con éxito aunque el usuario no exista
     if (!user) {
-      return res.json({ 
-        message: 'Si el email existe, recibirás un enlace de recuperación' 
-      });
+      return res.json({ message: AUTH_MESSAGES.PASSWORD_RESET_SENT });
     }
 
     // Generar token aleatorio seguro
@@ -132,18 +149,16 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
     // Enviar email
     try {
-      await sendPasswordReset(email, resetToken, user.nombre);
+      await sendPasswordReset(sanitizedEmail, resetToken, user.nombre);
     } catch (emailError) {
       console.error('Error al enviar email de reseteo:', emailError);
       // No fallar si el email no se puede enviar
     }
 
-    return res.json({ 
-      message: 'Si el email existe, recibirás un enlace de recuperación' 
-    });
+    return res.json({ message: AUTH_MESSAGES.PASSWORD_RESET_SENT });
   } catch (error: any) {
     console.error('Error en requestPasswordReset:', error);
-    return res.status(500).json({ error: 'Error del servidor' });
+    return res.status(500).json({ error: AUTH_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -156,12 +171,10 @@ export const resetPassword = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const { token, newPassword } = req.body;
 
-    if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token y nueva contraseña requeridos' });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    // ✅ Validar datos usando helper
+    const validation = validatePasswordResetData({ token, newPassword });
+    if (!validation.isValid) {
+      return res.status(validation.statusCode || 400).json({ error: validation.error });
     }
 
     // Buscar token válido
@@ -171,12 +184,12 @@ export const resetPassword = async (req: Request, res: Response) => {
     );
 
     if (!resetToken) {
-      return res.status(400).json({ error: 'Token inválido o ya usado' });
+      return res.status(400).json({ error: AUTH_MESSAGES.TOKEN_USED });
     }
 
     // Verificar que no haya expirado
     if (resetToken.fechaExpiracion < new Date()) {
-      return res.status(400).json({ error: 'Token expirado' });
+      return res.status(400).json({ error: AUTH_MESSAGES.TOKEN_INVALID });
     }
 
     // Actualizar contraseña del usuario
@@ -188,12 +201,10 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     await em.persistAndFlush([user, resetToken]);
 
-    return res.json({ 
-      message: 'Contraseña actualizada exitosamente' 
-    });
+    return res.json({ message: AUTH_MESSAGES.PASSWORD_RESET_SUCCESS });
   } catch (error: any) {
     console.error('Error en resetPassword:', error);
-    return res.status(500).json({ error: 'Error del servidor' });
+    return res.status(500).json({ error: AUTH_MESSAGES.SERVER_ERROR });
   }
 };
 

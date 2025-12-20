@@ -9,6 +9,28 @@ import { Autor } from '../entities/autor.entity';
 import { ActividadService } from '../services/actividad.service';
 import redis from '../redis';
 import { moderationService } from '../services/moderation.service';
+import { 
+  parseResenaInput, 
+  parseResenaFilters, 
+  parseResenaUpdateInput,
+  buildResenaQuery,
+  validateResenaId,
+  parseResenaRespuesta
+} from '../utils/resenaParser';
+import {
+  buildResenaWhereClause,
+  procesarResenasConContadores,
+  serializarResenaModeracion,
+  filtrarYOrdenarResenasTopLevel,
+  paginarResenas,
+  serializarResenaCompleta
+} from '../utils/resenaHelpers';
+import {
+  determinePopulateStrategy,
+  findResenasWithStrategy,
+  findResenaByIdWithStrategy,
+  logPopulateStats
+} from '../utils/resenaPopulateHelpers';
 
 interface AuthRequest extends Request {
   user?: { id: number; [key: string]: any };
@@ -22,242 +44,55 @@ export const getResenas = async (req: Request, res: Response) => {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     const { libroId, usuarioId, estado } = req.query;
+    const usuarioPayload = (req as AuthRequest).user;
 
     console.log('🔍 getResenas - libroId recibido:', libroId);
 
-    const where: any = {};
-
-    // 🚫 Excluir reseñas eliminadas (soft delete) por defecto
-    where.deletedAt = null;
-
-    // Filtrado por libroId - buscar tanto por externalId como por id interno
-    if (libroId) {
-      // Intentar buscar por externalId primero, y si es numérico también por id
-      const libroIdStr = libroId.toString();
-      const isNumeric = /^\d+$/.test(libroIdStr);
-      
-      console.log('🔍 libroIdStr:', libroIdStr, 'isNumeric:', isNumeric);
-      
-      if (isNumeric) {
-        // Si es numérico, buscar por id O externalId
-        where.libro = { $or: [{ id: +libroIdStr }, { externalId: libroIdStr }] };
-        console.log('🔍 Buscando por ID numérico O externalId');
-      } else {
-        // Si no es numérico, solo por externalId
-        where.libro = { externalId: libroIdStr };
-        console.log('🔍 Buscando solo por externalId');
-      }
-    }
-
-    if (usuarioId) where.usuario = +usuarioId;
-    
-    // 🔹 Para moderación: si piden PENDING, incluir también FLAGGED
-    if (estado === 'PENDING') {
-      where.estado = { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] };
-    } else if (estado) {
-      where.estado = estado;
-    }
-
-    // 🔹 Lógica de visibilidad
-    if (!estado) {
-      const usuarioPayload = (req as AuthRequest).user;
-
-      if (libroId) {
-        // ➤ Mostrar todas las reseñas del libro excepto las rechazadas
-        where.estado = { $nin: [EstadoResena.FLAGGED] };
-      } else {
-        // ➤ Para listas generales, mantener solo aprobadas para no-admin
-        if (!usuarioPayload) {
-          where.estado = EstadoResena.APPROVED;
-        } else {
-          const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
-          if (!usuario || usuario.rol !== RolUsuario.ADMIN) {
-            where.estado = EstadoResena.APPROVED;
-          }
-        }
-      }
-    }
+    // 1️⃣ Construir el WHERE clause usando helper
+    const where = buildResenaWhereClause({
+      libroId: libroId as string,
+      usuarioId: usuarioId as string,
+      estado: estado as string,
+      user: usuarioPayload,
+      em
+    });
 
     console.log('🔍 WHERE clause para buscar reseñas:', JSON.stringify(where, null, 2));
     
-    const resenas = await em.find(Resena, where, {
-      populate: [
-        'usuario',
-        'libro',
-        'libro.autor',
-        'reacciones',
-        'reacciones.usuario',
-        'resenaPadre.usuario',
-        'respuestas.usuario',
-        'respuestas.reacciones',
-        'respuestas.reacciones.usuario',
-        'respuestas.resenaPadre.usuario',
-        'respuestas.respuestas.usuario'
-      ],
-      orderBy: { createdAt: 'DESC' },
-    });
+    // 2️⃣ Determinar estrategia de populate según query params
+    const populateStrategy = determinePopulateStrategy(req.query);
+    logPopulateStats(populateStrategy);
+    
+    // 3️⃣ Buscar reseñas con estrategia optimizada
+    const resenas = await findResenasWithStrategy(em, where, populateStrategy);
     
     console.log('🔍 Reseñas encontradas:', resenas.length);
 
-    // 📊 Agregar contadores de reacciones a cada reseña
-    const agregarContadores = (resena: Resena) => {
-      const reacciones = resena.reacciones.getItems();
-      console.log(`🔍 Reseña ${resena.id} tiene ${reacciones.length} reacciones:`, reacciones.map(r => ({ id: r.id, tipo: r.tipo, usuarioId: r.usuario?.id })));
-      (resena as any).reaccionesCount = {
-        likes: reacciones.filter(r => r.tipo === 'like').length,
-        dislikes: reacciones.filter(r => r.tipo === 'dislike').length,
-        corazones: reacciones.filter(r => r.tipo === 'corazon').length,
-        total: reacciones.length
-      };
-    };
-    
-    resenas.forEach(r => {
-      agregarContadores(r);
-      r.respuestas?.getItems().forEach(agregarContadores);
-    });
+    // 4️⃣ Agregar contadores de reacciones (solo si se cargaron reacciones)
+    if (populateStrategy !== 'minimal') {
+      procesarResenasConContadores(resenas);
+    }
 
-    // Special handling for pending reviews (admin moderation): return flat array without pagination or top-level filtering
+    // 5️⃣ Caso especial: reseñas pendientes (moderación)
     if (estado === 'PENDING' || where.estado?.$in?.includes(EstadoResena.PENDING)) {
       console.log('🔍 getResenas => moderation reviews:', resenas.length);
-      console.log('🔍 Sample moderation data:', resenas[0] ? {
-        id: resenas[0].id,
-        moderationScore: resenas[0].moderationScore,
-        moderationReasons: resenas[0].moderationReasons,
-        autoModerated: resenas[0].autoModerated,
-        estado: resenas[0].estado
-      } : 'No resenas');
-      
-      // Serializar explícitamente para asegurar que incluye campos de moderación
-      const serialized = resenas.map(r => ({
-        id: r.id,
-        comentario: r.comentario,
-        estrellas: r.estrellas,
-        estado: r.estado,
-        fechaResena: r.fechaResena,
-        moderationScore: r.moderationScore,
-        moderationReasons: r.moderationReasons,
-        autoModerated: r.autoModerated,
-        usuario: {
-          id: r.usuario.id,
-          nombre: r.usuario.nombre,
-          email: r.usuario.email,
-          username: r.usuario.username,
-          avatar: r.usuario.avatar
-        },
-        libro: {
-          id: r.libro.id,
-          titulo: r.libro.nombre,
-          slug: r.libro.externalId
-        }
-      }));
-      
+      const serialized = resenas.map(serializarResenaModeracion);
       res.json(serialized);
       return;
     }
 
-    // Filter top-level reviews (no parent)
-    let topLevel = resenas.filter(r => !r.resenaPadre);
+    // 6️⃣ Filtrar y ordenar reseñas de nivel superior
+    const topLevel = filtrarYOrdenarResenasTopLevel(resenas);
 
-    // Recursive function to sort replies by fechaResena ASC
-    const sortReplies = (resena: Resena) => {
-      if (resena.respuestas && resena.respuestas.isInitialized()) {
-        const sortedReplies = resena.respuestas.getItems().sort((a, b) => new Date(a.fechaResena).getTime() - new Date(b.fechaResena).getTime());
-        resena.respuestas.set(sortedReplies);
-        sortedReplies.forEach(sortReplies); // Recurse for deeper levels
-      }
-    };
-
-    // Sort top-level by createdAt DESC, and sort their replies
-    topLevel = topLevel.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    topLevel.forEach(sortReplies);
-
-    // Paginate top-level reviews (10 per page)
+    // 7️⃣ Paginar resultados
     const page = parseInt(req.query.page as string) || 1;
     const limit = 10;
-    const offset = (page - 1) * limit;
-    const paginatedTopLevel = topLevel.slice(offset, offset + limit);
+    const paginatedTopLevel = paginarResenas(topLevel, page, limit);
 
-        console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
+    console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
     
-    // Función recursiva para convertir reseña a objeto plano (evita referencias circulares)
-    const serializeResena = (resena: any, includeParent = false): any => {
-      // Extraer reacciones
-      let reaccionesArray: any[] = [];
-      if (resena.reacciones) {
-        if (typeof resena.reacciones.getItems === 'function') {
-          reaccionesArray = resena.reacciones.getItems();
-        } else if (Array.isArray(resena.reacciones)) {
-          reaccionesArray = resena.reacciones;
-        }
-      }
-      
-      // Extraer respuestas
-      let respuestasArray: any[] = [];
-      if (resena.respuestas) {
-        if (typeof resena.respuestas.getItems === 'function') {
-          respuestasArray = resena.respuestas.getItems();
-        } else if (Array.isArray(resena.respuestas)) {
-          respuestasArray = resena.respuestas;
-        }
-      }
-      
-      // Calcular contadores
-      const reaccionesCount = {
-        likes: reaccionesArray.filter((r: any) => r.tipo === 'like').length,
-        dislikes: reaccionesArray.filter((r: any) => r.tipo === 'dislike').length,
-        corazones: reaccionesArray.filter((r: any) => r.tipo === 'corazon').length,
-        total: reaccionesArray.length
-      };
-      
-      return {
-        id: resena.id,
-        comentario: resena.comentario,
-        estrellas: resena.estrellas,
-        estado: resena.estado,
-        fechaResena: resena.fechaResena,
-        createdAt: resena.createdAt,
-        updatedAt: resena.updatedAt,
-        usuario: {
-          id: resena.usuario?.id,
-          nombre: resena.usuario?.nombre,
-          username: resena.usuario?.username,
-          email: resena.usuario?.email,
-          avatar: resena.usuario?.avatar
-        },
-        libro: resena.libro ? {
-          id: resena.libro.id,
-          nombre: resena.libro.nombre,
-          externalId: resena.libro.externalId,
-          imagen: resena.libro.imagen,
-          autor: resena.libro.autor ? {
-            id: resena.libro.autor.id,
-            nombre: resena.libro.autor.nombre
-          } : null
-        } : null,
-        reacciones: reaccionesArray.map((r: any) => ({
-          id: r.id,
-          tipo: r.tipo,
-          usuarioId: r.usuario?.id || r.usuario,
-          fecha: r.fecha
-        })),
-        reaccionesCount,
-        // Recursivamente serializar respuestas (sin incluir su padre para evitar ciclo)
-        respuestas: respuestasArray.map(resp => serializeResena(resp, false)),
-        // Solo incluir resenaPadre si se solicita (no incluir respuestas del padre)
-        resenaPadre: includeParent && resena.resenaPadre ? {
-          id: resena.resenaPadre.id,
-          comentario: resena.resenaPadre.comentario,
-          usuario: {
-            id: resena.resenaPadre.usuario?.id,
-            nombre: resena.resenaPadre.usuario?.nombre,
-            username: resena.resenaPadre.usuario?.username
-          }
-        } : null
-      };
-    };
-    
-    // Serializar todas las reseñas paginadas
-    const serializedReviews = paginatedTopLevel.map(r => serializeResena(r, false));
+    // 8️⃣ Serializar reseñas para respuesta
+    const serializedReviews = paginatedTopLevel.map(r => serializarResenaCompleta(r, false));
     
     console.log('📤 Enviando respuesta con reseñas:', serializedReviews.map(r => ({ 
       id: r.id, 
@@ -284,7 +119,10 @@ export const getResenaById = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario', 'libro', 'reacciones'] });
+    
+    // Usar estrategia 'complete' para vistas de detalle
+    const resena = await findResenaByIdWithStrategy(em, +req.params.id, 'complete');
+    
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
     
     // 📊 Agregar contadores de reacciones
@@ -311,14 +149,15 @@ export const createResena = async (req: Request, res: Response) => {
     console.log('📝 Creando reseña...');
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const { comentario, estrellas, libroId, libro: libroData } = req.body;
 
-    if (!comentario || typeof comentario !== 'string')
-      return res.status(400).json({ error: 'Comentario inválido o faltante' });
+    // ✅ Usar parser para validar input
+    const validation = parseResenaInput(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
+    }
 
-    const estrellasNum = Number(estrellas);
-    if (isNaN(estrellasNum) || estrellasNum < 1 || estrellasNum > 5)
-      return res.status(400).json({ error: 'Estrellas debe ser un número entre 1 y 5' });
+    const { comentario, estrellas, libroId } = validation.data!;
+    const { libro: libroData } = req.body;
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -394,7 +233,7 @@ export const createResena = async (req: Request, res: Response) => {
     }
 
     // Análisis de moderación automática
-    const moderationResult = moderationService.analyzeReview(comentario, estrellasNum);
+    const moderationResult = moderationService.analyzeReview(comentario, estrellas);
     console.log('🤖 Análisis de moderación:', {
       score: moderationResult.score,
       isApproved: moderationResult.isApproved,
@@ -434,7 +273,7 @@ export const createResena = async (req: Request, res: Response) => {
     // Crear la reseña
     const nuevaResena = em.create(Resena, {
       comentario,
-      estrellas: estrellasNum,
+      estrellas,
       libro,
       usuario,
       estado: estadoInicial,
@@ -485,7 +324,14 @@ export const updateResena = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const resena = await em.findOne(Resena, { id: +req.params.id }, { populate: ['usuario'] });
+
+    // ✅ Validar ID de reseña
+    const idValidation = validateResenaId(req.params.id);
+    if (!idValidation.valid) {
+      return res.status(400).json({ error: idValidation.error });
+    }
+
+    const resena = await em.findOne(Resena, { id: idValidation.id! }, { populate: ['usuario'] });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
     const usuarioPayload = (req as AuthRequest).user;
@@ -493,16 +339,13 @@ export const updateResena = async (req: Request, res: Response) => {
     if (resena.usuario.id !== usuarioPayload.id)
       return res.status(403).json({ error: 'No autorizado para modificar esta reseña' });
 
-    if (req.body.comentario && typeof req.body.comentario !== 'string')
-      return res.status(400).json({ error: 'Comentario inválido' });
-
-    if (req.body.estrellas !== undefined) {
-      const estrellas = Number(req.body.estrellas);
-      if (isNaN(estrellas) || estrellas < 1 || estrellas > 5)
-        return res.status(400).json({ error: 'Estrellas debe ser un número entre 1 y 5' });
+    // ✅ Usar parser para validar update
+    const validation = parseResenaUpdateInput(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
     }
 
-    em.assign(resena, req.body);
+    em.assign(resena, validation.data!);
     await em.persistAndFlush(resena);
 
     res.json({ message: 'Reseña actualizada', resena });
@@ -600,17 +443,23 @@ export const createRespuesta = async (req: Request, res: Response) => {
     console.log('📝 Creando respuesta...');
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const { comentario, estrellas = 0 } = req.body;
-    const parentId = +req.params.id;
 
-    if (!comentario || typeof comentario !== 'string' || comentario.length > 2000) {
-      return res.status(400).json({ error: 'Comentario inválido o demasiado largo (máx. 2000 caracteres)' });
+    // ✅ Validar ID de reseña padre
+    const idValidation = validateResenaId(req.params.id);
+    if (!idValidation.valid) {
+      return res.status(400).json({ error: idValidation.error });
     }
 
-    const estrellasNum = Number(estrellas);
-    if (isNaN(estrellasNum) || estrellasNum < 0 || estrellasNum > 5) {
-      return res.status(400).json({ error: 'Estrellas debe ser un número entre 0 y 5' });
+    const parentId = idValidation.id!;
+
+    // ✅ Usar parser para validar respuesta
+    const validation = parseResenaRespuesta(req.body, parentId);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
     }
+
+    const { comentario } = validation.data!;
+    const estrellas = 0; // Las respuestas no tienen estrellas
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -621,15 +470,13 @@ export const createRespuesta = async (req: Request, res: Response) => {
     const parent = await em.findOne(Resena, { id: parentId }, { populate: ['libro'] });
     if (!parent) return res.status(404).json({ error: 'Reseña padre no encontrada' });
 
-
-
     // Heredar libro del padre
     const libro = parent.libro;
 
     // Crear la respuesta
     const nuevaResena = em.create(Resena, {
       comentario,
-      estrellas: estrellasNum,
+      estrellas,
       resenaPadre: parent,
       libro,
       usuario,

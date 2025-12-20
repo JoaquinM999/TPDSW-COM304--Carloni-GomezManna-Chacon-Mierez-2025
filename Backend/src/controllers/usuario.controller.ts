@@ -4,23 +4,31 @@ import { MikroORM } from '@mikro-orm/mysql';
 import { Usuario, RolUsuario } from '../entities/usuario.entity';
 import { Seguimiento } from '../entities/seguimiento.entity';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { 
+  parseUserRegistration, 
+  parseUserProfileUpdate,
+  sanitizeUserResponse 
+} from '../utils/usuarioParser';
 
 // Create user
 export const createUser = async (req: AuthRequest, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
-    const { email, username, password, rol } = req.body;
-
-    if (!email || !username || !password) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    
+    // ✅ Usar parser para validar registro
+    const validation = parseUserRegistration(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
     }
+
+    const { email, username, password, rol } = validation.data!;
 
     const existingUser = await orm.em.findOne(Usuario, { email });
     if (existingUser) {
       return res.status(400).json({ error: 'Email is already registered' });
     }
 
-    const userRole: RolUsuario = rol ?? RolUsuario.USUARIO;
+    const userRole: RolUsuario = (rol as RolUsuario) ?? RolUsuario.USUARIO;
 
     const newUser = orm.em.create(Usuario, {
       email,
@@ -32,11 +40,12 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 
     await orm.em.persistAndFlush(newUser);
 
-    const { password: _, refreshToken, ...userWithoutPassword } = newUser;
+    // ✅ Usar sanitizeUserResponse para eliminar campos sensibles
+    const userResponse = sanitizeUserResponse(newUser);
 
     res.status(201).json({
       message: 'User created successfully',
-      user: userWithoutPassword,
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({
@@ -94,12 +103,21 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    orm.em.assign(user, req.body);
+    // ✅ Usar parser para validar update
+    const validation = parseUserProfileUpdate(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ errors: validation.errors });
+    }
+
+    orm.em.assign(user, validation.data!);
     await orm.em.persistAndFlush(user);
+
+    // ✅ Usar sanitizeUserResponse para la respuesta
+    const userResponse = sanitizeUserResponse(user);
 
     res.json({
       message: 'User updated successfully',
-      user,
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({ error: 'Error updating user' });

@@ -9,43 +9,50 @@ import { Saga } from '../entities/saga.entity';
 import { ContenidoLista } from '../entities/contenidoLista.entity';
 import { getBookById } from '../services/googleBooks.service';
 import { Resena } from '../entities/resena.entity';
+import { 
+  parseLibroFilters, 
+  buildLibroQuery, 
+  validateLibroId 
+} from '../utils/libroParser';
+import {
+  findOrCreateAutorLibro,
+  findLibroRelatedEntities,
+  createLibroEntity,
+  validateLibroCreationData
+} from '../utils/libroHelpers';
+import {
+  validateSearchQuery,
+  searchLibrosOptimized
+} from '../utils/libroSearchHelpers';
+
 
 export const getLibros = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
 
   try {
-    // Pagination parameters
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 12;
-    const offset = (page - 1) * limit;
-
-    // Search parameter
-    const search = req.query.search as string;
-
-    // Filtro opcional por autor
+    // ✅ Usar parser para validar y extraer filtros
+    const filters = parseLibroFilters(req.query);
+    
+    // ✅ Construir query usando el parser
+    const where = buildLibroQuery(filters);
+    
+    // Filtro opcional por autor (legacy support)
     const { autor, autorId } = req.query;
-    const filtro: any = {};
-
     if (autor || autorId) {
       const idAutor = (autor || autorId) as string;
-      filtro.autor = +idAutor; // Convertir a número
-    }
-
-    // Add search filter if provided
-    if (search && search.trim()) {
-      filtro.nombre = { $like: `%${search.trim()}%` };
+      where.autor = +idAutor;
     }
 
     // Get total count for pagination
-    const total = await em.count(Libro, filtro);
+    const total = await em.count(Libro, where);
 
     // Get paginated results
-    const libros = await em.find(Libro, filtro, {
+    const libros = await em.find(Libro, where, {
       populate: ['autor', 'categoria', 'editorial', 'saga'],
-      limit,
-      offset,
-      orderBy: { createdAt: 'DESC' } // Most recent first
+      limit: filters.limit,
+      offset: (filters.page - 1) * filters.limit,
+      orderBy: { createdAt: 'DESC' }
     });
 
     const librosTransformados = libros.map((libro) => {
@@ -64,17 +71,17 @@ export const getLibros = async (req: Request, res: Response) => {
       };
     });
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / filters.limit);
 
-    console.log(`getLibros: page=${page}, limit=${limit}, total=${total}, totalPages=${totalPages}, librosCount=${librosTransformados.length}`);
+    console.log(`getLibros: page=${filters.page}, limit=${filters.limit}, total=${total}, totalPages=${totalPages}, librosCount=${librosTransformados.length}`);
 
     res.json({
       libros: librosTransformados,
       total,
       totalPages,
-      currentPage: page,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
+      currentPage: filters.page,
+      hasNextPage: filters.page < totalPages,
+      hasPrevPage: filters.page > 1
     });
   } catch (error) {
     console.error('Error in getLibros:', error);
@@ -152,50 +159,29 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
 export const createLibro = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
-
   const { nombreAutor, apellidoAutor, categoriaId, editorialId, sagaId, ...libroData } = req.body;
 
   try {
-    // 1. Buscar si el autor ya existe en tu base de datos.
-    let autor = await em.findOne(Autor, {
-      nombre: nombreAutor,
-      apellido: apellidoAutor,
-    });
-
-    // 2. Si el autor NO existe, crearlo.
-    if (!autor) {
-      console.log('El autor no existe, creando uno nuevo...');
-      autor = em.create(Autor, {
-        nombre: nombreAutor,
-        apellido: apellidoAutor,
-        createdAt: new Date()
-      });
-      await em.persist(autor); // Guardamos el nuevo autor para que tenga un ID
-    } else {
-      console.log('El autor ya existía en la base de datos.');
+    // 1️⃣ Validar datos de entrada
+    const validation = validateLibroCreationData(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
     }
 
-    // Fetch other related entities
-    const categoria = await em.findOne(Categoria, { id: categoriaId });
-    const editorial = await em.findOne(Editorial, { id: editorialId });
-    const saga = sagaId ? await em.findOne(Saga, { id: sagaId }) : undefined;
+    // 2️⃣ Buscar o crear autor
+    const autor = await findOrCreateAutorLibro(em, nombreAutor, apellidoAutor);
 
-    if (!categoria || !editorial) {
-      return res.status(404).json({ error: 'Categoría o editorial no encontrada' });
+    // 3️⃣ Buscar entidades relacionadas (categoría, editorial, saga)
+    const relatedEntities = await findLibroRelatedEntities(em, categoriaId, editorialId, sagaId);
+    
+    if ('error' in relatedEntities) {
+      return res.status(404).json({ error: relatedEntities.error });
     }
 
-    // 3. Crear la nueva entidad de Libro.
-    const nuevoLibro = em.create(Libro, {
-      ...libroData,
-      // 4. ¡Aquí está la magia! Asignas el objeto completo del autor.
-      // MikroORM se encargará de establecer el `autor_id` correcto en la base de datos.
-      autor,
-      categoria,
-      editorial,
-      saga
-    });
+    relatedEntities.autor = autor;
 
-    // 5. Guardar el libro en la base de datos.
+    // 4️⃣ Crear y guardar el libro
+    const nuevoLibro = createLibroEntity(em, libroData, relatedEntities);
     await em.persistAndFlush(nuevoLibro);
 
     res.status(201).json(nuevoLibro);
@@ -319,27 +305,20 @@ export const searchLibros = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const query = req.query.q as string;
 
-    if (!query || query.trim().length < 2) {
-      return res.status(400).json({ error: 'La consulta de búsqueda debe tener al menos 2 caracteres' });
+    // ✅ Validar query usando helper
+    const validation = validateSearchQuery(query);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
     }
 
-    // Search by title
-    const librosByTitle = await em.find(Libro, {
-      nombre: { $like: `%${query}%` }
-    }, { populate: ['autor', 'categoria'] });
+    // ✅ Búsqueda optimizada con una sola query usando $or
+    const libros = await searchLibrosOptimized(em, {
+      query: validation.sanitizedQuery!,
+      searchIn: ['titulo', 'autor'], // Buscar en título y autor simultáneamente
+      limit: 50
+    });
 
-    // Search by author name
-    const librosByAuthor = await em.find(Libro, {
-      autor: { nombre: { $like: `%${query}%` } }
-    }, { populate: ['autor', 'categoria'] });
-
-    // Combine and deduplicate results
-    const allLibros = [...librosByTitle, ...librosByAuthor];
-    const uniqueLibros = allLibros.filter((libro, index, self) =>
-      index === self.findIndex(l => l.id === libro.id)
-    );
-
-    res.json(uniqueLibros);
+    res.json(libros);
   } catch (error) {
     console.error('Error en searchLibros:', error);
     res.status(500).json({ error: 'Error al buscar libros' });

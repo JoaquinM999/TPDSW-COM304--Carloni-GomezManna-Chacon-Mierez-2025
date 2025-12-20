@@ -11,25 +11,34 @@ import {
   ExternalAuthorDTO,
   getPopularAuthorsFromAPIs
 } from '../services/autor.service';
+import { 
+  parseAutorFilters, 
+  buildAutorQuery, 
+  validateAutorId 
+} from '../utils/autorParser';
+import {
+  validateAuthorSearchQuery,
+  searchAutoresLocal as searchAutoresLocalDB,
+  searchAutoresExternal as searchAutoresExternalAPIs,
+  combineAuthorResults,
+  getFromCache,
+  saveToCache,
+  generateCacheKey
+} from '../utils/autorSearchHelpers';
+
 
 export const getAutores = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
     
-    const { page = '1', limit = '20', search = '', sortBy = 'nombre' } = req.query;
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = Math.min(parseInt(limit as string, 10), 100); // Max 100 por página
+    // ✅ Usar parser para validar y extraer filtros
+    const filters = parseAutorFilters(req.query);
     
-    // Validación de parámetros
-    if (pageNum < 1 || limitNum < 1) {
-      return res.status(400).json({ error: 'Parámetros de paginación inválidos' });
-    }
-    
-    console.log('📚 getAutores - page:', pageNum, 'limit:', limitNum, 'search:', search);
+    console.log('📚 getAutores - page:', filters.page, 'limit:', filters.limit, 'search:', filters.search);
     
     // 🚀 CACHE: Generar clave única para esta búsqueda
-    const cacheKey = `autores:page:${pageNum}:limit:${limitNum}:search:${search}:sort:${sortBy}`;
+    const cacheKey = `autores:page:${filters.page}:limit:${filters.limit}:search:${filters.search}:sort:${filters.sortBy}`;
     const cacheTTL = 300; // 5 minutos
     
     // 🚀 CACHE: Intentar obtener del cache primero
@@ -47,28 +56,14 @@ export const getAutores = async (req: Request, res: Response) => {
       }
     }
     
-    // Construir filtro de búsqueda mejorado
-    const where: any = {};
-    if (search && (search as string).trim().length > 0) {
-      const searchTerm = (search as string).trim();
-      
-      // Validar longitud de búsqueda
-      if (searchTerm.length < 2) {
-        return res.status(400).json({ error: 'El término de búsqueda debe tener al menos 2 caracteres' });
-      }
-      
-      // Búsqueda case-insensitive (MySQL usa LIKE, que es case-insensitive por defecto)
-      where.$or = [
-        { nombre: { $like: `%${searchTerm}%` } },
-        { apellido: { $like: `%${searchTerm}%` } }
-      ];
-    }
+    // ✅ Construir query usando el parser
+    const where = buildAutorQuery(filters);
     
     // ✅ OPTIMIZACIÓN: Usar findAndCount con paginación en BD
     const [autores, total] = await em.findAndCount(Autor, where, {
-      limit: limitNum,
-      offset: (pageNum - 1) * limitNum,
-      orderBy: { [sortBy as string]: 'ASC' }
+      limit: filters.limit,
+      offset: (filters.page - 1) * filters.limit,
+      orderBy: { [filters.sortBy as keyof Autor]: 'ASC' }
     });
     
     console.log(`✅ Encontrados ${total} autores totales en BD, mostrando ${autores.length}`);
@@ -76,7 +71,7 @@ export const getAutores = async (req: Request, res: Response) => {
     // 🌟 NUEVA FUNCIONALIDAD: Si hay menos de 15 autores en BD y no hay búsqueda, complementar con externos
     const UMBRAL_MINIMO_AUTORES = 15;
     // Permitir complementar con externos en cualquier página, no solo la primera
-    const debeComplementarConExternos = total < UMBRAL_MINIMO_AUTORES && !search;
+    const debeComplementarConExternos = total < UMBRAL_MINIMO_AUTORES && !filters.search;
     
     if (debeComplementarConExternos) {
       console.log(`📦 BD tiene solo ${total} autores (< ${UMBRAL_MINIMO_AUTORES}), complementando con externos...`);
@@ -223,18 +218,18 @@ export const getAutores = async (req: Request, res: Response) => {
         console.log(`📊 Autores después de eliminar duplicados: ${autoresCombinados.length} → ${totalCompleto}`);
         
         // 🔧 Aplicar paginación: calcular offset y limit ANTES de slicear
-        const totalPaginasCalculado = Math.ceil(totalCompleto / limitNum);
-        const offset = (pageNum - 1) * limitNum;
-        const autoresPaginados = todosLosAutores.slice(offset, offset + limitNum);
+        const totalPaginasCalculado = Math.ceil(totalCompleto / filters.limit);
+        const offset = (filters.page - 1) * filters.limit;
+        const autoresPaginados = todosLosAutores.slice(offset, offset + filters.limit);
         
-        console.log(`✅ Respuesta híbrida: ${autoresBD.length} de BD + ${autoresExternos.length} externos = ${totalCompleto} total | Mostrando ${autoresPaginados.length} en página ${pageNum}/${totalPaginasCalculado}`);
+        console.log(`✅ Respuesta híbrida: ${autoresBD.length} de BD + ${autoresExternos.length} externos = ${totalCompleto} total | Mostrando ${autoresPaginados.length} en página ${filters.page}/${totalPaginasCalculado}`);
         
         const responseData = {
           autores: autoresPaginados,
           total: totalCompleto,
-          page: pageNum,
+          page: filters.page,
           totalPages: totalPaginasCalculado,
-          hasMore: pageNum < totalPaginasCalculado,
+          hasMore: filters.page < totalPaginasCalculado,
           fromExternalAPIs: true,
           autoresBD: autoresBD.length,
           autoresExternos: autoresExternos.length
@@ -272,9 +267,9 @@ export const getAutores = async (req: Request, res: Response) => {
         external: false
       })),
       total,
-      page: pageNum,
-      totalPages: Math.ceil(total / limitNum),
-      hasMore: pageNum < Math.ceil(total / limitNum),
+      page: filters.page,
+      totalPages: Math.ceil(total / filters.limit),
+      hasMore: filters.page < Math.ceil(total / filters.limit),
       fromExternalAPIs: false
     };
     
@@ -548,6 +543,116 @@ export const deleteAutor = async (req: Request, res: Response) => {
   res.json({ mensaje: 'Autor eliminado' });
 };
 
+/**
+ * Búsqueda de autores solo en base de datos local
+ */
+export const searchAutoresLocal = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const query = req.query.q as string;
+
+    console.log('🔍 searchAutoresLocal - Query recibida:', query);
+
+    // Validar query
+    const validation = validateAuthorSearchQuery(query);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    const { trimmedQuery } = validation;
+    const cacheKey = generateCacheKey(trimmedQuery!, false);
+
+    // Intentar obtener del cache
+    const cachedResults = await getFromCache(cacheKey);
+    if (cachedResults) {
+      return res.json(cachedResults);
+    }
+
+    // Buscar en BD local
+    const autores = await searchAutoresLocalDB(em, trimmedQuery!);
+
+    // Guardar en cache
+    await saveToCache(cacheKey, autores);
+
+    res.json(autores);
+  } catch (error: any) {
+    console.error('❌ Error en searchAutoresLocal:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+/**
+ * Búsqueda de autores con resultados combinados (local + APIs externas)
+ */
+export const searchAutoresWithExternal = async (req: Request, res: Response) => {
+  try {
+    const orm = req.app.get('orm') as MikroORM;
+    const em = orm.em.fork();
+    const query = req.query.q as string;
+
+    console.log('🔍 searchAutoresWithExternal - Query recibida:', query);
+
+    // Validar query
+    const validation = validateAuthorSearchQuery(query);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    const { trimmedQuery } = validation;
+    const cacheKey = generateCacheKey(trimmedQuery!, true);
+
+    // Intentar obtener del cache
+    const cachedResults = await getFromCache(cacheKey);
+    if (cachedResults) {
+      return res.json(cachedResults);
+    }
+
+    // Buscar en BD local
+    const autoresLocales = await searchAutoresLocalDB(em, trimmedQuery!);
+
+    // Si hay suficientes resultados locales, no buscar en APIs externas
+    if (autoresLocales.length >= 5) {
+      await saveToCache(cacheKey, autoresLocales);
+      return res.json(autoresLocales);
+    }
+
+    // Buscar en APIs externas (sin guardar)
+    const autoresExternos = await searchAutoresExternalAPIs(trimmedQuery!);
+
+    // Combinar resultados
+    const autoresCombinados = combineAuthorResults(autoresLocales, autoresExternos);
+
+    // Guardar en cache
+    await saveToCache(cacheKey, autoresCombinados);
+
+    res.json(autoresCombinados);
+  } catch (error: any) {
+    console.error('❌ Error en searchAutoresWithExternal:', error.message);
+    
+    // Fallback: devolver solo resultados locales
+    try {
+      const orm = req.app.get('orm') as MikroORM;
+      const em = orm.em.fork();
+      const query = req.query.q as string;
+      const validation = validateAuthorSearchQuery(query);
+      
+      if (validation.valid && validation.trimmedQuery) {
+        const autoresLocales = await searchAutoresLocalDB(em, validation.trimmedQuery);
+        return res.json(autoresLocales);
+      }
+    } catch (fallbackError) {
+      console.error('❌ Error en fallback:', fallbackError);
+    }
+    
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+/**
+ * @deprecated Use searchAutoresLocal o searchAutoresWithExternal
+ * Mantenida por compatibilidad. Será removida en v2.0
+ */
 export const searchAutores = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;

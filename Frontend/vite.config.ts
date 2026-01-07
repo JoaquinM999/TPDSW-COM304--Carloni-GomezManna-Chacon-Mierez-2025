@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite';
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
@@ -7,17 +8,31 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  // ✅ AÑADE ESTE BLOQUE COMPLETO
   server: {
     proxy: {
-      // Cualquier petición que empiece con '/api'
       '/api': {
-        // Será redirigida a tu servidor de backend
-        target: 'http://localhost:3000', // <-- ¡Verifica que este es el puerto de tu backend!
-
-        // Necesario para que el backend acepte la petición
+        target: 'http://localhost:3000',
         changeOrigin: true, 
       },
     },
+  },
+  // ✅ Configuración de Vitest para testing
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/mockData',
+        'dist/'
+      ]
+    }
   },
 });

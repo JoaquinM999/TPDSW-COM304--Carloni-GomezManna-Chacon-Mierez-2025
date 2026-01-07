@@ -37,10 +37,23 @@ export function buildResenaWhereClause(params: {
   }
 
   // Filtrado por estado
-  if (estado === 'PENDING') {
-    where.estado = { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] };
-  } else if (estado) {
-    where.estado = estado;
+  if (estado) {
+    // Normalizar estado a enum value
+    const estadoNormalizado = estado.toLowerCase();
+    
+    if (estadoNormalizado === 'pendiente' || estadoNormalizado === 'pending') {
+      // Para moderación: incluir pendientes y flagged
+      where.estado = { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] };
+    } else if (estadoNormalizado === 'aprobada' || estadoNormalizado === 'approved') {
+      where.estado = EstadoResena.APPROVED;
+    } else if (estadoNormalizado === 'rechazada' || estadoNormalizado === 'rejected') {
+      where.estado = EstadoResena.REJECTED;
+    } else if (estadoNormalizado === 'flagged') {
+      where.estado = EstadoResena.FLAGGED;
+    } else {
+      // Si viene directamente como enum, usarlo
+      where.estado = estado;
+    }
   }
 
   // Lógica de visibilidad según usuario y contexto

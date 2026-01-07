@@ -74,7 +74,11 @@ export const getResenas = async (req: Request, res: Response) => {
     }
 
     // 5️⃣ Caso especial: reseñas pendientes (moderación)
-    if (estado === 'PENDING' || where.estado?.$in?.includes(EstadoResena.PENDING)) {
+    const estadoNormalizado = typeof estado === 'string' ? estado.toLowerCase() : '';
+    if (estadoNormalizado === 'pendiente' || 
+        estadoNormalizado === 'pending' || 
+        estado === EstadoResena.PENDING || 
+        where.estado?.$in?.includes(EstadoResena.PENDING)) {
       console.log('🔍 getResenas => moderation reviews:', resenas.length);
       const serialized = resenas.map(serializarResenaModeracion);
       res.json(serialized);
@@ -256,8 +260,8 @@ export const createResena = async (req: Request, res: Response) => {
 
     // Determinar estado inicial basado en moderación
     let estadoInicial = EstadoResena.PENDING;
-    if (moderationResult.isApproved && moderationResult.score >= 70) {
-      // Auto-aprobar reseñas con score alto y sin flags críticos
+    if (moderationResult.isApproved && moderationResult.score >= 85) {
+      // Auto-aprobar SOLO reseñas con score MUY alto (≥85) y sin flags críticos
       estadoInicial = EstadoResena.APPROVED;
       console.log('✅ Reseña auto-aprobada con score:', moderationResult.score);
     } else if (moderationResult.score < 30 || moderationResult.flags.profanity || moderationResult.flags.toxicity) {
@@ -265,7 +269,7 @@ export const createResena = async (req: Request, res: Response) => {
       estadoInicial = EstadoResena.FLAGGED;
       console.log('⚠️ Reseña auto-flagged por:', moderationResult.reasons.join(', '));
     } else {
-      // Enviar a moderación manual si está en zona gris (30-69) sin flags críticos
+      // Enviar a moderación manual si está en zona gris (30-84) sin flags críticos
       estadoInicial = EstadoResena.PENDING;
       console.log('⏳ Reseña enviada a moderación manual - Score:', moderationResult.score);
     }
@@ -279,7 +283,7 @@ export const createResena = async (req: Request, res: Response) => {
       estado: estadoInicial,
       moderationScore: moderationResult.score,
       moderationReasons: JSON.stringify(moderationResult.reasons),
-      autoModerated: moderationResult.score >= 80 || moderationResult.score < 40,
+      autoModerated: moderationResult.score >= 85 || moderationResult.score < 30,
       autoRejected: moderationResult.shouldAutoReject,
       rejectionReason: moderationResult.shouldAutoReject 
         ? moderationResult.reasons.join('; ') 

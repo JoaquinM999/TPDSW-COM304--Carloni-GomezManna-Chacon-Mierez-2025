@@ -577,13 +577,13 @@ const DetalleLibro: React.FC = () => {
             
             console.log("📚 Datos de reseñas recibidos:", reviewsData);
             
-            // Filtrar: mostrar todo excepto FLAGGED (rechazadas)
+            // Filtrar: mostrar todo excepto flagged (rechazadas)
             const reviews = reviewsData?.reviews || reviewsData || [];
             console.log("📝 Total de reseñas antes de filtrar:", reviews.length);
             console.log("📋 Estados de reseñas:", reviews.map((r: Reseña) => ({ id: r.id, estado: r.estado })));
             
-            const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
-            console.log("✅ Reseñas después de filtrar FLAGGED:", filtered.length);
+            const filtered = reviews.filter((r: Reseña) => r.estado !== "flagged");
+            console.log("✅ Reseñas después de filtrar flagged:", filtered.length);
 
             dispatch({ type: 'SET_REVIEWS', payload: filtered });
 
@@ -740,7 +740,7 @@ const DetalleLibro: React.FC = () => {
         console.log("🔀 Cambio de orden - Datos recibidos:", reviewsData);
         const reviews = reviewsData?.reviews || reviewsData || [];
         console.log("🔀 Cambio de orden - Total reseñas:", reviews.length);
-        const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
+        const filtered = reviews.filter((r: Reseña) => r.estado !== "flagged");
         console.log("🔀 Cambio de orden - Reseñas filtradas:", filtered.length);
 
         dispatch({ type: 'SET_REVIEWS', payload: filtered });
@@ -913,7 +913,7 @@ const DetalleLibro: React.FC = () => {
       console.log("🔄 Refresh - Datos recibidos:", reviewsData);
       const reviews = reviewsData?.reviews || reviewsData || [];
       console.log("🔄 Refresh - Total reseñas:", reviews.length);
-      const filtered = reviews.filter((r: Reseña) => r.estado !== "FLAGGED");
+      const filtered = reviews.filter((r: Reseña) => r.estado !== "flagged");
       console.log("🔄 Refresh - Reseñas filtradas:", filtered.length);
       dispatch({ type: 'SET_REVIEWS', payload: filtered });
       // actualizar likedByUser y dislikedByUser tras refresh

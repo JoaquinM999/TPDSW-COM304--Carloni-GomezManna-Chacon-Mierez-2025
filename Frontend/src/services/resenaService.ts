@@ -69,7 +69,7 @@ export const agregarReseña = async (
  * Incluye PENDING y FLAGGED para el panel de moderación.
  */
 export const obtenerResenasPendientes = async (token: string) => {
-  const response = await fetch(`${API_URL}?estado=PENDING`, {
+  const response = await fetch(`${API_URL}?estado=pendiente`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Cache-Control': 'no-cache',

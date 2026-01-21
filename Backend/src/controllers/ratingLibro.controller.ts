@@ -25,7 +25,18 @@ export const getRatingLibroByLibroId = async (req: Request, res: Response) => {
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
   const rating = await orm.em.findOne(RatingLibro, { libro: libro.id });
-  if (!rating) return res.status(404).json({ error: 'Rating no encontrado para este libro' });
+  
+  // If no rating exists, return default values instead of 404
+  if (!rating) {
+    return res.json({
+      id: null,
+      avgRating: 0,
+      cantidadResenas: 0,
+      libro: libro.id,
+      fechaCreacion: null,
+      fechaActualizacion: null
+    });
+  }
 
   res.json(rating);
 };

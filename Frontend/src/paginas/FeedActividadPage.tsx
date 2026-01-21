@@ -55,7 +55,7 @@ const FeedActividadPage: React.FC = () => {
         setLoadingMore(true);
       }
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         setError('Debes iniciar sesión');
         setLoading(false);
@@ -148,28 +148,45 @@ const FeedActividadPage: React.FC = () => {
 
   const getTipoTexto = (tipo: string) => {
     switch (tipo) {
-      case 'RESENA': return 'dejó una reseña';
+      case 'RESENA': return 'escribió una reseña';
       case 'SEGUIMIENTO': return 'comenzó a seguir a alguien';
-      case 'LISTA_CREADA': return 'creó una lista';
+      case 'LISTA_CREADA': return 'creó una lista nueva';
       case 'LISTA_ACTUALIZADA': return 'actualizó una lista';
       case 'FAVORITO': return 'agregó a favoritos';
       default: return tipo.toLowerCase();
     }
   };
 
-  const formatearFecha = (fecha: string) => {
-    const date = new Date(fecha);
-    const ahora = new Date();
-    const diferencia = ahora.getTime() - date.getTime();
-    const minutos = Math.floor(diferencia / 60000);
-    const horas = Math.floor(diferencia / 3600000);
-    const dias = Math.floor(diferencia / 86400000);
+  const getTipoBadge = (tipo: string) => {
+    const badges = {
+      'RESENA': { text: 'Reseña', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+      'SEGUIMIENTO': { text: 'Seguimiento', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+      'LISTA_CREADA': { text: 'Lista creada', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+      'LISTA_ACTUALIZADA': { text: 'Lista actualizada', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
+      'FAVORITO': { text: 'Favorito', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    };
+    return badges[tipo as keyof typeof badges] || { text: tipo, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
+  };
 
-    if (minutos < 1) return 'Hace un momento';
-    if (minutos < 60) return `Hace ${minutos} min`;
-    if (horas < 24) return `Hace ${horas}h`;
-    if (dias < 7) return `Hace ${dias}d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  const formatearFecha = (fecha: string) => {
+    try {
+      const date = new Date(fecha);
+      if (isNaN(date.getTime())) return 'Fecha no disponible';
+      
+      const ahora = new Date();
+      const diferencia = ahora.getTime() - date.getTime();
+      const minutos = Math.floor(diferencia / 60000);
+      const horas = Math.floor(diferencia / 3600000);
+      const dias = Math.floor(diferencia / 86400000);
+
+      if (minutos < 1) return 'Ahora';
+      if (minutos < 60) return `${minutos}m`;
+      if (horas < 24) return `${horas}h`;
+      if (dias < 7) return `${dias}d`;
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return 'Fecha no disponible';
+    }
   };
 
   if (loading) {
@@ -278,124 +295,148 @@ const FeedActividadPage: React.FC = () => {
             </div>
           </motion.div>
         ) : (
-          <div className="space-y-4">
-            {actividades.map((actividad, index) => (
-              <motion.div
-                key={actividad.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-cyan-500/30 transition-all"
-              >
-                <div className="flex gap-4">
-                  {/* Avatar + icono de actividad */}
-                  <div className="flex-shrink-0 relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold">
-                      {actividad.usuario.fotoPerfil ? (
-                        <img
-                          src={actividad.usuario.fotoPerfil}
-                          alt={actividad.usuario.username}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <span>{actividad.usuario.username[0].toUpperCase()}</span>
-                      )}
+          <div className="space-y-6">
+            {actividades.map((actividad, index) => {
+              const badge = getTipoBadge(actividad.tipo);
+              return (
+                <motion.div
+                  key={actividad.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:border-cyan-400 dark:hover:border-cyan-500 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300"
+                >
+                  <div className="flex gap-4">
+                    {/* Avatar con badge de tipo de actividad */}
+                    <div className="flex-shrink-0 relative">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-cyan-500/20">
+                        {actividad.usuario.fotoPerfil ? (
+                          <img
+                            src={actividad.usuario.fotoPerfil}
+                            alt={actividad.usuario.username}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span>{actividad.usuario.username[0].toUpperCase()}</span>
+                        )}
+                      </div>
+                      {/* Icono de tipo de actividad más grande */}
+                      <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br ${getTipoColor(actividad.tipo)} flex items-center justify-center text-white shadow-md ring-2 ring-gray-900`}>
+                        {getTipoIcon(actividad.tipo)}
+                      </div>
                     </div>
-                    <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br ${getTipoColor(actividad.tipo)} flex items-center justify-center text-white`}>
-                      {getTipoIcon(actividad.tipo)}
-                    </div>
-                  </div>
 
-                  {/* Contenido */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <Link
-                          to={`/perfil/${actividad.usuario.id}`}
-                          className="font-semibold text-white hover:text-cyan-400 transition-colors"
-                        >
-                          {actividad.usuario.nombre} {actividad.usuario.apellido}
-                        </Link>
-                        <span className="text-gray-400 ml-2">
-                          {getTipoTexto(actividad.tipo)}
+                    {/* Contenido mejorado */}
+                    <div className="flex-1 min-w-0">
+                      {/* Header con badge */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <Link
+                              to={`/perfil/${actividad.usuario.id}`}
+                              className="font-bold text-gray-900 dark:text-white hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors"
+                            >
+                              {actividad.usuario.nombre} {actividad.usuario.apellido}
+                            </Link>
+                            <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${badge.color}`}>
+                              {badge.text}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {getTipoTexto(actividad.tipo)}
+                          </p>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 font-medium bg-gray-100 dark:bg-gray-800/50 px-2.5 py-1 rounded-full flex-shrink-0">
+                          {formatearFecha(actividad.fechaCreacion)}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-500 flex-shrink-0">
-                        {formatearFecha(actividad.fechaCreacion)}
-                      </span>
-                    </div>
 
-                    {/* Libro (si aplica) */}
-                    {actividad.libro && (
-                      <Link
-                        to={`/libro/${actividad.libro.slug}`}
-                        className="flex gap-3 mt-3 p-3 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition-colors"
-                      >
-                        {actividad.libro.imagen && (
-                          <img
-                            src={actividad.libro.imagen}
-                            alt={actividad.libro.nombre}
-                            className="w-12 h-16 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white truncate">
-                            {actividad.libro.nombre}
-                          </p>
-                          {actividad.libro.autor && (
-                            <p className="text-sm text-gray-400">
-                              {actividad.libro.autor.nombre} {actividad.libro.autor.apellido}
+                      {/* Libro (si aplica) - Mejorado */}
+                      {actividad.libro && (
+                        <Link
+                          to={`/libro/${actividad.libro.slug}`}
+                          className="flex gap-4 mt-4 p-4 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl hover:from-cyan-50 hover:to-blue-50 dark:hover:from-gray-700/70 dark:hover:to-gray-800/70 border-2 border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all duration-300 hover:shadow-xl group"
+                        >
+                          {actividad.libro.imagen ? (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={actividad.libro.imagen}
+                                alt={actividad.libro.nombre}
+                                className="w-20 h-28 object-cover rounded-lg shadow-lg group-hover:shadow-2xl transition-shadow border border-gray-300 dark:border-gray-600"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-20 h-28 bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-lg flex items-center justify-center">
+                              <svg className="w-10 h-10 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 mb-2">
+                              {actividad.libro.nombre}
+                            </p>
+                            {actividad.libro.autor && (
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <span className="text-gray-500 dark:text-gray-400">por</span> {actividad.libro.autor.nombre} {actividad.libro.autor.apellido}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      )}
+
+                      {/* Reseña (si aplica) - Mejorado */}
+                      {actividad.resena && (
+                        <div className="mt-4 p-5 bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-xl border-2 border-yellow-400 dark:border-yellow-500 shadow-md">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`w-6 h-6 ${i < actividad.resena!.calificacion ? 'fill-yellow-500 dark:fill-yellow-400' : 'fill-gray-300 dark:fill-gray-600'}`}
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <span className="text-base font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-900/50 px-3 py-1 rounded-full shadow-sm">
+                              {actividad.resena.calificacion} / 5
+                            </span>
+                          </div>
+                          {actividad.resena.titulo && (
+                            <p className="font-bold text-base text-gray-900 dark:text-white mb-2">
+                              {actividad.resena.titulo}
+                            </p>
+                          )}
+                          {actividad.resena.comentario && actividad.resena.comentario.trim() && (
+                            <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed italic">
+                              "{actividad.resena.comentario}"
                             </p>
                           )}
                         </div>
-                      </Link>
-                    )}
-
-                    {/* Reseña (si aplica) */}
-                    {actividad.resena && (
-                      <div className="mt-3 p-3 bg-gray-900/30 rounded-lg border-l-2 border-yellow-500">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="flex text-yellow-400">
-                            {[...Array(5)].map((_, i) => (
-                              <svg
-                                key={i}
-                                className={`w-4 h-4 ${i < actividad.resena!.calificacion ? 'fill-current' : 'fill-gray-600'}`}
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-400">
-                            {actividad.resena.calificacion}/5
-                          </span>
-                        </div>
-                        {actividad.resena.titulo && (
-                          <p className="font-medium text-white mb-1">
-                            {actividad.resena.titulo}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-400 line-clamp-2">
-                          {actividad.resena.comentario}
-                        </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
 
-            {/* Botón cargar más */}
+            {/* Botón cargar más - Mejorado */}
             {hasMore && (
-              <div className="text-center pt-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center pt-8"
+              >
                 <button
                   onClick={cargarMas}
                   disabled={loadingMore}
-                  className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
                 >
                   {loadingMore ? (
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -411,13 +452,13 @@ const FeedActividadPage: React.FC = () => {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Cargando...
+                      Cargando más actividades...
                     </span>
                   ) : (
-                    'Cargar más'
+                    'Ver más actividades'
                   )}
                 </button>
-              </div>
+              </motion.div>
             )}
           </div>
         )}

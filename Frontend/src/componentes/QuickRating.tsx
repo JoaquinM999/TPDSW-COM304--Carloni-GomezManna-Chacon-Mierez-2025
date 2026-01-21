@@ -32,10 +32,7 @@ export const QuickRating: React.FC<QuickRatingProps> = ({ libroId, onRatingChang
         setUserRating(Math.round(rating.avgRating));
       }
     } catch (error: any) {
-      // Si no existe rating, es normal
-      if (error.response?.status !== 404) {
-        console.error('Error cargando rating:', error);
-      }
+      // Silently handle - backend now returns default values for books without ratings
     } finally {
       setLoading(false);
     }

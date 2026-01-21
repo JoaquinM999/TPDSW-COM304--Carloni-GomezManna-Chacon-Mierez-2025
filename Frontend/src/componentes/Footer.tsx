@@ -247,64 +247,7 @@ const NewsletterSection: React.FC = () => {
 };
 
 
-const StatsSection: React.FC = () => {
-  const stats = [
-    { icon: BookOpen, label: 'Libros', value: 15847, color: 'text-blue-400', suffix: '+' },
-    { icon: Users, label: 'Usuarios Activos', value: 3256, color: 'text-green-400', suffix: '+' },
-    { icon: MessageSquare, label: 'Reseñas', value: 8932, color: 'text-purple-400', suffix: '+' },
-    { icon: Star, label: 'Rating Promedio', value: 4.7, color: 'text-yellow-400', suffix: '★' },
-  ];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      className="bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-900 dark:to-black py-16"
-    >
-      <div className="max-w-7xl mx-auto px-6 sm:px-12">
-        <motion.h3
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-center mb-12 text-white"
-        >
-          <TrendingUp className="inline-block w-8 h-8 mr-2 mb-1" />
-          Nuestra Comunidad en Números
-        </motion.h3>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="text-center p-6 rounded-2xl bg-gray-800/50 dark:bg-gray-800/30 backdrop-blur-sm border border-gray-700 hover:border-gray-600 transition-all"
-            >
-              <motion.div
-                animate={{ 
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                className="inline-block mb-4"
-              >
-                <stat.icon className={`w-12 h-12 ${stat.color} mx-auto`} />
-              </motion.div>
-              <div className={`text-4xl font-extrabold ${stat.color} mb-2`}>
-                <AnimatedCounter end={stat.value} suffix={stat.suffix} />
-              </div>
-              <p className="text-gray-400 font-medium">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 export const Footer: React.FC<FooterProps> = ({
   siteName = "TPDSW-Libros",
@@ -385,9 +328,6 @@ export const Footer: React.FC<FooterProps> = ({
       <footer className="bg-gray-900 dark:bg-gray-950 text-white select-none overflow-hidden relative z-10">
         {/* Newsletter mejorado */}
         {showNewsletter && <NewsletterSection />}
-
-        {/* Estadísticas animadas */}
-        {showStats && <StatsSection />}
 
         {/* Features */}
         {showFeatures && (

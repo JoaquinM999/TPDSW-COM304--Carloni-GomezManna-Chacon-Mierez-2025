@@ -13,9 +13,11 @@ interface QuickAccessItem {
 }
 
 const defaultQuickAccesses: QuickAccessItem[] = [
-  { id: '1', label: 'Mis Favoritos', href: '/favoritos', icon: '⭐', color: 'yellow' },
-  { id: '2', label: 'Mis Listas', href: '/listas', icon: '📋', color: 'blue' },
-  { id: '3', label: 'Nuevos Lanzamientos', href: '/libros/nuevos', icon: '🚀', color: 'purple' },
+  { id: '1', label: 'Libros Recomendados', href: '/libros/recomendados', icon: '💡', color: 'yellow' },
+  { id: '2', label: 'Libros Populares', href: '/libros/populares', icon: '🔥', color: 'red' },
+  { id: '3', label: 'Usuarios que Sigo', href: '/siguiendo', icon: '👥', color: 'blue' },
+  { id: '4', label: 'Feed de Actividad', href: '/feed', icon: '📰', color: 'purple' },
+  { id: '5', label: 'Categorías', href: '/categorias', icon: '🏷️', color: 'green' },
 ];
 
 const STORAGE_KEY = 'bookcode_quick_access';

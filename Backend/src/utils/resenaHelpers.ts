@@ -138,7 +138,11 @@ export function serializarResenaCompleta(resena: any, includeParent = false): an
   // Extraer reacciones
   let reaccionesArray: any[] = [];
   if (resena.reacciones) {
-    if (typeof resena.reacciones.getItems === 'function') {
+    // Check if it's a MikroORM Collection and if it's initialized
+    if (typeof resena.reacciones.isInitialized === 'function' && !resena.reacciones.isInitialized()) {
+      // Collection exists but not loaded - skip it
+      reaccionesArray = [];
+    } else if (typeof resena.reacciones.getItems === 'function') {
       reaccionesArray = resena.reacciones.getItems();
     } else if (Array.isArray(resena.reacciones)) {
       reaccionesArray = resena.reacciones;
@@ -148,7 +152,11 @@ export function serializarResenaCompleta(resena: any, includeParent = false): an
   // Extraer respuestas
   let respuestasArray: any[] = [];
   if (resena.respuestas) {
-    if (typeof resena.respuestas.getItems === 'function') {
+    // Check if it's a MikroORM Collection and if it's initialized
+    if (typeof resena.respuestas.isInitialized === 'function' && !resena.respuestas.isInitialized()) {
+      // Collection exists but not loaded - skip it
+      respuestasArray = [];
+    } else if (typeof resena.respuestas.getItems === 'function') {
       respuestasArray = resena.respuestas.getItems();
     } else if (Array.isArray(resena.respuestas)) {
       respuestasArray = resena.respuestas;

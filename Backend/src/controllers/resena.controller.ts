@@ -150,21 +150,30 @@ export const getResenaById = async (req: Request, res: Response) => {
 // =======================
 export const createResena = async (req: Request, res: Response) => {
   try {
-    console.log('📝 Creando reseña...');
+    console.log('📝 ===== INICIO createResena =====');
+    console.log('📝 Body recibido:', JSON.stringify(req.body, null, 2));
+    console.log('📝 Headers:', req.headers.authorization ? 'Token presente' : 'Sin token');
+    
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
 
     // ✅ Usar parser para validar input
     const validation = parseResenaInput(req.body);
     if (!validation.valid) {
+      console.log('❌ Validación fallida:', validation.errors);
       return res.status(400).json({ errors: validation.errors });
     }
+    console.log('✅ Validación exitosa');
 
     const { comentario, estrellas, libroId } = validation.data!;
     const { libro: libroData } = req.body;
 
     const usuarioPayload = (req as AuthRequest).user;
-    if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
+    if (!usuarioPayload) {
+      console.log('❌ Usuario no autenticado');
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+    console.log('✅ Usuario autenticado:', usuarioPayload.id);
 
     const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });

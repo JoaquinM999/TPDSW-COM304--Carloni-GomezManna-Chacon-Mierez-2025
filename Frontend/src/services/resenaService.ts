@@ -48,6 +48,8 @@ export const agregarReseña = async (
   estrellas: number,
   libro: LibroData
 ) => {
+  console.log('📝 Enviando reseña:', { libroId, estrellas, comentarioLength: comentario.length });
+  
   const response = await fetchWithRefresh(API_URL, {
     method: 'POST',
     headers: {
@@ -56,12 +58,17 @@ export const agregarReseña = async (
     body: JSON.stringify({ libroId, comentario, estrellas, libro }),
   });
 
+  console.log('📡 Response status:', response.status);
+
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
+    console.error('❌ Error response:', data);
     throw new Error(data.error || 'Error al agregar reseña');
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('✅ Reseña creada:', result);
+  return result;
 };
 
 /**

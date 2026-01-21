@@ -301,6 +301,9 @@ export const Header: React.FC<HeaderProps> = ({
                             <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                               Moderación
                             </Link>
+                            <Link to="/admin/crear-libro" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                              Crear Libro
+                            </Link>
                             <Link to="/admin/crear-saga" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
                               Crear Saga
                             </Link>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api.config';
+import { Link, useNavigate } from 'react-router-dom';
 import SeguirUsuarioButton from '../componentes/SeguirUsuarioButton';
+import { seguimientoService } from '../services/seguimientoService';
+import { LogIn } from 'lucide-react';
 
 interface Usuario {
   id: number;
@@ -16,10 +16,12 @@ interface Usuario {
 }
 
 const SiguiendoPage: React.FC = () => {
+  const navigate = useNavigate();
   const [siguiendo, setSiguiendo] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtro, setFiltro] = useState('');
+  const [requiresAuth, setRequiresAuth] = useState(false);
 
   useEffect(() => {
     cargarSiguiendo();
@@ -28,23 +30,26 @@ const SiguiendoPage: React.FC = () => {
   const cargarSiguiendo = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       
       if (!token) {
-        setError('Debes iniciar sesión');
+        setError('Debes iniciar sesión para ver los usuarios que sigues');
+        setRequiresAuth(true);
         setLoading(false);
         return;
       }
 
-      const response = await axios.get(
-        `${API_BASE_URL}/seguimiento/siguiendo`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setSiguiendo(response.data);
+      const seguidos = await seguimientoService.getSeguidos();
+      setSiguiendo(seguidos);
+      setRequiresAuth(false);
     } catch (err: any) {
       console.error('Error cargando usuarios seguidos:', err);
-      setError(err.response?.data?.error || 'Error al cargar usuarios seguidos');
+      if (err.message.includes('autenticado') || err.message.includes('token') || err.message.includes('Sesión expirada')) {
+        setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        setRequiresAuth(true);
+      } else {
+        setError(err.message || 'Error al cargar usuarios seguidos');
+      }
     } finally {
       setLoading(false);
     }
@@ -79,10 +84,49 @@ const SiguiendoPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-red-500/10 border border-red-500 rounded-lg p-6 text-center">
-            <h2 className="text-xl font-bold text-red-500 mb-2">Error</h2>
-            <p className="text-red-300">{error}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border border-red-500/50 rounded-2xl p-8 text-center"
+          >
+            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              {requiresAuth ? (
+                <LogIn className="w-10 h-10 text-red-400" />
+              ) : (
+                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <h2 className="text-2xl font-bold text-red-400 mb-2">
+              {requiresAuth ? '🔒 Acceso Restringido' : 'Error'}
+            </h2>
+            <p className="text-red-300 mb-6 text-lg">{error}</p>
+            {requiresAuth ? (
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => navigate('/LoginPage')}
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all flex items-center gap-2"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Iniciar Sesión
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all"
+                >
+                  Volver al Inicio
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => cargarSiguiendo()}
+                className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all"
+              >
+                Reintentar
+              </button>
+            )}
+          </motion.div>
         </div>
       </div>
     );

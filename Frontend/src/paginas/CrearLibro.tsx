@@ -4,6 +4,8 @@ import { Book, Upload, Plus, X, Globe, Users, Calendar, FileText, Tag, Building 
 import { getEditoriales } from '../services/editorialService'; // Asumiendo que tienes estos servicios
 import { getCategorias } from '../services/categoriaService';
 import { getSagas } from '../services/sagaService';
+import { isAdmin } from '../utils/jwtUtils';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface Idioma {
   codigo: string;
@@ -43,6 +45,7 @@ export const CrearLibro: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [portadaPreview, setPortadaPreview] = useState<string>('');
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   const [editoriales, setEditoriales] = useState<Editorial[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -65,8 +68,17 @@ export const CrearLibro: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Check user role (replace with actual auth check)
-  const userRole = 'admin'; // or 'autor' - get from auth context
+  useEffect(() => {
+    // Verificar si el usuario es admin
+    const checkAuth = async () => {
+      const authorized = await isAdmin();
+      setIsAuthorized(authorized);
+      if (!authorized) {
+        setTimeout(() => navigate('/'), 2000);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   useEffect(() => {
     // Cargar datos para los dropdowns desde el backend
@@ -188,13 +200,26 @@ export const CrearLibro: React.FC = () => {
     }
   };
 
-  if (userRole !== 'admin' && userRole !== 'autor') {
+  if (isAuthorized === null) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="flex justify-center items-center py-12 min-h-screen">
+        <DotLottieReact
+          src="https://lottie.host/6d727e71-5a1d-461e-9434-c9e7eb1ae1d1/IWVmdeMHnT.lottie"
+          loop
+          autoplay
+          style={{ width: 140, height: 140 }}
+        />
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <Book className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600 dark:text-gray-400">No tienes permisos para crear libros.</p>
+          <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Acceso Denegado</h1>
+          <p className="text-gray-600 dark:text-gray-400">Solo los administradores pueden crear libros.</p>
         </div>
       </div>
     );

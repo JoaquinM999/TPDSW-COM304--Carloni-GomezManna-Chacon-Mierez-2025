@@ -29,7 +29,7 @@ const AutoresPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalAutores, setTotalAutores] = useState(0);
-  const [includeExternal, setIncludeExternal] = useState(false);
+  const [includeExternal, setIncludeExternal] = useState(true);
 
   // Búsqueda híbrida (local + APIs externas)
   const fetchAutores = async (searchTerm = '', pageNum = 1) => {

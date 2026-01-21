@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api.config';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { User, Mail, AtSign, Calendar, MapPin, BookOpen, Edit3, Settings, Heart, MessageCircle, Users, UserPlus, List as ListIcon, TrendingUp } from 'lucide-react';
+import { User, Mail, AtSign, Calendar, MapPin, BookOpen, Edit3, Settings, Heart, MessageCircle, Users, UserPlus, List as ListIcon, TrendingUp, Compass, Library } from 'lucide-react';
 import { getUserIdFromToken } from '../services/authService';
 import { usuarioService } from '../services/usuarioService';
 import { getResenasByUsuario } from '../services/resenaService';
@@ -522,11 +522,27 @@ const PerfilPage = () => {
                 </Link>
 
                 <Link
-                  to="/crear-libro"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:from-emerald-600 hover:to-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  to="/favoritos"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl hover:from-rose-600 hover:to-pink-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Agregar Libro</span>
+                  <Heart className="w-4 h-4" />
+                  <span>Mis Favoritos</span>
+                </Link>
+
+                <Link
+                  to="/autores"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-xl hover:from-purple-600 hover:to-violet-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Explorar Autores</span>
+                </Link>
+
+                <Link
+                  to="/sagas"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  <Library className="w-4 h-4" />
+                  <span>Explorar Sagas</span>
                 </Link>
               </div>
             </div>

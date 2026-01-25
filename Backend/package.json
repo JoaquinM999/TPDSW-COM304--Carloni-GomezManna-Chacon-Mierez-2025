@@ -11,6 +11,7 @@
     "build": "tsc --skipLibCheck",
     "seed:sagas": "npm run build && node dist/seed-sagas.js",
     "create:admin": "ts-node-dev src/scripts/create-admin-user.ts",
+    "create:demo-users": "tsx create-demo-users.ts",
     "fix:autores": "ts-node-dev --transpile-only fix-autores.ts",
     "test": "vitest run",
     "test:watch": "vitest",

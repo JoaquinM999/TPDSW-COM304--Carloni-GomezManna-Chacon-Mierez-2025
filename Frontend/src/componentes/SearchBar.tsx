@@ -166,17 +166,51 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       ref={searchRef}
       className={`relative w-full max-w-2xl mx-auto ${className}`}
     >
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+      <motion.div 
+        className="relative"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl opacity-20 blur-lg group-hover:opacity-30 transition duration-300"></div>
+        
+        {/* Search icon con animación */}
+        <div className="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none z-10">
+          <motion.div
+            animate={{ 
+              scale: query.length > 0 ? [1, 1.1, 1] : 1,
+              rotate: isLoading ? 360 : 0
+            }}
+            transition={{ 
+              scale: { duration: 0.3 },
+              rotate: { duration: 1, repeat: isLoading ? Infinity : 0, ease: "linear" }
+            }}
+          >
+            <Search className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400" />
+          </motion.div>
         </div>
+
+        {/* Input con diseño mejorado */}
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="block w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg shadow-lg"
+          className="relative block w-full pl-12 sm:pl-14 pr-14 sm:pr-16 py-4 sm:py-5 
+                     border-2 border-gray-200 dark:border-gray-700 
+                     rounded-2xl 
+                     text-gray-900 dark:text-gray-100 
+                     placeholder-gray-400 dark:placeholder-gray-500
+                     bg-white/90 dark:bg-gray-800/90 backdrop-blur-md
+                     focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 
+                     focus:border-blue-500 dark:focus:border-blue-400
+                     text-base sm:text-lg font-medium
+                     shadow-xl shadow-blue-500/10 dark:shadow-blue-400/10
+                     hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-blue-400/20
+                     transition-all duration-300
+                     group"
           placeholder={placeholder}
           aria-autocomplete="list"
           aria-controls="search-results"
@@ -185,45 +219,63 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         />
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-2">
-          {isLoading && (
-            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-          )}
-          {query && !isLoading && (
-            <button
-              onClick={clearSearch}
-              aria-label="Borrar búsqueda"
-              className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors"
-            >
-              <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-            </button>
-          )}
+
+        {/* Botones de acción con mejor diseño */}
+        <div className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center gap-2">
+          <AnimatePresence mode="wait">
+            {isLoading && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 dark:text-blue-400 animate-spin" />
+              </motion.div>
+            )}
+            {query && !isLoading && (
+              <motion.button
+                key="clear"
+                onClick={clearSearch}
+                aria-label="Borrar búsqueda"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-2 transition-colors"
+              >
+                <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       <AnimatePresence>
         {!disableSuggestions && isOpen && (
           <motion.div
             id="search-results"
             role="listbox"
-            className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm"
+            className="absolute z-50 w-full mt-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-            {/* Header con contador */}
+            {/* Header con contador mejorado */}
             {suggestions.length > 0 && (
-              <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-blue-100 dark:border-blue-800">
-                <p className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
+              <div className="px-5 py-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-purple-900/40 border-b-2 border-blue-100 dark:border-blue-800/50">
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
                   {suggestions.length} resultado{suggestions.length !== 1 ? 's' : ''} encontrado{suggestions.length !== 1 ? 's' : ''}
                 </p>
               </div>
             )}
 
-            {/* Sugerencias */}
-            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {/* Sugerencias con diseño mejorado */}
+            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300 dark:scrollbar-thumb-blue-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
               {suggestions.length > 0 ? (
                 suggestions.map((item, index) => (
                   <motion.div
@@ -234,28 +286,31 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     onClick={() => handleSelect(item)}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`px-4 py-3 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 flex items-center gap-3 transition-all duration-200 ${
+                    transition={{ delay: index * 0.04 }}
+                    whileHover={{ scale: 1.01, x: 4 }}
+                    className={`px-5 py-4 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 flex items-center gap-4 transition-all duration-200 ${
                       selectedIndex === index 
-                        ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-l-blue-500' 
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700 border-l-4 border-l-transparent'
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 border-l-4 border-l-blue-500 shadow-sm' 
+                        : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 dark:hover:from-gray-700/50 dark:hover:to-blue-900/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    {/* Imagen de portada o ícono */}
+                    {/* Imagen de portada o ícono mejorado */}
                     <div className="flex-shrink-0">
                       {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-12 h-16 object-cover rounded shadow-sm"
-                          onError={(e) => {
-                            // Fallback si la imagen falla
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
+                        <div className="relative">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-12 h-16 object-cover rounded-lg shadow-md ring-2 ring-gray-200 dark:ring-gray-600"
+                            onError={(e) => {
+                              // Fallback si la imagen falla
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        </div>
                       ) : null}
-                      <div className={item.image ? 'hidden' : 'flex items-center justify-center w-12 h-16 rounded bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900'}>
+                      <div className={item.image ? 'hidden' : 'flex items-center justify-center w-12 h-16 rounded-lg bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 dark:from-blue-900/50 dark:via-indigo-900/50 dark:to-purple-900/50 shadow-md ring-2 ring-blue-200 dark:ring-blue-700'}>
                         {item.type === 'book' ? (
                           <Book className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         ) : item.type === 'author' ? (
@@ -264,56 +319,62 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       </div>
                     </div>
 
-                    {/* Información */}
+                    {/* Información mejorada */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm">
+                      <p className="font-bold text-gray-900 dark:text-gray-100 truncate text-base">
                         {item.title}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 truncate mt-0.5">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1 flex items-center gap-1">
                         {item.type === 'book' && item.author && `por ${item.author}`}
                         {item.type === 'author' && item.books && `${item.books} libros`}
-                        {item.year && item.type !== 'saga' && ` • ${item.year}`}
+                        {item.year && item.type !== 'saga' && (
+                          <span className="text-gray-400 dark:text-gray-500">• {item.year}</span>
+                        )}
                       </p>
                     </div>
 
-                    {/* Badge de tipo */}
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    {/* Badge de tipo mejorado */}
+                    <div className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
                       item.type === 'book' 
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' 
-                        : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                        ? 'bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/60 dark:to-indigo-900/60 text-blue-700 dark:text-blue-300 ring-1 ring-blue-300 dark:ring-blue-700' 
+                        : 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/60 dark:to-emerald-900/60 text-green-700 dark:text-green-300 ring-1 ring-green-300 dark:ring-green-700'
                     }`}>
                       {item.type === 'book' ? 'Libro' : 'Autor'}
                     </div>
                   </motion.div>
                 ))
               ) : query.length > 0 && !isLoading ? (
-                <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                  <Search className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-                  <p className="text-sm">No se encontraron resultados</p>
-                  <p className="text-xs mt-1">Intenta con otro término de búsqueda</p>
+                <div className="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                    <Search className="w-10 h-10 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <p className="text-base font-semibold mb-1">No se encontraron resultados</p>
+                  <p className="text-sm">Intenta con otro término de búsqueda</p>
                 </div>
               ) : null}
             </div>
 
-            {/* Footer con búsquedas populares cuando no hay query */}
+            {/* Footer con búsquedas populares mejorado */}
             {query.length === 0 && (
-              <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-blue-50/30 dark:from-gray-800/50 dark:to-blue-900/10 border-t-2 border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-blue-500" />
                   Búsquedas populares
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {trendingSearches.map((term) => (
-                    <button
+                    <motion.button
                       key={term}
                       onClick={() => {
                         setQuery(term);
                         inputRef.current?.focus();
                       }}
-                      className="px-3 py-1 bg-white dark:bg-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 rounded-full text-xs text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 bg-white dark:bg-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 border-2 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                       {term}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>

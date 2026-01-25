@@ -256,6 +256,15 @@ export const Header: React.FC<HeaderProps> = ({
                       setIsSearchFocused(false);
                       if (!isMobileOrTablet) setShowSearch(false);
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const value = (e.target as HTMLInputElement).value;
+                        if (value.trim()) {
+                          navigate(`/buscar?q=${encodeURIComponent(value)}`);
+                          setShowSearch(false);
+                        }
+                      }
+                    }}
                   />
                 )}
               </AnimatePresence>

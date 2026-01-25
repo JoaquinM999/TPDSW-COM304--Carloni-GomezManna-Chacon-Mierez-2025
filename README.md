@@ -1,88 +1,259 @@
-# TPDSW-COM304--Carloni-GomezManna-Chacon-Mierez-2025
-# Propuesta TP DSW
+# 🎊 TPDSW-COM304 - Sistema de Gestión de Libros y Reseñas
 
-## Grupo
-### Integrantes
-* 47791 - Gomez Manna, Joaquina Esperanza
-* 51095 - Carloni, Nahuel Iván
-* 50980 - Chacón, Agustina Celeste (com 301)
-* 49938 - Mierez, Joaquín 
+**Trabajo Práctico de Desarrollo de Software - COM304**  
+**Universidad Tecnologica Nacional**
 
-## Tema
-### Descripción
-El sistema permitirá a los usuarios ingresar a la página web y observar diferentes reseñas de libros junto con recomendaciones categorizadas por géneros. Los usuarios podrán agregar reseñas con calificación (1-5 estrellas) y comentario, marcar libros como favoritos y guardarlos en su lista personal.
+---
 
-### Modelo
+## 🎥 Video Demo
 
-[Modelo de Dominio](https://drive.google.com/file/d/10CZM5P55DNUaeEiIdEiqubp5iLLYt8Ha/view?usp=sharing)
+**📹 Link:** [Ver Video Demo]()  
+**⏱️ Duración:** 10 minutos  
+**📋 Contenido:**
+- Demostración de funcionalidades principales
+- 3 roles: Usuario, Moderador, Administrador
+- Aspectos técnicos (tests, arquitectura, responsive)
+- Credenciales de prueba incluidas
 
-## Alcance Funcional 
+---
 
-### Alcance Mínimo
+## 🔗 Links de Deploy
 
-Regularidad:
-|Req|Detalle|
-|:-|:-|
-|CRUD simple|1. CRUD de Usuario<br>2. CRUD de Editorial - Se cambio a CRUD de Sagas<br>3. CRUD de Categoría - Se cambio a CRUD de Reseña<br>4. CRUD de Autor|
-|CRUD dependiente|1. Libro depende del Autor<br>2. Las Sagas dependen de los Libros.|
-|Listado + Detalle|1. Ingresando una categoría, se muestra un listado de libros coincidentes<br>2. Filtrado de libros por mayor cantidad de estrellas|
-|CUU/Epic|1. Listas de "Leído", "Ver más tarde", "Pendientes".<br>2. Reseñas de los Libros.|
+| Entorno | URL | Estado |
+|---------|-----|--------|
+| **Frontend (Vercel)** | `https://biblioteca-dsw.vercel.app` | 🔄 Por configurar |
+| **Backend (Render)** | `https://biblioteca-api.onrender.com` | 🔄 Por configurar |
+| **Repositorio** | `https://github.com/usuario/TPDSW-COM304--Carloni-GomezManna-Chacon-Mierez-2025` | ✅ Activo |
 
-### Adicionales para Aprobación
+---
 
-|Req|Detalle|
-|:-|:-|
-|CRUD |1. CRUD completo de todos los elementos|
-|CRUD dependiente |1. Todas las relaciones establecidas|
-|CUU/Epic|1. Implementar un sistema automático para revisar y moderar reseñas de usuarios usando alguna librería especifica.<br>2. Permitir a los usuarios reaccionar a reseñas (ej. likes)<br>3. Mostrar recomendaciones personalizadas<br>4. Implementar la funcionalidad de "seguir" para que los usuarios puedan seguir a otros y ver sus actividades o reseñas.|
+## 🔐 Credenciales de Prueba
 
-### Clases
+```
+==========================================
+🔐 CREDENCIALES PARA PRUEBA DE LA APP
+==========================================
 
-#### Usuario
-- Nombre
-- Apellido
-- IdUsuario
-- Mail
-- Teléfono
-- Tipo
+👤 USUARIO NORMAL
+   Email: demo@biblioteca.com
+   Password: Demo123!
+   Permisos: Crear reseñas, listas, favoritos, seguir usuarios
 
-#### Reseña
-- IdReseña
-- FechaReseña
-- Reaccion[0..1]
+👮 MODERADOR
+   Email: moderador@biblioteca.com
+   Password: Mod123!
+   Permisos: Aprobar/rechazar reseñas, ver estadísticas
 
-#### Categoría
-- Nombre
-- idCategoria
+👑 ADMINISTRADOR
+   Email: admin@biblioteca.com
+   Password: Admin123!
+   Permisos: Acceso total al sistema
 
-#### Libro
-- Nombre
-- IdLibro
-- Sinopsis
+==========================================
+```
 
-#### Favoritos
-- IdAutor
-- FechaAgregado
+---
 
+## 📚 Documentación API
 
-#### Autor
-- Nombre
-- ApellidoAutor
-- IdAutor
+**📖 Documentación completa:** [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md)
 
-#### Autor
-- NombreLista
-- UltimaFechaModificacion
+La API incluye endpoints para:
+- Autenticación (login, register, password reset)
+- Libros (CRUD, búsqueda, filtros)
+- Usuarios (perfil, gestión)
+- Reseñas (CRUD, moderación, respuestas)
+- Listas (CRUD, contenido)
+- Favoritos
+- Reacciones (likes, helpful)
+- Seguimiento de usuarios
+- Notificaciones
+- Votaciones
+- Newsletter
+- Estadísticas (Admin)
 
- #### ContenidoLista
- - IdLibro
- - NombreLibro
+---
 
-#### Saga
-- IdSaga
-- NombreSaga
+## 👥 Integrantes del Grupo
 
-#### Editorial
-- IdEditorial
-- NombreEditorial
-- Idioma
+| Legajo | Nombre | Mail | Rol |
+|--------|--------|------|-----|
+| 47791 | Gomez Manna, Joaquina Esperanza | Desarrollador Backend/Frontend |
+| 51095 | Carloni, Nahuel Iván | Desarrollador Backend/Frontend |
+| 50980 | Chacón, Agustina Celeste  | Desarrollador Backend/Frontend |
+| 49938 | Mierez, Joaquín | Desarrollador Backend/Frontend |
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### Requisitos Previos
+- Node.js 18+
+- PostgreSQL 14+
+- Redis (opcional, para sesiones)
+
+### Backend
+
+```bash
+cd Backend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
+
+# Ejecutar migraciones
+npm run migrate
+
+# Iniciar servidor (desarrollo)
+npm run dev
+
+# Ejecutar tests
+npm test
+
+# Ver cobertura
+npm run test:coverage
+```
+
+### Frontend
+
+```bash
+cd Frontend
+
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Ejecutar tests
+npm test
+
+# Tests E2E
+npm run e2e
+```
+
+---
+
+## 🧪 Testing
+
+| Suite | Tests | Estado |
+|-------|-------|--------|
+| Backend Unit Tests | 620 | ✅ Pasando |
+| Backend Integration Tests | Multiple | ✅ Pasando |
+| Frontend Unit Tests | 136 | ✅ Pasando |
+| Frontend E2E Tests | 1 | ✅ Pasando |
+| **Total** | **756+** | **✅ 100% Pasando** |
+
+```bash
+# Ejecutar todos los tests
+cd Backend && npm test -- --run
+cd Frontend && npm test -- --run
+
+# Tests con UI
+cd Backend && npm run test:ui
+cd Frontend && npm run test:ui
+```
+
+---
+
+## 📋 Cumplimiento de Requisitos
+
+### ✅ Backend - Regularidad (9/9)
+- [x] Desarrollarse en JavaScript/TypeScript
+- [x] Framework web (Express con middlewares)
+- [x] API REST
+- [x] Base de datos persistente (PostgreSQL)
+- [x] Mapper (MikroORM)
+- [x] Arquitectura en capas
+- [x] Validación de datos
+- [x] Manejo de errores
+- [x] Dependencias en package.json
+
+### ✅ Backend - Aprobación Directa (6/6)
+- [x] Cumple regularidad
+- [x] Tests automatizados (620 tests, 4x por integrante)
+- [x] Test de integración
+- [x] Login con autenticación JWT
+- [x] 3 niveles de acceso (Usuario, Moderador, Admin)
+- [x] Rutas protegidas y ambientes (.env)
+
+### ✅ Frontend - Regularidad (16/16)
+- [x] Framework (React 18)
+- [x] HTML5 semántico
+- [x] CSS con Tailwind CSS 4
+- [x] Metodología Airbnb JS
+- [x] Mobile-first design
+- [x] 5 breakpoints (sm, md, lg, xl, 2xl)
+- [x] Buenas prácticas UX/UI
+- [x] Manejo de eventos
+- [x] Manejo de errores amigable
+- [x] Reactividad (React hooks)
+- [x] Input/Output properties
+- [x] Servicios (API calls)
+- [x] Modelos con interfaces/classes
+- [x] Patrones de diseño (Observer, Strategy)
+- [x] Dependencias en package.json
+- [x] Tests unitarios (136 tests)
+
+### ✅ Frontend - Aprobación Directa (5/5)
+- [x] Cumple regularidad
+- [x] Test unitario de componente
+- [x] Test E2E (resena-flow.spec.ts)
+- [x] Login implementado
+- [x] Rutas protegidas por rol
+
+### ✅ Funcional - Regularidad
+- [x] CRUD Usuario, Autor, Libro, Reseña, Lista
+- [x] CRUD dependientes (Libro→Autor, Reseña→Usuario/Libro)
+- [x] Listados con filtros (categoría, rating, búsqueda)
+- [x] CUU: Reseñas, Listas personalizadas
+
+### ✅ Funcional - Aprobación Directa
+- [x] CRUDs de todas las clases de negocio
+- [x] CUU: Moderación, Notificaciones, Recomendaciones
+- [x] CUU relacionados (reseñas → notificaciones)
+
+---
+
+## 🏗️ Arquitectura
+
+```
+Backend/
+├── src/
+│   ├── entities/          # Modelos de datos (MikroORM)
+│   ├── repositories/      # Acceso a datos
+│   ├── services/          # Lógica de negocio
+│   ├── controllers/       # Endpoints REST
+│   ├── middleware/        # Auth, validación, errores
+│   ├── routes/            # Definición de rutas
+│   └── __tests__/         # Tests automatizados
+
+Frontend/
+├── src/
+│   ├── componentes/       # Componentes UI reutilizables
+│   ├── paginas/           # Vistas/pages
+│   ├── services/          # Llamadas a API
+│   ├── hooks/             # Custom hooks
+│   ├── contexts/          # Estado global
+│   └── __tests__/         # Tests unitarios
+└── e2e/                   # Tests end-to-end (Playwright)
+```
+
+---
+
+## 📅 Fechas Importantes
+
+| Entrega | Fecha |
+|---------|-------|
+| **Regularidad/Aprobación Directa** | **17/10/2025** |
+| Primer Recuperatorio | 31/10/2025 |
+| Última instancia | 14/11/2025 |
+
+---
+
+**Última actualización:** 25 de Enero de 2026  
+**Estado del Proyecto:** 🚀 LISTO PARA ENTREGA
+

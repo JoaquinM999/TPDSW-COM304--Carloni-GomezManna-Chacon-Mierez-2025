@@ -19,6 +19,8 @@ export class NotificacionService {
   async crearNotificacion(data: CrearNotificacionData): Promise<Notificacion> {
     const usuario = await this.em.findOneOrFail(Usuario, { id: data.usuarioId });
 
+    console.log(`🔔 Creando notificación para usuario ${data.usuarioId}: ${data.mensaje}`);
+
     const notificacion = this.em.create(Notificacion, {
       usuario,
       tipo: data.tipo,
@@ -30,6 +32,7 @@ export class NotificacionService {
     });
 
     await this.em.persistAndFlush(notificacion);
+    console.log(`✅ Notificación creada con ID: ${notificacion.id}`);
     return notificacion;
   }
 
@@ -141,7 +144,8 @@ export class NotificacionService {
     usuarioReaccionNombre: string,
     tipoReaccion: string,
     resenaId: number,
-    libroTitulo: string
+    libroTitulo: string,
+    libroSlug?: string
   ): Promise<void> {
     const emojis: Record<string, string> = {
       LIKE: '👍',
@@ -149,12 +153,15 @@ export class NotificacionService {
       CORAZON: '❤️'
     };
 
+    // Usar slug si está disponible, si no usar el ID de la reseña
+    const url = libroSlug ? `/libro/${libroSlug}` : `/libro/${resenaId}`;
+
     await this.crearNotificacion({
       usuarioId: autorResenaId,
       tipo: TipoNotificacion.NUEVA_REACCION,
       mensaje: `${usuarioReaccionNombre} reaccionó ${emojis[tipoReaccion] || ''} a tu reseña de "${libroTitulo}"`,
       data: { resenaId, tipoReaccion },
-      url: `/libro/${resenaId}` // Ajustar según tu routing
+      url
     });
   }
 
@@ -165,14 +172,18 @@ export class NotificacionService {
     seguidorId: number,
     usuarioNombre: string,
     libroTitulo: string,
-    libroId: number
+    libroId: number,
+    libroSlug?: string
   ): Promise<void> {
+    // Usar slug si está disponible, si no usar el ID
+    const url = libroSlug ? `/libro/${libroSlug}` : `/libro/${libroId}`;
+    
     await this.crearNotificacion({
       usuarioId: seguidorId,
       tipo: TipoNotificacion.ACTIVIDAD_SEGUIDO,
       mensaje: `${usuarioNombre} publicó una reseña de "${libroTitulo}"`,
       data: { libroId },
-      url: `/libro/${libroId}`
+      url
     });
   }
 
@@ -183,14 +194,30 @@ export class NotificacionService {
     autorResenaOriginalId: number,
     usuarioRespuestaNombre: string,
     libroTitulo: string,
-    resenaId: number
+    resenaId: number,
+    libroSlug?: string
   ): Promise<void> {
+    console.log('📨 notificarRespuestaResena llamado con:', {
+      autorResenaOriginalId,
+      usuarioRespuestaNombre,
+      libroTitulo,
+      resenaId,
+      libroSlug
+    });
+    
+    // Usar slug si está disponible, si no usar el ID de la reseña
+    const url = libroSlug ? `/libro/${libroSlug}` : `/libro/${resenaId}`;
+    
+    console.log('🔗 URL de notificación:', url);
+    
     await this.crearNotificacion({
       usuarioId: autorResenaOriginalId,
       tipo: TipoNotificacion.RESPUESTA_RESENA,
       mensaje: `${usuarioRespuestaNombre} respondió a tu reseña de "${libroTitulo}"`,
       data: { resenaId },
-      url: `/libro/${resenaId}`
+      url
     });
+    
+    console.log('✅ notificarRespuestaResena completado');
   }
 }

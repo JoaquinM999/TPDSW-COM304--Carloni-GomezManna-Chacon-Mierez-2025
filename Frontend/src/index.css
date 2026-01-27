@@ -131,3 +131,30 @@
   box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.2),
               0 10px 10px -5px rgba(236, 72, 153, 0.1);
 }
+
+/* Estilos personalizados para scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Scrollbar en modo oscuro */
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

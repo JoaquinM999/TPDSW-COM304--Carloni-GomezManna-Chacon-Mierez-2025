@@ -18,6 +18,11 @@ export const getUserRole = (): string | null => {
   return decoded?.rol || null;
 };
 
+// Get token from localStorage
+export const getToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
 // Check if user is admin
 export const isAdmin = (): boolean => {
   const role = getUserRole();

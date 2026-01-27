@@ -7,6 +7,7 @@ import { Usuario, RolUsuario } from '../entities/usuario.entity';
 import { contieneMalasPalabras } from '../shared/filtrarMalasPalabras';
 import { Autor } from '../entities/autor.entity';
 import { ActividadService } from '../services/actividad.service';
+import { NotificacionService } from '../services/notificacion.service';
 import redis from '../redis';
 import { moderationService } from '../services/moderation.service';
 import { 
@@ -480,7 +481,7 @@ export const createRespuesta = async (req: Request, res: Response) => {
     const usuario = await em.findOne(Usuario, { id: usuarioPayload.id });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-    const parent = await em.findOne(Resena, { id: parentId }, { populate: ['libro'] });
+    const parent = await em.findOne(Resena, { id: parentId }, { populate: ['libro', 'usuario'] });
     if (!parent) return res.status(404).json({ error: 'Reseña padre no encontrada' });
 
     // Heredar libro del padre
@@ -500,6 +501,38 @@ export const createRespuesta = async (req: Request, res: Response) => {
 
     await em.persistAndFlush(nuevaResena);
     console.log('✅ Respuesta guardada con ID:', nuevaResena.id);
+
+    // Notificar al autor de la reseña original (si no es el mismo usuario)
+    console.log('🔍 Verificando notificación - Autor reseña:', parent.usuario.id, 'Usuario respuesta:', usuarioPayload.id);
+    if (parent.usuario.id !== usuarioPayload.id) {
+      try {
+        const notificacionService = new NotificacionService(em);
+        
+        // Cargar slug del libro si está disponible
+        await em.populate(libro, ['slug', 'externalId']);
+        const libroSlug = libro.slug || libro.externalId || libro.id.toString();
+        
+        console.log('🔔 Enviando notificación de respuesta:', {
+          autorId: parent.usuario.id,
+          respuestaAutor: usuario.nombre || usuario.username,
+          libro: libro.nombre,
+          slug: libroSlug
+        });
+        
+        await notificacionService.notificarRespuestaResena(
+          parent.usuario.id,
+          usuario.nombre || usuario.username || 'Alguien',
+          libro.nombre,
+          parentId,
+          libroSlug
+        );
+        console.log('✅ Notificación de respuesta enviada al autor de la reseña original');
+      } catch (notifError) {
+        console.error('❌ Error al enviar notificación de respuesta:', notifError);
+      }
+    } else {
+      console.log('ℹ️ No se envía notificación porque el autor responde a su propia reseña');
+    }
 
     // Invalidar cache si existe
     if (redis) {

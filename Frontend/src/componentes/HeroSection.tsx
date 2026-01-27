@@ -91,7 +91,7 @@ export const HeroSection: React.FC = () => {
         console.error('❌ Error loading platform stats:', error);
         // Usar valores por defecto si falla
         const fallbackStats = {
-          librosResenados: 50000,
+          librosCreados: 50000,
           reseniasTotales: 250000,
           lectoresActivos: 15000,
           librosFavoritos: 180000,
@@ -109,8 +109,8 @@ export const HeroSection: React.FC = () => {
   const stats = [
     { 
       icon: BookOpen, 
-      label: 'Libros Reseñados', 
-      value: platformStats?.librosResenados || 0, 
+      label: 'Libros Creados', 
+      value: platformStats?.librosCreados || 0, 
       color: '#14F0FF' 
     },
     { 

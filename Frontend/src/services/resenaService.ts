@@ -145,7 +145,7 @@ export const getResenasByUsuario = async (userId: number) => {
  * 🔹 Obtiene reseñas de un libro (mismo propósito que obtenerReseñas, pero separado por compatibilidad).
  */
 export const getResenasByLibro = async (libroId: string) => {
-  const response = await fetchWithRefresh(`${API_URL}?libroId=${encodeURIComponent(libroId)}`, {
+  const response = await fetchWithRefresh(`${API_URL}?libroId=${encodeURIComponent(libroId)}&includeReactions=true&includeReplies=true`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

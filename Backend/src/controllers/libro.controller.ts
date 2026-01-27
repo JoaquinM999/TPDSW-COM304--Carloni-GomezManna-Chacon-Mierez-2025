@@ -64,6 +64,7 @@ export const getLibros = async (req: Request, res: Response) => {
 
       return {
         id: libro.id,
+        slug: libro.slug,
         titulo: libro.nombre,
         autores,
         imagen: libro.imagen,
@@ -130,6 +131,7 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
       autores: libro.autor 
         ? [`${libro.autor.nombre || ''} ${libro.autor.apellido || ''}`.trim()]
         : ['Autor desconocido'],
+      autorId: libro.autor?.id || null, // ✅ NUEVO: ID del autor local
       descripcion: libro.sinopsis || 'No hay descripción disponible.',
       imagen: libro.imagen || null,
       coverUrl: libro.imagen || null,
@@ -172,7 +174,12 @@ export const createLibro = async (req: Request, res: Response) => {
     const autor = await findOrCreateAutorLibro(em, nombreAutor, apellidoAutor);
 
     // 3️⃣ Buscar entidades relacionadas (categoría, editorial, saga)
-    const relatedEntities = await findLibroRelatedEntities(em, categoriaId, editorialId, sagaId);
+    // Convertir IDs a números
+    const categoriaIdNum = parseInt(categoriaId);
+    const editorialIdNum = editorialId ? parseInt(editorialId) : undefined;
+    const sagaIdNum = sagaId ? parseInt(sagaId) : undefined;
+    
+    const relatedEntities = await findLibroRelatedEntities(em, categoriaIdNum, editorialIdNum, sagaIdNum);
     
     if ('error' in relatedEntities) {
       return res.status(404).json({ error: relatedEntities.error });
@@ -184,7 +191,30 @@ export const createLibro = async (req: Request, res: Response) => {
     const nuevoLibro = createLibroEntity(em, libroData, relatedEntities);
     await em.persistAndFlush(nuevoLibro);
 
-    res.status(201).json(nuevoLibro);
+    // Formatear respuesta para incluir autorId
+    const response = {
+      id: nuevoLibro.id,
+      slug: nuevoLibro.slug,
+      nombre: nuevoLibro.nombre,
+      sinopsis: nuevoLibro.sinopsis,
+      imagen: nuevoLibro.imagen,
+      autorId: nuevoLibro.autor?.id || null,
+      autor: nuevoLibro.autor ? {
+        id: nuevoLibro.autor.id,
+        nombre: nuevoLibro.autor.nombre,
+        apellido: nuevoLibro.autor.apellido
+      } : null,
+      categoria: nuevoLibro.categoria ? {
+        id: nuevoLibro.categoria.id,
+        nombre: nuevoLibro.categoria.nombre
+      } : null,
+      editorial: nuevoLibro.editorial ? {
+        id: nuevoLibro.editorial.id,
+        nombre: nuevoLibro.editorial.nombre
+      } : null
+    };
+
+    res.status(201).json(response);
   } catch (error) {
     console.error('Error al guardar el libro:', error);
     res.status(500).json({ message: 'Ocurrió un error en el servidor.' });
@@ -303,7 +333,7 @@ export const searchLibros = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const query = req.query.q as string;
+    const query = (req.query.q || req.query.query) as string;
 
     // ✅ Validar query usando helper
     const validation = validateSearchQuery(query);

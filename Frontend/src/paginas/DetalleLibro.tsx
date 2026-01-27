@@ -25,7 +25,6 @@ import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
 import LibroImagen from "../componentes/LibroImagen";
-import { QuickRating } from "../componentes/QuickRating";
 import { LISTA_NOMBRES, LISTA_TIPOS } from "../constants/listas";
 import { buildApiUrl } from "../utils/apiHelpers";
 
@@ -34,6 +33,7 @@ interface Libro {
   titulo: string;
   title?: string;
   autores: string[];
+  autorId?: number | null; // ID del autor local si existe
   descripcion: string | null;
   imagen: string | null;
   coverUrl?: string | null;
@@ -124,12 +124,19 @@ const reviewReducer = (state: ReviewState, action: ReviewAction): ReviewState =>
 };
 
 // Componente para links de autores (con verificación de existencia en BD y fallback a APIs externas)
-const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => {
-  const [autorId, setAutorId] = useState<number | null>(null);
+const AutorLink: React.FC<{ nombreCompleto: string; autorId?: number | null }> = ({ nombreCompleto, autorId: autorIdProp }) => {
+  const [autorId, setAutorId] = useState<number | null>(autorIdProp || null);
   const [autorExterno, setAutorExterno] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!autorIdProp); // Si ya tenemos ID, no cargar
 
   useEffect(() => {
+    // Si ya tenemos el ID del autor, no buscar
+    if (autorIdProp) {
+      setAutorId(autorIdProp);
+      setLoading(false);
+      return;
+    }
+
     const buscarAutor = async () => {
       try {
         // 1️⃣ Primero: Buscar en BD local
@@ -183,7 +190,7 @@ const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => 
     };
 
     buscarAutor();
-  }, [nombreCompleto]);
+  }, [nombreCompleto, autorIdProp]);
 
   if (loading) {
     return (
@@ -198,7 +205,7 @@ const AutorLink: React.FC<{ nombreCompleto: string }> = ({ nombreCompleto }) => 
   if (autorId) {
     return (
       <Link
-        to={`/perfil-autor/${autorId}`}
+        to={`/autores/${autorId}`}
         className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 rounded-full shadow-md hover:shadow-xl text-base font-semibold text-gray-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-400 transition-all duration-200 border border-gray-200 dark:border-slate-700 hover:scale-105"
       >
         <User className="w-4 h-4" />
@@ -502,6 +509,7 @@ const DetalleLibro: React.FC = () => {
             titulo: data.titulo || data.title,
             title: data.titulo || data.title,
             autores: data.autores?.length ? data.autores : ["Autor desconocido"],
+            autorId: data.autorId || null, // ✅ NUEVO: ID del autor local
             descripcion: data.descripcion || "No hay descripción disponible.",
             imagen: data.imagen || data.coverUrl,
             coverUrl: data.imagen || data.coverUrl,
@@ -1492,14 +1500,18 @@ const DetalleLibro: React.FC = () => {
 
                 <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                   {libro.autores.map((a, i) => (
-                    <AutorLink key={i} nombreCompleto={a} />
+                    <AutorLink 
+                      key={i} 
+                      nombreCompleto={a} 
+                      autorId={(libro as any).autorId || null}
+                    />
                   ))}
                 </div>
 
                 {libro.source && (
                   <div className="flex justify-center lg:justify-start">
                     <span className="inline-flex items-center text-sm font-medium text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-4 py-2 rounded-full border border-gray-200 dark:border-slate-700">
-                      Fuente: {libro.source === "hardcover" ? "Hardcover" : "Google Books"}
+                      Fuente: {libro.source === "hardcover" ? "Hardcover" : libro.source === "bookcode" ? "BookCode" : "Google Books"}
                     </span>
                   </div>
                 )}
@@ -1721,14 +1733,6 @@ const DetalleLibro: React.FC = () => {
 
           {isAuthenticated() && (
             <>
-              {/* Calificación Rápida */}
-              <div className="mb-6">
-                <QuickRating 
-                  libroId={libro.id} 
-                  onRatingChange={refreshResenas}
-                />
-              </div>
-
               {/* Formulario de Reseña Completa */}
               <div className="bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-xl p-8 mb-10 border-2 border-blue-100 dark:border-blue-900">
                 <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-slate-100">Escribe tu reseña</h3>

@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/mysql';
 import { Reaccion } from '../entities/reaccion.entity';
-import { ActividadService } from '../services/actividad.service';
+import { Resena } from '../entities/resena.entity';
+import { Usuario } from '../entities/usuario.entity';
+import { NotificacionService } from '../services/notificacion.service';
 
 interface AuthRequest extends Request {
   user?: { id: number; email: string };
@@ -13,12 +15,16 @@ export const addOrUpdateReaccion = async (req: Request, res: Response) => {
     const em = orm.em.fork();
     const { resenaId, tipo } = req.body;
     
+    console.log('📝 Datos recibidos:', { resenaId, tipo, body: req.body });
+    
     // Obtener usuarioId del token
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
     const usuarioId = usuarioPayload.id;
+
+    console.log('👤 Usuario autenticado:', usuarioId);
 
     if (!resenaId || !tipo) {
       return res.status(400).json({ error: 'Faltan datos requeridos: resenaId y tipo' });
@@ -30,37 +36,80 @@ export const addOrUpdateReaccion = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Tipo de reacción inválido' });
     }
 
+    console.log('🔍 Buscando reacción existente...');
     let reaccion = await em.findOne(Reaccion, {
       usuario: usuarioId,
       resena: resenaId,
     });
 
+    console.log('📊 Reacción encontrada:', reaccion ? `ID: ${reaccion.id}` : 'No existe');
+
     let esNueva = false;
 
     if (reaccion) {
       // Actualizar reacción existente
+      console.log('🔄 Actualizando reacción existente');
       reaccion.tipo = tipo;
       reaccion.fecha = new Date();
     } else {
-      // Crear nueva reacción
+      // Crear nueva reacción - necesitamos las referencias de entidades
+      console.log('✨ Creando nueva reacción');
+      const usuario = em.getReference(Usuario, usuarioId);
+      const resena = em.getReference(Resena, resenaId);
+      
       reaccion = em.create(Reaccion, {
-        usuario: usuarioId,
-        resena: resenaId,
+        usuario,
+        resena,
         tipo,
         fecha: new Date(),
       });
       esNueva = true;
     }
 
+    console.log('💾 Persistiendo reacción...');
     await em.persistAndFlush(reaccion);
+    console.log('✅ Reacción guardada con ID:', reaccion.id);
 
-    // Crear registro de actividad solo para nuevas reacciones
+    // Recargar la reacción con sus relaciones para devolverla correctamente
+    await em.populate(reaccion, ['usuario', 'resena']);
+
+    // Enviar notificación solo para nuevas reacciones
     if (esNueva) {
       try {
-        const actividadService = new ActividadService(orm);
-        await actividadService.crearActividadReaccion(usuarioId, resenaId);
-      } catch (actividadError) {
-        console.error('Error al crear registro de actividad:', actividadError);
+        // Obtener información de la reseña y el libro para la notificación
+        const resena = await em.findOne(Resena, { id: resenaId }, { 
+          populate: ['usuario', 'libro'],
+          fields: ['id', 'usuario', 'libro.id', 'libro.nombre', 'libro.slug', 'libro.externalId']
+        });
+        
+        if (resena && resena.usuario.id !== usuarioId) {
+          // Solo notificar si no es tu propia reseña
+          const usuarioReaccion = await em.findOne(Usuario, { id: usuarioId });
+          
+          if (usuarioReaccion && resena.libro) {
+            const notificacionService = new NotificacionService(em);
+            
+            // Mapear tipo de reacción a formato esperado
+            const tipoMayuscula = tipo.toUpperCase();
+            
+            // Usar slug o externalId del libro para la URL, fallback a ID
+            const libroSlug = resena.libro.slug || resena.libro.externalId || resena.libro.id.toString();
+            
+            console.log(`🔔 Creando notificación de reacción - Libro: ${resena.libro.nombre}, Slug: ${libroSlug}`);
+            
+            await notificacionService.notificarNuevaReaccion(
+              resena.usuario.id,
+              usuarioReaccion.nombre || usuarioReaccion.username || 'Alguien',
+              tipoMayuscula,
+              resenaId,
+              resena.libro.nombre,
+              libroSlug
+            );
+          }
+        }
+      } catch (notifError) {
+        console.error('Error al crear notificación de reacción:', notifError);
+        // No fallar la creación de la reacción si falla la notificación
       }
     }
 

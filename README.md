@@ -101,7 +101,7 @@ cd Backend
 npm install
 
 # Configurar variables de entorno
-cp .env.example .env
+cp .env
 # Editar .env con tus credenciales
 
 # Ejecutar migraciones

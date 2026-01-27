@@ -9,12 +9,19 @@ export const obtenerNotificaciones = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
-      const usuarioId = (req as any).usuarioId;
+      const usuarioPayload = (req as any).user;
+      if (!usuarioPayload || !usuarioPayload.id) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+      }
+      const usuarioId = usuarioPayload.id;
       const limit = parseInt(req.query.limit as string) || 20;
+
+      console.log(`🔔 Obteniendo notificaciones para usuario ${usuarioId}`);
 
       const service = new NotificacionService(orm.em);
       const notificaciones = await service.obtenerNotificaciones(usuarioId, limit);
 
+      console.log(`✅ Encontradas ${notificaciones.length} notificaciones`);
       res.json({ notificaciones });
     } catch (error: any) {
       console.error('Error al obtener notificaciones:', error);
@@ -30,7 +37,11 @@ export const contarNoLeidas = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
-      const usuarioId = (req as any).usuarioId;
+      const usuarioPayload = (req as any).user;
+      if (!usuarioPayload || !usuarioPayload.id) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+      }
+      const usuarioId = usuarioPayload.id;
 
       const service = new NotificacionService(orm.em);
       const count = await service.contarNoLeidas(usuarioId);
@@ -50,7 +61,11 @@ export const marcarComoLeida = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
-      const usuarioId = (req as any).usuarioId;
+      const usuarioPayload = (req as any).user;
+      if (!usuarioPayload || !usuarioPayload.id) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+      }
+      const usuarioId = usuarioPayload.id;
       const { id } = req.params;
 
       const service = new NotificacionService(orm.em);
@@ -71,7 +86,11 @@ export const marcarTodasComoLeidas = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
-      const usuarioId = (req as any).usuarioId;
+      const usuarioPayload = (req as any).user;
+      if (!usuarioPayload || !usuarioPayload.id) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+      }
+      const usuarioId = usuarioPayload.id;
 
       const service = new NotificacionService(orm.em);
       await service.marcarTodasComoLeidas(usuarioId);
@@ -91,7 +110,11 @@ export const eliminarNotificacion = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   await RequestContext.create(orm.em, async () => {
     try {
-      const usuarioId = (req as any).usuarioId;
+      const usuarioPayload = (req as any).user;
+      if (!usuarioPayload || !usuarioPayload.id) {
+        return res.status(401).json({ error: 'Usuario no autenticado' });
+      }
+      const usuarioId = usuarioPayload.id;
       const { id } = req.params;
 
       const service = new NotificacionService(orm.em);

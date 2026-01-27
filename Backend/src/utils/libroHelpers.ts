@@ -47,23 +47,35 @@ export async function findOrCreateAutorLibro(
 export async function findLibroRelatedEntities(
   em: EntityManager,
   categoriaId: number,
-  editorialId: number,
+  editorialId?: number,
   sagaId?: number
 ): Promise<LibroRelatedEntities | { error: string }> {
   const categoria = await em.findOne(Categoria, { id: categoriaId });
-  const editorial = await em.findOne(Editorial, { id: editorialId });
+  const editorial = editorialId ? await em.findOne(Editorial, { id: editorialId }) : undefined;
   const saga = sagaId ? await em.findOne(Saga, { id: sagaId }) : undefined;
 
-  if (!categoria || !editorial) {
-    return { error: 'Categoría o editorial no encontrada' };
+  if (!categoria) {
+    return { error: 'Categoría no encontrada' };
   }
 
   return {
     autor: null as any, // Will be set separately
     categoria,
-    editorial,
+    editorial: editorial || undefined,
     saga: saga || undefined
   };
+}
+
+/**
+ * Genera un slug URL-friendly a partir del nombre del libro
+ */
+function generateSlug(nombre: string): string {
+  return nombre
+    .toLowerCase()
+    .normalize('NFD') // Normaliza caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, '') // Elimina acentos
+    .replace(/[^a-z0-9]+/g, '-') // Reemplaza caracteres no alfanuméricos con guiones
+    .replace(/^-+|-+$/g, ''); // Elimina guiones al inicio y al final
 }
 
 /**
@@ -74,8 +86,13 @@ export function createLibroEntity(
   libroData: any,
   relatedEntities: LibroRelatedEntities
 ): Libro {
+  // Genera el slug automáticamente desde el nombre del libro
+  const slug = libroData.nombre ? generateSlug(libroData.nombre) : undefined;
+  
   return em.create(Libro, {
     ...libroData,
+    slug, // Agrega el slug generado
+    source: 'bookcode', // Marca como libro creado en BookCode
     autor: relatedEntities.autor,
     categoria: relatedEntities.categoria,
     editorial: relatedEntities.editorial,
@@ -98,9 +115,7 @@ export function validateLibroCreationData(data: any): {
     return { valid: false, error: 'La categoría es requerida' };
   }
 
-  if (!data.editorialId) {
-    return { valid: false, error: 'La editorial es requerida' };
-  }
+  // Editorial es opcional - removida la validación
 
   if (!data.nombre) {
     return { valid: false, error: 'El nombre del libro es requerido' };

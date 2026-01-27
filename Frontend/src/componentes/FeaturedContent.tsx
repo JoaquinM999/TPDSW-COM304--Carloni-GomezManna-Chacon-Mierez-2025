@@ -6,10 +6,10 @@ import { Star, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { buildApiUrl } from "../utils/apiHelpers";
 import { API_BASE_URL } from '../config/api.config';
-import { VoteButtons } from './VoteButtons';
 
 interface PopularBook {
   id: string;
+  libroId?: number; // ID numérico de la base de datos
   titulo: string;
   autores: string[];
   imagen: string;
@@ -122,6 +122,7 @@ export const FeaturedContent: React.FC = () => {
             
             return {
               id: libro.slug || libro.externalId || libro.id?.toString() || 'unknown',
+              libroId: libro.id ? Number(libro.id) : undefined,
               titulo: libro.nombre || libro.titulo || 'Título desconocido',
               autores,
               imagen: libro.imagen || 'https://via.placeholder.com/400x600?text=Sin+Imagen',
@@ -268,11 +269,6 @@ export const FeaturedContent: React.FC = () => {
                 >
                   {book.autores.join(", ")}
                 </p>
-                
-                {/* Botones de votación */}
-                <div className="my-3">
-                  <VoteButtons libroId={Number(book.id)} size="sm" showStats={true} />
-                </div>
                 
                 {/* Info extra: categoría y contador de reseñas */}
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-auto pt-3 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between gap-2">

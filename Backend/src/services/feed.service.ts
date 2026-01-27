@@ -11,7 +11,9 @@ interface ActividadEnriquecida {
   usuario: {
     id: number;
     nombre?: string;
+    apellido?: string;
     username: string;
+    avatar?: string;
   };
   libro?: {
     id: number;
@@ -39,17 +41,19 @@ export class FeedService {
    * @param limit - Cantidad de actividades a retornar
    * @param offset - Paginación
    * @param tipos - Filtrar por tipos de actividad (opcional)
+   * @param forceRefresh - Forzar recarga sin usar caché
    */
   async getFeedActividades(
     usuarioId: number,
     limit: number = 20,
     offset: number = 0,
-    tipos?: TipoActividad[]
+    tipos?: TipoActividad[],
+    forceRefresh: boolean = false
   ): Promise<{ actividades: ActividadEnriquecida[]; total: number; hasMore: boolean }> {
     const cacheKey = `feed:usuario:${usuarioId}:${limit}:${offset}:${tipos?.join('-') || 'all'}`;
 
-    // Intentar obtener del caché
-    if (redis && offset === 0) { // Solo cachear primera página
+    // Intentar obtener del caché solo si no es force refresh
+    if (redis && offset === 0 && !forceRefresh) { // Solo cachear primera página
       try {
         const cached = await redis.get(cacheKey);
         if (cached) {
@@ -74,11 +78,14 @@ export class FeedService {
 
     // 2. Construir query de actividades
     const whereCondition: any = {
-      usuario: { $in: seguidosIds }
+      usuario: { $in: seguidosIds },
+      // EXCLUIR reacciones del feed (no se muestran aunque se guarden en BD)
+      tipo: { $ne: TipoActividad.REACCION }
     };
 
     if (tipos && tipos.length > 0) {
-      whereCondition.tipo = { $in: tipos };
+      // Si hay filtro de tipos, combinar con la exclusión de reacciones
+      whereCondition.tipo = { $in: tipos, $ne: TipoActividad.REACCION };
     }
 
     // 3. Obtener actividades con populate
@@ -101,7 +108,9 @@ export class FeedService {
       usuario: {
         id: act.usuario.id,
         nombre: act.usuario.nombre,
-        username: act.usuario.username
+        apellido: act.usuario.apellido || '',
+        username: act.usuario.username,
+        avatar: act.usuario.avatar
       },
       libro: act.libro ? {
         id: act.libro.id,

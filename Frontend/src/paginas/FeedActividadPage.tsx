@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -11,27 +11,85 @@ interface Actividad {
     username: string;
     nombre: string;
     apellido: string;
-    fotoPerfil?: string;
+    avatar?: string;
   };
-  tipo: 'RESENA' | 'SEGUIMIENTO' | 'LISTA_CREADA' | 'LISTA_ACTUALIZADA' | 'FAVORITO';
+  tipo: 'resena' | 'seguimiento' | 'lista' | 'favorito'; // 'reaccion' eliminado - no se muestra en feed
   libro?: {
     id: number;
-    slug: string;
     nombre: string;
-    imagen?: string;
     autor?: {
       nombre: string;
-      apellido: string;
     };
   };
   resena?: {
     id: number;
-    titulo?: string;
-    calificacion: number;
-    comentario: string;
+    contenido?: string;
+    estrellas: number;
   };
-  fechaCreacion: string;
+  fecha: string;
 }
+
+// Componente para renderizar avatar con link opcional al perfil
+const UserAvatar: React.FC<{ 
+  usuario: { id?: number; nombre?: string; username: string; avatar?: string }; 
+  size?: string;
+  clickable?: boolean;
+  currentUserId?: number | null;
+}> = ({ usuario, size = "w-14 h-14", clickable = true, currentUserId = null }) => {
+  const [imageError, setImageError] = React.useState(false);
+  
+  // Determinar la fuente del avatar
+  const getAvatarSrc = () => {
+    if (!usuario.avatar) return null;
+    
+    // Si es una URL completa (http/https), usarla directamente
+    if (usuario.avatar.startsWith('http://') || usuario.avatar.startsWith('https://')) {
+      return usuario.avatar;
+    }
+    
+    // Si tiene extensión, usar directamente desde assets
+    if (usuario.avatar.includes('.')) {
+      return `/assets/${usuario.avatar}`;
+    }
+    
+    // Si no tiene extensión, asumir .svg
+    return `/assets/${usuario.avatar}.svg`;
+  };
+
+  const avatarSrc = getAvatarSrc();
+  const displayName = usuario.nombre || usuario.username || "?";
+  const initials = displayName
+    .split(" ")
+    .map(s => s[0]?.toUpperCase() || "?")
+    .slice(0, 2)
+    .join("");
+
+  const placeholder = (
+    <div className={`${size} rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold text-lg`}>
+      {initials}
+    </div>
+  );
+
+  const content = !imageError && avatarSrc ? (
+    <img
+      src={avatarSrc}
+      alt={`Avatar de ${usuario.username || usuario.nombre}`}
+      className={`${size} rounded-full object-cover`}
+      onError={() => setImageError(true)}
+    />
+  ) : placeholder;
+
+  // Si es clickable, no es el usuario actual y tiene ID, envolver en Link
+  if (clickable && usuario.id && usuario.id !== currentUserId) {
+    return (
+      <Link to={`/perfil/${usuario.id}`} className="hover:opacity-80 transition-opacity">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+};
 
 const FeedActividadPage: React.FC = () => {
   const [actividades, setActividades] = useState<Actividad[]>([]);
@@ -41,16 +99,14 @@ const FeedActividadPage: React.FC = () => {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
-  useEffect(() => {
-    cargarActividades();
-  }, [filtroTipo]);
-
-  const cargarActividades = async (append = false) => {
+  const cargarActividades = useCallback(async (append = false, forceRefresh = false) => {
     try {
       if (!append) {
         setLoading(true);
         setOffset(0);
+        setActividades([]); // Limpiar actividades al cambiar filtro
       } else {
         setLoadingMore(true);
       }
@@ -70,6 +126,11 @@ const FeedActividadPage: React.FC = () => {
 
       if (filtroTipo !== 'all') {
         params.tipos = filtroTipo;
+      }
+
+      // Agregar timestamp para forzar bypass del caché
+      if (forceRefresh) {
+        params._t = Date.now();
       }
 
       const response = await axios.get(
@@ -95,6 +156,31 @@ const FeedActividadPage: React.FC = () => {
       setLoading(false);
       setLoadingMore(false);
     }
+  }, [filtroTipo]);
+
+  useEffect(() => {
+    cargarActividades();
+  }, [cargarActividades]);
+
+  // Auto-refresh cuando la página se vuelve visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Recargar si han pasado más de 30 segundos desde la última actualización
+        if (Date.now() - lastUpdate > 30000) {
+          cargarActividades(false, true); // Force refresh
+          setLastUpdate(Date.now());
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [cargarActividades, lastUpdate]);
+
+  const handleRefresh = () => {
+    cargarActividades(false, true); // Force refresh para bypass del caché
+    setLastUpdate(Date.now());
   };
 
   const cargarMas = () => {
@@ -105,26 +191,25 @@ const FeedActividadPage: React.FC = () => {
 
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
-      case 'RESENA':
+      case 'resena':
         return (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
         );
-      case 'SEGUIMIENTO':
+      case 'seguimiento':
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         );
-      case 'LISTA_CREADA':
-      case 'LISTA_ACTUALIZADA':
+      case 'lista':
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
         );
-      case 'FAVORITO':
+      case 'favorito':
         return (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -137,33 +222,30 @@ const FeedActividadPage: React.FC = () => {
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'RESENA': return 'from-yellow-500 to-orange-500';
-      case 'SEGUIMIENTO': return 'from-blue-500 to-cyan-500';
-      case 'LISTA_CREADA':
-      case 'LISTA_ACTUALIZADA': return 'from-purple-500 to-pink-500';
-      case 'FAVORITO': return 'from-red-500 to-pink-500';
+      case 'resena': return 'from-yellow-500 to-orange-500';
+      case 'seguimiento': return 'from-blue-500 to-cyan-500';
+      case 'lista': return 'from-purple-500 to-pink-500';
+      case 'favorito': return 'from-red-500 to-pink-500';
       default: return 'from-gray-500 to-gray-600';
     }
   };
 
   const getTipoTexto = (tipo: string) => {
     switch (tipo) {
-      case 'RESENA': return 'escribió una reseña';
-      case 'SEGUIMIENTO': return 'comenzó a seguir a alguien';
-      case 'LISTA_CREADA': return 'creó una lista nueva';
-      case 'LISTA_ACTUALIZADA': return 'actualizó una lista';
-      case 'FAVORITO': return 'agregó a favoritos';
+      case 'resena': return 'escribió una reseña';
+      case 'seguimiento': return 'comenzó a seguir a alguien';
+      case 'lista': return 'actualizó una lista';
+      case 'favorito': return 'agregó a favoritos';
       default: return tipo.toLowerCase();
     }
   };
 
   const getTipoBadge = (tipo: string) => {
     const badges = {
-      'RESENA': { text: 'Reseña', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-      'SEGUIMIENTO': { text: 'Seguimiento', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-      'LISTA_CREADA': { text: 'Lista creada', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-      'LISTA_ACTUALIZADA': { text: 'Lista actualizada', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
-      'FAVORITO': { text: 'Favorito', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
+      'resena': { text: 'Reseña', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+      'seguimiento': { text: 'Seguimiento', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+      'lista': { text: 'Lista', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+      'favorito': { text: 'Favorito', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
     };
     return badges[tipo as keyof typeof badges] || { text: tipo, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
   };
@@ -223,9 +305,32 @@ const FeedActividadPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:to-blue-500 mb-2">
-            Feed de Actividad
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:to-blue-500">
+              Feed de Actividad
+            </h1>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Refrescar feed"
+            >
+              <svg 
+                className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                />
+              </svg>
+              <span className="hidden sm:inline">Refrescar</span>
+            </button>
+          </div>
           <p className="text-gray-600 dark:text-gray-400">
             Últimas actividades de usuarios que sigues
           </p>
@@ -240,10 +345,10 @@ const FeedActividadPage: React.FC = () => {
         >
           {[
             { value: 'all', label: 'Todas' },
-            { value: 'RESENA', label: 'Reseñas' },
-            { value: 'FAVORITO', label: 'Favoritos' },
-            { value: 'LISTA_CREADA,LISTA_ACTUALIZADA', label: 'Listas' },
-            { value: 'SEGUIMIENTO', label: 'Seguimientos' },
+            { value: 'resena', label: 'Reseñas' },
+            { value: 'favorito', label: 'Favoritos' },
+            { value: 'lista', label: 'Listas' },
+            { value: 'seguimiento', label: 'Seguimientos' },
           ].map((filtro) => (
             <button
               key={filtro.value}
@@ -309,17 +414,16 @@ const FeedActividadPage: React.FC = () => {
                   <div className="flex gap-4">
                     {/* Avatar con badge de tipo de actividad */}
                     <div className="flex-shrink-0 relative">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg ring-2 ring-cyan-500/20">
-                        {actividad.usuario.fotoPerfil ? (
-                          <img
-                            src={actividad.usuario.fotoPerfil}
-                            alt={actividad.usuario.username}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span>{actividad.usuario.username[0].toUpperCase()}</span>
-                        )}
-                      </div>
+                      <UserAvatar 
+                        usuario={{
+                          id: actividad.usuario.id,
+                          nombre: `${actividad.usuario.nombre} ${actividad.usuario.apellido}`,
+                          username: actividad.usuario.username,
+                          avatar: actividad.usuario.avatar
+                        }} 
+                        size="w-14 h-14"
+                        clickable={true}
+                      />
                       {/* Icono de tipo de actividad más grande */}
                       <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br ${getTipoColor(actividad.tipo)} flex items-center justify-center text-white shadow-md ring-2 ring-gray-900`}>
                         {getTipoIcon(actividad.tipo)}
@@ -347,42 +451,29 @@ const FeedActividadPage: React.FC = () => {
                           </p>
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-500 font-medium bg-gray-100 dark:bg-gray-800/50 px-2.5 py-1 rounded-full flex-shrink-0">
-                          {formatearFecha(actividad.fechaCreacion)}
+                          {formatearFecha(actividad.fecha)}
                         </span>
                       </div>
 
                       {/* Libro (si aplica) - Mejorado */}
                       {actividad.libro && (
-                        <Link
-                          to={`/libro/${actividad.libro.slug}`}
-                          className="flex gap-4 mt-4 p-4 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl hover:from-cyan-50 hover:to-blue-50 dark:hover:from-gray-700/70 dark:hover:to-gray-800/70 border-2 border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all duration-300 hover:shadow-xl group"
-                        >
-                          {actividad.libro.imagen ? (
-                            <div className="flex-shrink-0">
-                              <img
-                                src={actividad.libro.imagen}
-                                alt={actividad.libro.nombre}
-                                className="w-20 h-28 object-cover rounded-lg shadow-lg group-hover:shadow-2xl transition-shadow border border-gray-300 dark:border-gray-600"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex-shrink-0 w-20 h-28 bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 rounded-lg flex items-center justify-center">
-                              <svg className="w-10 h-10 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                              </svg>
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 mb-2">
-                              {actividad.libro.nombre}
-                            </p>
-                            {actividad.libro.autor && (
-                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                <span className="text-gray-500 dark:text-gray-400">por</span> {actividad.libro.autor.nombre} {actividad.libro.autor.apellido}
+                        <div className="mt-4 p-4 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all duration-300 hover:shadow-xl">
+                          <div className="flex items-center gap-3">
+                            <svg className="w-8 h-8 text-cyan-600 dark:text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                            </svg>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-base text-gray-900 dark:text-white line-clamp-1">
+                                {actividad.libro.nombre}
                               </p>
-                            )}
+                              {actividad.libro.autor && (
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                  <span className="text-gray-500 dark:text-gray-400">por</span> {actividad.libro.autor.nombre}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </Link>
+                        </div>
                       )}
 
                       {/* Reseña (si aplica) - Mejorado */}
@@ -393,7 +484,7 @@ const FeedActividadPage: React.FC = () => {
                               {[...Array(5)].map((_, i) => (
                                 <svg
                                   key={i}
-                                  className={`w-6 h-6 ${i < actividad.resena!.calificacion ? 'fill-yellow-500 dark:fill-yellow-400' : 'fill-gray-300 dark:fill-gray-600'}`}
+                                  className={`w-6 h-6 ${i < actividad.resena!.estrellas ? 'fill-yellow-500 dark:fill-yellow-400' : 'fill-gray-300 dark:fill-gray-600'}`}
                                   viewBox="0 0 20 20"
                                 >
                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -401,17 +492,12 @@ const FeedActividadPage: React.FC = () => {
                               ))}
                             </div>
                             <span className="text-base font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-900/50 px-3 py-1 rounded-full shadow-sm">
-                              {actividad.resena.calificacion} / 5
+                              {actividad.resena.estrellas} / 5
                             </span>
                           </div>
-                          {actividad.resena.titulo && (
-                            <p className="font-bold text-base text-gray-900 dark:text-white mb-2">
-                              {actividad.resena.titulo}
-                            </p>
-                          )}
-                          {actividad.resena.comentario && actividad.resena.comentario.trim() && (
+                          {actividad.resena.contenido && actividad.resena.contenido.trim() && (
                             <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed italic">
-                              "{actividad.resena.comentario}"
+                              "{actividad.resena.contenido}"
                             </p>
                           )}
                         </div>

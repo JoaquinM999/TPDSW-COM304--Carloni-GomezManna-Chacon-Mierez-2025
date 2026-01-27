@@ -117,10 +117,12 @@ export default function FeaturesSection() {
                   y.set(windowSize.height / 2);
                 }}
                 initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                 transition={{ delay: i * 0.2, duration: 0.6 }}
                 drag
-                dragElastic={0.25}
+                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                dragElastic={0.3}
+                dragTransition={{ bounceStiffness: 600, bounceDamping: 30 }}
                 whileHover={{
                   scale: 1.07,
                   boxShadow: `0 0 40px 10px rgba(255, 255, 255, 0.7)`,

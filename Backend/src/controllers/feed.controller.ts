@@ -30,9 +30,16 @@ export const getFeed = async (req: Request, res: Response) => {
       ? tiposParam.split(',').filter(t => Object.values(TipoActividad).includes(t as TipoActividad)) as TipoActividad[]
       : undefined;
 
+    // Detectar si es un force refresh (presencia del parámetro _t)
+    const forceRefresh = req.query._t !== undefined;
+
+    if (forceRefresh) {
+      console.log(`🔄 Force refresh solicitado por usuario ${usuario.id}`);
+    }
+
     // Obtener feed
     const feedService = new FeedService(orm);
-    const result = await feedService.getFeedActividades(usuario.id, limit, offset, tipos);
+    const result = await feedService.getFeedActividades(usuario.id, limit, offset, tipos, forceRefresh);
 
     res.json({
       actividades: result.actividades,

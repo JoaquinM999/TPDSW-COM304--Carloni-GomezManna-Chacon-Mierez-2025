@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Book, Upload, Plus, X, Globe, Users, Calendar, FileText, Tag, Building } from 'lucide-react';
-import { getEditoriales } from '../services/editorialService'; // Asumiendo que tienes estos servicios
+import { Book, Upload, Plus, X, Link as LinkIcon, Tag, Building } from 'lucide-react';
+import { getEditoriales } from '../services/editorialService';
 import { getCategorias } from '../services/categoriaService';
 import { getSagas } from '../services/sagaService';
+import { getAutores, createAutor } from '../services/autorService';
 import { isAdmin } from '../utils/jwtUtils';
+import { getToken } from '../utils/jwtUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
-interface Idioma {
-  codigo: string;
-  nombre: string;
-}
 
 interface Editorial {
   id: number;
@@ -27,43 +24,49 @@ interface Saga {
   nombre: string;
 }
 
-// Mock data - replace with your database
-const idiomasDisponibles: Idioma[] = [
-  { codigo: 'es', nombre: 'Español' },
-  { codigo: 'en', nombre: 'Inglés' },
-  { codigo: 'fr', nombre: 'Francés' },
-  { codigo: 'de', nombre: 'Alemán' },
-  { codigo: 'it', nombre: 'Italiano' },
-  { codigo: 'pt', nombre: 'Portugués' },
-  { codigo: 'ru', nombre: 'Ruso' },
-  { codigo: 'ja', nombre: 'Japonés' },
-  { codigo: 'zh', nombre: 'Chino' },
-  { codigo: 'ar', nombre: 'Árabe' }
-];
+interface Autor {
+  id: number;
+  nombre: string;
+  apellido: string;
+}
 
 export const CrearLibro: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [portadaPreview, setPortadaPreview] = useState<string>('');
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [showAutorModal, setShowAutorModal] = useState(false);
+  const [showCategoriaModal, setShowCategoriaModal] = useState(false);
 
   const [editoriales, setEditoriales] = useState<Editorial[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [sagas, setSagas] = useState<Saga[]>([]);
+  const [autores, setAutores] = useState<Autor[]>([]);
   
   const [libroData, setLibroData] = useState({
-    titulo: '',
-    autor: '',
-    isbn: '',
+    nombre: '',
+    autorId: '',
+    externalId: '',
     sinopsis: '',
-    año: new Date().getFullYear(),
-    paginas: 0,
     editorialId: '',
     categoriaId: '',
     sagaId: '',
-    numeroEnSaga: '',
-    idiomas: [] as string[],
-    portada: null as File | null
+    enlace: '',
+    source: '',
+    imagen: null as File | null,
+    imagenUrl: '' // URL de la imagen si se proporciona en lugar de archivo
+  });
+
+  const [nuevoAutor, setNuevoAutor] = useState({
+    nombre: '',
+    apellido: '',
+    biografia: '',
+    foto: ''
+  });
+
+  const [nuevaCategoria, setNuevaCategoria] = useState({
+    nombre: '',
+    descripcion: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -84,16 +87,32 @@ export const CrearLibro: React.FC = () => {
     // Cargar datos para los dropdowns desde el backend
     const fetchData = async () => {
       try {
-        const [editorialesData, categoriasData, sagasData] = await Promise.all([
+        const [editorialesData, categoriasData, sagasData, autoresData] = await Promise.all([
           getEditoriales(),
           getCategorias(),
-          getSagas()
+          getSagas(),
+          getAutores()
         ]);
-        setEditoriales(editorialesData);
-        setCategorias(categoriasData);
-        setSagas(sagasData);
+        
+        console.log('📚 Datos cargados:');
+        console.log('Editoriales:', editorialesData);
+        console.log('Categorías:', categoriasData);
+        console.log('Sagas:', sagasData);
+        console.log('Autores:', autoresData);
+        
+        setEditoriales(Array.isArray(editorialesData) ? editorialesData : []);
+        setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+        setSagas(Array.isArray(sagasData) ? sagasData : []);
+        // Extraer el array de autores del objeto paginado
+        const autoresArray = autoresData?.autores || (Array.isArray(autoresData) ? autoresData : []);
+        setAutores(autoresArray);
       } catch (error) {
         console.error("Error al cargar datos para el formulario:", error);
+        // Asegurar que todos los estados sean arrays vacíos en caso de error
+        setEditoriales([]);
+        setCategorias([]);
+        setSagas([]);
+        setAutores([]);
       }
     };
     fetchData();
@@ -112,19 +131,10 @@ export const CrearLibro: React.FC = () => {
     }
   };
 
-  const handleIdiomaToggle = (codigoIdioma: string) => {
-    setLibroData(prev => ({
-      ...prev,
-      idiomas: prev.idiomas.includes(codigoIdioma)
-        ? prev.idiomas.filter(id => id !== codigoIdioma)
-        : [...prev.idiomas, codigoIdioma]
-    }));
-  };
-
-  const handlePortadaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setLibroData(prev => ({ ...prev, portada: file }));
+      setLibroData(prev => ({ ...prev, imagen: file }));
       
       // Create preview
       const reader = new FileReader();
@@ -135,17 +145,97 @@ export const CrearLibro: React.FC = () => {
     }
   };
 
+  const handleNuevoAutorChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNuevoAutor(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNuevaCategoriaChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNuevaCategoria(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCrearAutor = async () => {
+    if (!nuevoAutor.nombre.trim() || !nuevoAutor.apellido.trim()) {
+      alert('El nombre y apellido del autor son requeridos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = getToken();
+      
+      if (!token) {
+        alert('No estás autenticado. Por favor inicia sesión.');
+        return;
+      }
+
+      const autorCreado = await createAutor(nuevoAutor, token);
+      
+      setAutores([...autores, autorCreado]);
+      setLibroData(prev => ({ ...prev, autorId: autorCreado.id.toString() }));
+      setShowAutorModal(false);
+      setNuevoAutor({ nombre: '', apellido: '', biografia: '', foto: '' });
+      alert('Autor creado exitosamente');
+    } catch (error) {
+      console.error('Error al crear autor:', error);
+      alert(error instanceof Error ? error.message : 'Error al crear el autor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCrearCategoria = async () => {
+    if (!nuevaCategoria.nombre.trim()) {
+      alert('El nombre de la categoría es requerido');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/categoria', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${getToken()}`
+      //   },
+      //   body: JSON.stringify(nuevaCategoria)
+      // });
+      
+      // if (response.ok) {
+      //   const categoriaCreada = await response.json();
+      //   setCategorias([...categorias, categoriaCreada]);
+      //   setLibroData(prev => ({ ...prev, categoriaId: categoriaCreada.id.toString() }));
+      //   setShowCategoriaModal(false);
+      //   setNuevaCategoria({ nombre: '', descripcion: '' });
+      // }
+
+      // Simulación temporal
+      const categoriaSimulada = {
+        id: Date.now(),
+        nombre: nuevaCategoria.nombre,
+        descripcion: nuevaCategoria.descripcion
+      };
+      setCategorias([...categorias, categoriaSimulada]);
+      setLibroData(prev => ({ ...prev, categoriaId: categoriaSimulada.id.toString() }));
+      setShowCategoriaModal(false);
+      setNuevaCategoria({ nombre: '', descripcion: '' });
+      alert('Categoría creada exitosamente (simulado)');
+    } catch (error) {
+      console.error('Error al crear categoría:', error);
+      alert('Error al crear la categoría');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!libroData.titulo.trim()) newErrors.titulo = 'El título es requerido';
-    if (!libroData.autor.trim()) newErrors.autor = 'El autor es requerido';
-    if (!libroData.isbn.trim()) newErrors.isbn = 'El ISBN es requerido';
+    if (!libroData.nombre.trim()) newErrors.nombre = 'El nombre del libro es requerido';
+    if (!libroData.autorId) newErrors.autorId = 'El autor es requerido';
     if (!libroData.sinopsis.trim()) newErrors.sinopsis = 'La sinopsis es requerida';
-    if (!libroData.editorialId) newErrors.editorialId = 'La editorial es requerida';
-    if (!libroData.categoriaId) newErrors.categoriaId = 'La categoría es requerida';
-    if (libroData.paginas <= 0) newErrors.paginas = 'El número de páginas debe ser mayor a 0';
-    if (libroData.idiomas.length === 0) newErrors.idiomas = 'Debe seleccionar al menos un idioma';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -159,42 +249,69 @@ export const CrearLibro: React.FC = () => {
     setLoading(true);
 
     try {
-  // TODO: Replace with actual API call
-  const formData = new FormData();
-  Object.entries(libroData).forEach(([key, value]) => {
-    if (key === 'idiomas') {
-      formData.append(key, JSON.stringify(value));
-    } else if (key === 'portada' && value instanceof File) {
-      formData.append(key, value);
-    } else if (value !== null && value !== undefined) {
-      formData.append(key, value.toString());
-    }
-  });
+      // Encontrar el autor seleccionado para obtener nombre y apellido
+      console.log('🔍 Buscando autor con ID:', libroData.autorId);
+      console.log('📋 Lista de autores disponibles:', autores);
+      
+      const autorSeleccionado = autores.find(a => a.id.toString() === libroData.autorId.toString());
+      
+      console.log('✅ Autor encontrado:', autorSeleccionado);
+      
+      if (!autorSeleccionado) {
+        alert('Por favor selecciona un autor válido');
+        setLoading(false);
+        return;
+      }
 
-      // const response = await fetch('/api/libros', {
-      //   method: 'POST',
-      //   body: formData,
-      //   headers: {
-      //     'Authorization': `Bearer ${getToken()}`
-      //   }
-      // });
+      const token = getToken();
+      
+      if (!token) {
+        alert('No estás autenticado. Por favor inicia sesión.');
+        setLoading(false);
+        return;
+      }
 
-      // if (response.ok) {
-      //   const nuevoLibro = await response.json();
-      //   navigate(`/libro/${nuevoLibro.id}`);
-      // } else {
-      //   throw new Error('Error al crear el libro');
-      // }
+      // Usar JSON siempre (el backend no soporta FormData con archivos)
+      const requestBody: any = {
+        nombreAutor: autorSeleccionado.nombre,
+        apellidoAutor: autorSeleccionado.apellido,
+        nombre: libroData.nombre,
+        sinopsis: libroData.sinopsis,
+        categoriaId: libroData.categoriaId
+      };
 
-      // Simulate API call
-      setTimeout(() => {
+      // Agregar campos opcionales si existen
+      if (libroData.imagenUrl) {
+        requestBody.imagen = libroData.imagenUrl;
+      }
+      if (libroData.editorialId) requestBody.editorialId = libroData.editorialId;
+      if (libroData.sagaId) requestBody.sagaId = libroData.sagaId;
+      if (libroData.fecha_publicacion) requestBody.fecha_publicacion = libroData.fecha_publicacion;
+
+      console.log('📤 Enviando JSON al backend:', requestBody);
+
+      const response = await fetch('http://localhost:3000/api/libro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok) {
+        const nuevoLibro = await response.json();
         alert('Libro creado exitosamente');
-        navigate('/libros');
-      }, 1000);
+        // Usar slug para libros creados manualmente
+        navigate(`/libro/${nuevoLibro.slug}`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear el libro');
+      }
 
     } catch (error) {
       console.error('Error al crear libro:', error);
-      alert('Error al crear el libro');
+      alert(error instanceof Error ? error.message : 'Error al crear el libro');
     } finally {
       setLoading(false);
     }
@@ -242,25 +359,25 @@ export const CrearLibro: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 dark:text-gray-100 mb-6">Información Básica</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Información Básica</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Título */}
+              {/* Nombre del Libro */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Título *
+                  Nombre del Libro *
                 </label>
                 <input
                   type="text"
-                  name="titulo"
-                  value={libroData.titulo}
+                  name="nombre"
+                  value={libroData.nombre}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.titulo ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.nombre ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
-                  placeholder="Ingresa el título del libro"
+                  placeholder="Ingresa el nombre del libro"
                 />
-                {errors.titulo && <p className="text-red-500 text-sm mt-1">{errors.titulo}</p>}
+                {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
               </div>
 
               {/* Autor */}
@@ -268,70 +385,81 @@ export const CrearLibro: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Autor *
                 </label>
-                <input
-                  type="text"
-                  name="autor"
-                  value={libroData.autor}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.autor ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Nombre del autor"
-                />
-                {errors.autor && <p className="text-red-500 text-sm mt-1">{errors.autor}</p>}
+                <div className="flex gap-2">
+                  <select
+                    name="autorId"
+                    value={libroData.autorId}
+                    onChange={handleInputChange}
+                    className={`flex-1 px-4 py-3 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      errors.autorId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <option value="">Selecciona un autor</option>
+                    {Array.isArray(autores) && autores.map(autor => (
+                      <option key={autor.id} value={autor.id}>
+                        {autor.nombre} {autor.apellido}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAutorModal(true)}
+                    className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
+                    title="Crear nuevo autor"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span className="hidden sm:inline">Nuevo</span>
+                  </button>
+                </div>
+                {errors.autorId && <p className="text-red-500 text-sm mt-1">{errors.autorId}</p>}
               </div>
 
-              {/* ISBN */}
+              {/* External ID */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  ISBN *
+                  ID Externo (opcional)
                 </label>
                 <input
                   type="text"
-                  name="isbn"
-                  value={libroData.isbn}
+                  name="externalId"
+                  value={libroData.externalId}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.isbn ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="978-0-123456-78-9"
-                />
-                {errors.isbn && <p className="text-red-500 text-sm mt-1">{errors.isbn}</p>}
-              </div>
-
-              {/* Año */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Año de Publicación
-                </label>
-                <input
-                  type="number"
-                  name="año"
-                  value={libroData.año}
-                  onChange={handleInputChange}
-                  min="1000"
-                  max={new Date().getFullYear() + 5}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="ID de Google Books, OpenLibrary, etc."
                 />
               </div>
 
-              {/* Páginas */}
+              {/* Enlace */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Enlace (opcional)
+                </label>
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="url"
+                    name="enlace"
+                    value={libroData.enlace}
+                    onChange={handleInputChange}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="https://ejemplo.com/libro"
+                  />
+                </div>
+              </div>
+
+              {/* Source */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Número de Páginas *
+                  Fuente (opcional)
                 </label>
                 <input
-                  type="number"
-                  name="paginas"
-                  value={libroData.paginas || ''}
+                  type="text"
+                  name="source"
+                  value={libroData.source}
                   onChange={handleInputChange}
-                  min="1"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.paginas ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Número de páginas"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Google Books, OpenLibrary, etc."
                 />
-                {errors.paginas && <p className="text-red-500 text-sm mt-1">{errors.paginas}</p>}
               </div>
             </div>
 
@@ -345,8 +473,8 @@ export const CrearLibro: React.FC = () => {
                 value={libroData.sinopsis}
                 onChange={handleInputChange}
                 rows={4}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.sinopsis ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.sinopsis ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Describe brevemente de qué trata el libro..."
               />
@@ -362,51 +490,56 @@ export const CrearLibro: React.FC = () => {
               {/* Editorial */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Editorial *
+                  Editorial (opcional)
                 </label>
                 <select
                   name="editorialId"
                   value={libroData.editorialId}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.editorialId ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Selecciona una editorial</option>
-                  {editoriales.map(editorial => (
+                  {Array.isArray(editoriales) && editoriales.map(editorial => (
                     <option key={editorial.id} value={editorial.id}>
                       {editorial.nombre}
                     </option>
                   ))}
                 </select>
-                {errors.editorialId && <p className="text-red-500 text-sm mt-1">{errors.editorialId}</p>}
               </div>
 
               {/* Categoría */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Categoría *
+                  Categoría (opcional)
                 </label>
-                <select
-                  name="categoriaId"
-                  value={libroData.categoriaId}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.categoriaId ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {categorias.map(categoria => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nombre}
-                    </option>
-                  ))}
-                </select>
-                {errors.categoriaId && <p className="text-red-500 text-sm mt-1">{errors.categoriaId}</p>}
+                <div className="flex gap-2">
+                  <select
+                    name="categoriaId"
+                    value={libroData.categoriaId}
+                    onChange={handleInputChange}
+                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {Array.isArray(categorias) && categorias.map(categoria => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoriaModal(true)}
+                    className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
+                    title="Crear nueva categoría"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span className="hidden sm:inline">Nueva</span>
+                  </button>
+                </div>
               </div>
 
               {/* Saga (opcional) */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Saga (opcional)
                 </label>
@@ -417,90 +550,49 @@ export const CrearLibro: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">No pertenece a una saga</option>
-                  {sagas.map(saga => (
+                  {Array.isArray(sagas) && sagas.map(saga => (
                     <option key={saga.id} value={saga.id}>
                       {saga.nombre}
                     </option>
                   ))}
                 </select>
               </div>
-
-              {/* Número en saga */}
-              {libroData.sagaId && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Número en la Saga
-                  </label>
-                  <input
-                    type="number"
-                    name="numeroEnSaga"
-                    value={libroData.numeroEnSaga}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Ej: 1, 2, 3..."
-                  />
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Idiomas */}
+          {/* Imagen */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Idiomas Disponibles *</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Imagen del Libro</h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {idiomasDisponibles.map(idioma => (
-                <button
-                  key={idioma.codigo}
-                  type="button"
-                  onClick={() => handleIdiomaToggle(idioma.codigo)}
-                  className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 transition-colors duration-200 ${
-                    libroData.idiomas.includes(idioma.codigo)
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300'
-                  }`}
-                >
-                  <Globe className="w-4 h-4" />
-                  <span className="text-sm font-medium">{idioma.nombre}</span>
-                </button>
-              ))}
-            </div>
-            {errors.idiomas && <p className="text-red-500 text-sm mt-2">{errors.idiomas}</p>}
-          </div>
-
-          {/* Portada */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Portada del Libro</h2>
-            
+            {/* Input de URL de imagen */}
             <div className="flex items-start space-x-6">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Subir Imagen de Portada
+                  URL de la Imagen
                 </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePortadaChange}
-                    className="hidden"
-                    id="portada-upload"
-                  />
-                  <label htmlFor="portada-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Haz clic para subir una imagen</p>
-                    <p className="text-sm text-gray-500">PNG, JPG hasta 5MB</p>
-                  </label>
-                </div>
+                <input
+                  type="url"
+                  name="imagenUrl"
+                  value={libroData.imagenUrl}
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    setPortadaPreview(e.target.value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
               </div>
               
               {portadaPreview && (
                 <div className="flex-shrink-0">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Vista Previa</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista Previa</p>
                   <img
                     src={portadaPreview}
                     alt="Vista previa"
                     className="w-32 h-40 object-cover rounded-lg shadow-md"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://via.placeholder.com/128x160?text=Error';
+                    }}
                   />
                 </div>
               )}
@@ -512,7 +604,7 @@ export const CrearLibro: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/libros')}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
             >
               Cancelar
             </button>
@@ -530,6 +622,174 @@ export const CrearLibro: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* Modal para Crear Autor */}
+        {showAutorModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Crear Nuevo Autor</h3>
+                <button
+                  onClick={() => setShowAutorModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={nuevoAutor.nombre}
+                    onChange={handleNuevoAutorChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Nombre del autor"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Apellido *
+                  </label>
+                  <input
+                    type="text"
+                    name="apellido"
+                    value={nuevoAutor.apellido}
+                    onChange={handleNuevoAutorChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Apellido del autor"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Biografía (opcional)
+                  </label>
+                  <textarea
+                    name="biografia"
+                    value={nuevoAutor.biografia}
+                    onChange={handleNuevoAutorChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Breve biografía del autor..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    URL de Foto (opcional)
+                  </label>
+                  <input
+                    type="url"
+                    name="foto"
+                    value={nuevoAutor.foto}
+                    onChange={handleNuevoAutorChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="https://ejemplo.com/foto.jpg"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAutorModal(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCrearAutor}
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span>Crear Autor</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para Crear Categoría */}
+        {showCategoriaModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Crear Nueva Categoría</h3>
+                <button
+                  onClick={() => setShowCategoriaModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={nuevaCategoria.nombre}
+                    onChange={handleNuevaCategoriaChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ej: Fantasy, Mystery, Romance..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Descripción (opcional)
+                  </label>
+                  <textarea
+                    name="descripcion"
+                    value={nuevaCategoria.descripcion}
+                    onChange={handleNuevaCategoriaChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Breve descripción de la categoría..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoriaModal(false)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCrearCategoria}
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span>Crear Categoría</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

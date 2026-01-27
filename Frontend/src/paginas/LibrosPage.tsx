@@ -87,6 +87,39 @@ export default function TodosLosLibros() {
       setError(null);
 
       try {
+        // 🔍 BÚSQUEDA COMBINADA: Base de datos + Google Books
+        let allItems: any[] = [];
+        let total: number | null = null;
+
+        // 1️⃣ Buscar en la base de datos local primero
+        if (debouncedSearchTerm && debouncedSearchTerm.length) {
+          try {
+            const localUrl = buildApiUrl(`/libro/search?query=${encodeURIComponent(debouncedSearchTerm)}`);
+            const localRes = await fetch(localUrl, { signal });
+            if (localRes.ok) {
+              const localData = await localRes.json();
+              const localLibros = Array.isArray(localData) ? localData : [];
+              
+              // Mapear libros de la BD al formato esperado
+              const mappedLocal = localLibros.map((libro: any) => ({
+                id: libro.slug || libro.id?.toString() || 'unknown',
+                titulo: libro.nombre || 'Sin título',
+                autores: libro.autor ? [`${libro.autor.nombre} ${libro.autor.apellido}`] : [],
+                descripcion: libro.sinopsis || undefined,
+                imagen: libro.imagen || null,
+                enlace: null,
+                isLocal: true // Marcador para distinguir libros locales
+              }));
+              
+              allItems = mappedLocal;
+              console.log(`📚 Encontrados ${mappedLocal.length} libros en la base de datos`);
+            }
+          } catch (localErr) {
+            console.warn('Error buscando en BD local:', localErr);
+          }
+        }
+
+        // 2️⃣ Buscar en Google Books API
         // Construir query con prefijo según filtro seleccionado
         let q = "";
         if (debouncedSearchTerm && debouncedSearchTerm.length) {
@@ -113,7 +146,7 @@ export default function TodosLosLibros() {
         }
 
         const startIndex = (pagina - 1) * librosPorPagina;
-        const cb = Date.now(); // cache buster
+        const cb = Date.now();
         const url = buildApiUrl(`/google-books/buscar?q=${encodeURIComponent(
           q
         )}&orderBy=relevance&maxResults=${librosPorPagina}&startIndex=${startIndex}&cb=${cb}`);
@@ -128,7 +161,6 @@ export default function TodosLosLibros() {
 
         // Soportar varios shapes: array directo o { items, totalItems } o wrappers comunes
         let items: any[] = [];
-        let total: number | null = null;
 
         if (Array.isArray(raw)) {
           items = raw;
@@ -140,12 +172,11 @@ export default function TodosLosLibros() {
         } else if (raw && Array.isArray(raw.books)) {
           items = raw.books;
         } else {
-          // fallback: si no hay items, dejar vacío
           items = [];
         }
 
-        // Mapeo seguro
-        const mapped: Libro[] = items.map((it: any, idx: number) => {
+        // Mapeo de libros de Google Books
+        const mappedGoogleBooks: Libro[] = items.map((it: any, idx: number) => {
           return {
             id: it.id ?? it._id ?? `${pagina}-${idx}-${it.title ?? it.titulo ?? "no-id"}`,
             titulo: it.titulo ?? it.title ?? it.volumeInfo?.title ?? "Título desconocido",
@@ -163,11 +194,16 @@ export default function TodosLosLibros() {
               it.volumeInfo?.imageLinks?.smallThumbnail ??
               null,
             enlace: it.enlace ?? it.link ?? it.volumeInfo?.infoLink ?? null,
+            isLocal: false
           };
         });
 
+        // 3️⃣ Combinar resultados locales + Google Books
+        allItems = [...allItems, ...mappedGoogleBooks];
+        console.log(`🌐 Total de libros combinados: ${allItems.length} (${allItems.filter((l: any) => l.isLocal).length} locales + ${mappedGoogleBooks.length} de Google Books)`);
+
         // Always fetch ratings for all libros in parallel for hover display
-        const ratingPromises = mapped.map(async (libro) => {
+        const ratingPromises = allItems.map(async (libro) => {
           try {
             const reviewsData = await getResenasByLibro(libro.id);
             const reviews = reviewsData?.reviews || [];
@@ -200,22 +236,22 @@ export default function TodosLosLibros() {
           setLibros((prev) => [...prev, ...finalLibros]);
         }
         setTotalItems(total);
-        setLastCount(mapped.length);
+        setLastCount(finalLibros.length);
 
         // Lógica mejorada de hasMore:
         // - Si conocemos total -> comparo startIndex + fetched < total
         // - Si NO conocemos total -> asumimos que hay más si la API devolvió al menos 1 item.
         if (total !== null) {
-          const fetchedCount = startIndex + mapped.length;
+          const fetchedCount = startIndex + finalLibros.length;
           setHasMore(fetchedCount < total);
         } else {
           // importante: si la API devolvió 0 items, no hay más; si devolvió >0, habilitamos "Siguiente" para que pruebes.
-          setHasMore(mapped.length > 0);
+          setHasMore(finalLibros.length > 0);
         }
 
         // logs en consola para debugging
         console.debug("Fetch URL:", url);
-        console.debug("Mapped length:", mapped.length, "startIndex:", startIndex, "total:", total);
+        console.debug("Final libros length:", finalLibros.length, "startIndex:", startIndex, "total:", total);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           // request cancelado
@@ -351,17 +387,22 @@ export default function TodosLosLibros() {
         {!error && libros.length > 0 && (
           <>
             <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-              {libros.map((libro) => (
-                <Link key={libro.id} to={`/libro/${libro.id}`} state={{ from: location.pathname }} className="block">
-                  <LibroCard
-                    title={libro.titulo}
-                    authors={libro.autores}
-                    image={libro.imagen}
-                    description={libro.descripcion}
-                    rating={libro.averageRating}
-                  />
-                </Link>
-              ))}
+              {libros.map((libro) => {
+                // Usar /libro/:slug para todos los libros (locales usan slug, externos usan externalId)
+                const libroUrl = `/libro/${libro.id}`;
+                
+                return (
+                  <Link key={libro.id} to={libroUrl} state={{ from: location.pathname }} className="block">
+                    <LibroCard
+                      title={libro.titulo}
+                      authors={libro.autores}
+                      image={libro.imagen}
+                      description={libro.descripcion}
+                      rating={libro.averageRating}
+                    />
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="flex flex-col items-center gap-4 mt-8">

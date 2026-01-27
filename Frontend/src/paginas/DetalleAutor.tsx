@@ -151,13 +151,56 @@ const DetalleAutor = () => {
         setFotoReal(autorData.foto);
       }
 
-      // Fetch datos de Google Books (foto y libros)
-      fetchGoogleBooksData(nombreCompleto);
+      // Fetch datos según el tipo de autor
+      if (isNumericId) {
+        // Autor local: buscar sus libros en la BD
+        fetchLibrosLocales(Number(id));
+      } else {
+        // Autor externo: buscar en Google Books
+        fetchGoogleBooksData(nombreCompleto);
+      }
       
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar autor');
       setLoading(false);
+    }
+  };
+
+  const fetchLibrosLocales = async (autorId: number) => {
+    try {
+      setLoadingGoogle(true);
+      
+      // Buscar libros del autor en la BD local
+      const response = await fetch(`${API_BASE_URL}/libro?autorId=${autorId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // El endpoint devuelve { libros: [...], total, ... }
+        const librosData = data.libros || [];
+        
+        // Convertir libros locales al formato GoogleBook para reutilizar la UI
+        const librosFormateados: GoogleBook[] = librosData.map((libro: any) => ({
+          id: libro.slug || libro.id.toString(),
+          titulo: libro.titulo,
+          autores: libro.autores || [],
+          descripcion: '',
+          imagen: libro.imagen || null,
+          portada: libro.imagen || null,
+          categoria: '',
+          fechaPublicacion: '',
+          enlace: `/libro/${libro.slug || libro.id}`,
+          source: 'bookcode',
+          isLocal: true // Marca para distinguir libros locales
+        }));
+        
+        setLibrosAdicionales(librosFormateados);
+      }
+      
+      setLoadingGoogle(false);
+    } catch (err) {
+      console.error('Error al cargar libros locales:', err);
+      setLoadingGoogle(false);
     }
   };
 
@@ -373,13 +416,21 @@ const DetalleAutor = () => {
                     <div className="flex items-center justify-between mb-3">
                       <BookOpen className="w-10 h-10 text-white" />
                       <span className="text-4xl font-bold text-white">
-                        {estadisticas.estadisticas.totalLibros + librosAdicionales.length}
+                        {librosAdicionales.length > 0 && (librosAdicionales[0] as any).isLocal
+                          ? estadisticas.estadisticas.totalLibros
+                          : estadisticas.estadisticas.totalLibros + librosAdicionales.length
+                        }
                       </span>
                     </div>
                     <p className="text-sm text-blue-100 font-semibold">Libros Publicados</p>
-                    {librosAdicionales.length > 0 && (
+                    {librosAdicionales.length > 0 && (librosAdicionales[0] as any).isLocal && (
                       <p className="text-xs text-blue-100 mt-2 opacity-90">
-                        {estadisticas.estadisticas.totalLibros} en BD + {librosAdicionales.length} en Google Books
+                        Todos en la base de datos
+                      </p>
+                    )}
+                    {librosAdicionales.length > 0 && !(librosAdicionales[0] as any).isLocal && (
+                      <p className="text-xs text-blue-100 mt-2 opacity-90">
+                        {estadisticas?.estadisticas.totalLibros || 0} en BD + {librosAdicionales.length} en Google Books
                       </p>
                     )}
                   </motion.div>
@@ -479,7 +530,8 @@ const DetalleAutor = () => {
                   Libros de {autor?.nombre} {autor?.apellido}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  {librosAdicionales.length} {librosAdicionales.length === 1 ? 'libro encontrado' : 'libros encontrados'} en Google Books
+                  {librosAdicionales.length} {librosAdicionales.length === 1 ? 'libro encontrado' : 'libros encontrados'}
+                  {librosAdicionales.length > 0 && (librosAdicionales[0] as any).isLocal ? ' en la base de datos' : ' en Google Books'}
                 </p>
               </div>
             </div>
@@ -495,10 +547,13 @@ const DetalleAutor = () => {
                   className="group"
                 >
                   <Link
-                    to={`/libro/${createGoogleBookSlug({
-                      titulo: libro.titulo,
-                      id: libro.id
-                    })}`}
+                    to={(libro as any).isLocal 
+                      ? `/libro/${libro.id}` 
+                      : `/libro/${createGoogleBookSlug({
+                          titulo: libro.titulo,
+                          id: libro.id
+                        })}`
+                    }
                     className="block bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-400 dark:hover:border-purple-500"
                   >
                     {libro.portada ? (

@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../config/api.config';
 const API_URL = API_BASE_URL;
 
 export interface PlatformStats {
-  librosResenados: number;
+  librosCreados: number;
   reseniasTotales: number;
   lectoresActivos: number;
   librosFavoritos: number;
@@ -40,7 +40,7 @@ export const getStats = async (): Promise<PlatformStats> => {
     
     // Fallback a valores por defecto si falla la API
     const fallback = {
-      librosResenados: 50000,
+      librosCreados: 50000,
       reseniasTotales: 250000,
       lectoresActivos: 15000,
       librosFavoritos: 180000,

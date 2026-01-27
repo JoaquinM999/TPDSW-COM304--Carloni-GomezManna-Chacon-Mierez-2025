@@ -2300,13 +2300,13 @@
         },
         "fecha": {
           "name": "fecha",
-          "type": "date",
+          "type": "datetime",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "length": null,
-          "mappedType": "date"
+          "mappedType": "datetime"
         }
       },
       "name": "actividad",

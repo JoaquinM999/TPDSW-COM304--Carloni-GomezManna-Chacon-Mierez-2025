@@ -30,6 +30,6 @@ export class Actividad {
   @ManyToOne(() => Resena, { nullable: true })
   resena?: Resena;
 
-  @Property({ type: 'date', onCreate: () => new Date() })
+  @Property({ type: 'datetime', onCreate: () => new Date() })
   fecha: Date = new Date();
 }

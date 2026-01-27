@@ -78,12 +78,20 @@ export const NotificationBell = () => {
     if (!notif.leida) {
       try {
         await marcarComoLeida(notif.id);
+        // Actualizar estado local inmediatamente para feedback visual
         setNotificaciones(prev =>
           prev.map(n => n.id === notif.id ? { ...n, leida: true } : n)
         );
+        // Actualizar contador
         setCount(prev => Math.max(0, prev - 1));
+        // Recargar desde servidor para asegurar consistencia
+        await fetchCount();
       } catch (error) {
         console.error('Error al marcar como leída:', error);
+        // Revertir cambio local si falla
+        setNotificaciones(prev =>
+          prev.map(n => n.id === notif.id ? { ...n, leida: false } : n)
+        );
       }
     }
 
@@ -97,24 +105,48 @@ export const NotificationBell = () => {
   const handleMarcarTodasLeidas = async () => {
     try {
       await marcarTodasComoLeidas();
+      // Actualizar estado local
       setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
       setCount(0);
+      // Recargar desde servidor para confirmar
+      await fetchCount();
     } catch (error) {
       console.error('Error al marcar todas como leídas:', error);
+      // Recargar notificaciones si falla
+      await fetchNotificaciones();
+      await fetchCount();
     }
   };
 
   const handleEliminar = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Guardar notificación antes de eliminar por si necesitamos revertir
+    const notifEliminada = notificaciones.find(n => n.id === id);
+    
     try {
-      await eliminarNotificacion(id);
+      // Actualizar UI inmediatamente para feedback visual
       setNotificaciones(prev => prev.filter(n => n.id !== id));
-      const notifEliminada = notificaciones.find(n => n.id === id);
       if (notifEliminada && !notifEliminada.leida) {
         setCount(prev => Math.max(0, prev - 1));
       }
+      
+      // Eliminar en servidor
+      await eliminarNotificacion(id);
+      
+      // Recargar contador para asegurar consistencia
+      await fetchCount();
     } catch (error) {
       console.error('Error al eliminar notificación:', error);
+      // Revertir cambios si falla
+      if (notifEliminada) {
+        setNotificaciones(prev => [...prev, notifEliminada].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ));
+        if (!notifEliminada.leida) {
+          setCount(prev => prev + 1);
+        }
+      }
     }
   };
 
@@ -269,21 +301,6 @@ export const NotificationBell = () => {
                 </div>
               )}
             </div>
-
-            {/* Footer */}
-            {notificaciones.length > 0 && (
-              <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center">
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/notificaciones'); // Crear página de todas las notificaciones (opcional)
-                  }}
-                  className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
-                >
-                  Ver todas las notificaciones
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

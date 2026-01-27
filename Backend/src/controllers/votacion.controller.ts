@@ -187,7 +187,7 @@ export const obtenerEstadisticasLibro = async (req: AuthRequest, res: Response) 
       return res.status(404).json({ error: 'Libro no encontrado' });
     }
 
-    const votaciones = await em.find(VotacionLibro, { libro: Number(libroId) });
+    const votaciones = await em.find(VotacionLibro, { libro: libro.id });
 
     const positivos = votaciones.filter(v => v.voto === TipoVoto.POSITIVO).length;
     const negativos = votaciones.filter(v => v.voto === TipoVoto.NEGATIVO).length;

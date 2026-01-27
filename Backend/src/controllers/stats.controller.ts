@@ -35,7 +35,7 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
     ]);
 
     res.json({
-      librosResenados: librosCount,
+      librosCreados: librosCount,
       reseniasTotales: resenasCount,
       lectoresActivos: usuariosCount,
       librosFavoritos: favoritosCount,

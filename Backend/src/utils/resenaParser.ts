@@ -199,7 +199,7 @@ export function validateResenaId(id: any): { valid: boolean; id?: number; error?
  */
 export function parseResenaRespuesta(body: any, resenaPadreId: number): {
   valid: boolean;
-  data?: { comentario: string; libroId: string | number; resenaPadreId: number };
+  data?: { comentario: string; resenaPadreId: number };
   errors?: string[];
 } {
   const errors: string[] = [];
@@ -214,10 +214,7 @@ export function parseResenaRespuesta(body: any, resenaPadreId: number): {
     }
   }
   
-  // Validar libroId
-  if (!body.libroId) {
-    errors.push('El ID del libro es requerido');
-  }
+  // No validamos libroId porque la respuesta hereda el libro de la reseña padre
   
   if (errors.length > 0) {
     return { valid: false, errors };
@@ -227,7 +224,6 @@ export function parseResenaRespuesta(body: any, resenaPadreId: number): {
     valid: true,
     data: {
       comentario: sanitizeInput(body.comentario),
-      libroId: body.libroId,
       resenaPadreId
     }
   };

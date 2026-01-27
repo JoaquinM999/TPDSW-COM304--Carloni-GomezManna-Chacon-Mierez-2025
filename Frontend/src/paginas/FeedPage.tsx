@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { MessageCircle, Heart, Book, List, User, Star, Calendar } from 'lucide-react';
+import { MessageCircle, Heart, Book, List, User } from 'lucide-react';
 //import { getFeed } from '../services/actividadService';
 import { isAuthenticated } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
@@ -28,7 +28,7 @@ interface Actividad {
 }
 
 export const FeedPage: React.FC = () => {
-  const [actividades, setActividades] = useState<Actividad[]>([]);
+  const [actividades] = useState<Actividad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -66,8 +66,7 @@ export const FeedPage: React.FC = () => {
         return <List className="w-5 h-5 text-green-600" />;
       case 'seguimiento':
         return <User className="w-5 h-5 text-purple-600" />;
-      case 'reaccion':
-        return <Heart className="w-5 h-5 text-pink-600" />;
+      // case 'reaccion': eliminado - las reacciones no se muestran en el feed
       default:
         return <Book className="w-5 h-5 text-gray-600" />;
     }
@@ -84,8 +83,7 @@ export const FeedPage: React.FC = () => {
         return `${userName} creó una nueva lista`;
       case 'seguimiento':
         return `${userName} comenzó a seguir a alguien`;
-      case 'reaccion':
-        return `${userName} reaccionó a una reseña`;
+      // case 'reaccion': eliminado - las reacciones no se muestran en el feed
       default:
         return `${userName} realizó una actividad`;
     }

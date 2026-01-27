@@ -18,6 +18,11 @@ interface Actividad {
   resena?: {
     id: number;
     comentario: string;
+    esRespuesta?: boolean;
+    resenaPadreAutor?: {
+      nombre: string;
+      apellido: string;
+    };
   };
 }
 

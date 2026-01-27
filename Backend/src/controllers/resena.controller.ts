@@ -263,6 +263,7 @@ export const createResena = async (req: Request, res: Response) => {
       return res.status(400).json({
         error: 'Tu reseña contiene contenido inapropiado y no puede ser publicada',
         details: 'Por favor, revisa nuestras normas de comunidad y asegúrate de que tu comentario sea respetuoso y constructivo.',
+        reasons: moderationResult.reasons,
         moderationScore: moderationResult.score,
         blocked: true
       });

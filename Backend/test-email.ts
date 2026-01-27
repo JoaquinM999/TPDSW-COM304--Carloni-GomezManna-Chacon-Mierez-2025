@@ -10,10 +10,13 @@
  */
 
 import dotenv from 'dotenv';
-import { sendNewsletterWelcome } from './src/services/email.service';
+import path from 'path';
 
-// Cargar variables de entorno
-dotenv.config();
+// Cargar variables de entorno desde la raíz PRIMERO
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+
+// Importar DESPUÉS de cargar el .env
+import { sendNewsletterWelcome } from './src/services/email.service';
 
 async function testEmail() {
   // Obtener argumentos de la línea de comandos

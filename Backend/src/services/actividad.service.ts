@@ -196,7 +196,7 @@ export class ActividadService {
     // Si es una respuesta, no notificar a seguidores (solo se notifica al autor de la reseña original)
     if (esRespuesta) {
       console.log('📝 Es una respuesta, no se notifica a seguidores');
-      return this.crearActividad(usuarioId, TipoActividad.RESEÑA, libroId, resenaId, false);
+      return this.crearActividad(usuarioId, TipoActividad.RESPUESTA, libroId, resenaId, false);
     }
     
     // Si es una reseña nueva, notificar a seguidores

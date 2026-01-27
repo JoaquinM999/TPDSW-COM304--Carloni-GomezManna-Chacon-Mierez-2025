@@ -45,6 +45,7 @@ import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
 import { ModerationDashboard } from './paginas/Admin/ModerationDashboard';
 import SiguiendoPage from './paginas/SiguiendoPage';
+import SeguidoresPage from './paginas/SeguidoresPage';
 import FeedActividadPage from './paginas/FeedActividadPage';
 
 
@@ -159,6 +160,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
             <Route path="/registro" element={<RegistrationPage />} />
             <Route path="/perfil" element={<PerfilPage />} />
             <Route path="/perfil/:id" element={<PerfilUsuario />} />
+            <Route path="/perfil/:id/seguidores" element={<SeguidoresPage />} />
             <Route path="/configuracion" element={<ConfiguracionUsuario />} />
             <Route path="/categorias" element={<CategoriasPage />} />
             <Route path="/libro/:slug" element={<DetalleLibro />} />

@@ -413,7 +413,10 @@ export const PerfilUsuario: React.FC = () => {
 
             {/* Stats inline - diseño compacto horizontal con colores coherentes */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-6">
-              <div className={`flex items-center gap-2.5 transition-all duration-200 hover:scale-105 ${usuario.seguidores === 0 ? 'opacity-40' : 'opacity-100'}`}>
+              <Link
+                to={`/perfil/${usuario.id}/seguidores`}
+                className={`flex items-center gap-2.5 transition-all duration-200 hover:scale-105 ${usuario.seguidores === 0 ? 'opacity-40' : 'opacity-100'}`}
+              >
                 <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200/50 dark:border-blue-400/20">
                   <Users className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
                 </div>
@@ -421,7 +424,7 @@ export const PerfilUsuario: React.FC = () => {
                   <div className="text-xl font-bold text-slate-900 dark:text-white leading-none">{usuario.seguidores}</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 leading-none mt-0.5 font-medium">Seguidores</div>
                 </div>
-              </div>
+              </Link>
 
               <div className={`flex items-center gap-2.5 transition-all duration-200 hover:scale-105 ${usuario.siguiendo === 0 ? 'opacity-40' : 'opacity-100'}`}>
                 <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200/50 dark:border-indigo-400/20">

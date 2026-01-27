@@ -24,6 +24,11 @@ interface Actividad {
     id: number;
     titulo: string;
     comentario: string;
+    esRespuesta?: boolean;
+    resenaPadreAutor?: {
+      nombre: string;
+      apellido: string;
+    };
   };
 }
 
@@ -59,8 +64,8 @@ export const FeedPage: React.FC = () => {
   const getActividadIcon = (tipo: string) => {
     switch (tipo) {
       case 'resena':
-        return <MessageCircle className="w-5 h-5 text-blue-600" />;
-      case 'favorito':
+        return <MessageCircle className="w-5 h-5 text-blue-600" />;      case 'respuesta':
+        return <MessageCircle className="w-5 h-5 text-green-600" />;      case 'favorito':
         return <Heart className="w-5 h-5 text-red-600" />;
       case 'lista':
         return <List className="w-5 h-5 text-green-600" />;
@@ -77,6 +82,12 @@ export const FeedPage: React.FC = () => {
     switch (actividad.tipo) {
       case 'resena':
         return `${userName} escribió una reseña de "${actividad.libro?.titulo}"`;
+      case 'respuesta':
+        if (actividad.resena?.resenaPadreAutor) {
+          const autorNombre = `${actividad.resena.resenaPadreAutor.nombre} ${actividad.resena.resenaPadreAutor.apellido}`.trim();
+          return `${userName} respondió a la reseña de ${autorNombre}`;
+        }
+        return `${userName} respondió a una reseña`;
       case 'favorito':
         return `${userName} agregó "${actividad.libro?.titulo}" a favoritos`;
       case 'lista':

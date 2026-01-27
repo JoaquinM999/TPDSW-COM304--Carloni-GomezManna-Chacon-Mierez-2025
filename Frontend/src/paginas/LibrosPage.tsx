@@ -54,17 +54,14 @@ export default function TodosLosLibros() {
     return () => window.clearTimeout(id);
   }, [searchTerm]);
 
-  // 2. useEffect para leer los parámetros de la URL al cargar la página
+  // 2. useEffect para leer los parámetros de la URL (también cuando ya estamos en /libros y se cambia el query)
   useEffect(() => {
-    const filtroFromURL = searchParams.get('filtro');
-    const terminoFromURL = searchParams.get('termino');
+    const filtroFromURL = searchParams.get('filtro') || 'todos';
+    const terminoFromURL = searchParams.get('termino') || '';
 
-    // 3. Si existen, actualiza el estado del buscador
-    if (filtroFromURL && terminoFromURL) {
-      setSearchFilter(filtroFromURL);
-      setSearchTerm(terminoFromURL);
-    }
-  }, []);
+    setSearchFilter(filtroFromURL);
+    setSearchTerm(terminoFromURL);
+  }, [searchParams]);
 
   // Cuando cambia la búsqueda, el filtro o el orden, se resetea la paginación.
   useEffect(() => {

@@ -1069,7 +1069,34 @@ const DetalleLibro: React.FC = () => {
       dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: null } });
     } catch (err: any) {
       console.error("Error creando respuesta:", err);
-      dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: false, error: err.message || "No se pudo crear la respuesta" } } });
+      
+      // Detectar si es un error de moderación/rechazo
+      const errorMsg = err.message || "No se pudo crear la respuesta";
+      const isModerationError = errorMsg.toLowerCase().includes('moderación') || 
+                                errorMsg.toLowerCase().includes('rechazada') ||
+                                errorMsg.toLowerCase().includes('rechazado') ||
+                                errorMsg.toLowerCase().includes('inapropiado') ||
+                                errorMsg.toLowerCase().includes('normas') ||
+                                errorMsg.toLowerCase().includes('calidad') ||
+                                err.blocked === true;
+
+      if (isModerationError) {
+        // Mostrar modal de error de moderación
+        setModerationError({
+          message: errorMsg,
+          details: {
+            autoRejected: true,
+            reasons: err.reasons || [],
+            score: err.score
+          }
+        });
+        setShowModerationModal(true);
+        // Cerrar el formulario de respuesta pero sin error local
+        dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: null } });
+      } else {
+        // Error normal, mostrarlo en el formulario
+        dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: false, error: errorMsg } } });
+      }
     }
   };
 

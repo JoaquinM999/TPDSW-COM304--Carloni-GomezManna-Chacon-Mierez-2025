@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { SplineErrorBoundary } from './SplineErrorBoundary';
 import { AnimatedCounter } from './AnimatedCounter';
 import { getStatsWithCache, PlatformStats } from '../services/statsService';
+import { isAuthenticated } from '../services/authService';
 
 
 const Spline = lazy(() => import('@splinetool/react-spline'));
@@ -137,6 +138,8 @@ export const HeroSection: React.FC = () => {
     const featuredSection = document.querySelector('[aria-label="Libros destacados"]');
     if (featuredSection) {
       featuredSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      navigate('/libros/populares');
     }
   };
 
@@ -231,7 +234,10 @@ export const HeroSection: React.FC = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
           >
             <motion.button
-              onClick={() => navigate('/registro')}
+              onClick={() => {
+                const isAuth = isAuthenticated();
+                navigate(isAuth ? '/libros' : '/registro');
+              }}
               whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
               whileTap={{ scale: 0.98 }}
               className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-base shadow-xl hover:shadow-2xl transition-all duration-300 group"

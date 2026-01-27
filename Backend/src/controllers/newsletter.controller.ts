@@ -33,12 +33,14 @@ export const subscribe = async (req: Request, res: Response) => {
         existingSub.fechaBaja = undefined;
         await em.persistAndFlush(existingSub);
 
-        // Enviar email de bienvenida
-        try {
-          await sendNewsletterWelcome(email, nombre);
-        } catch (emailError) {
-          console.error('Error al enviar email de bienvenida:', emailError);
-          // No fallar si el email no se puede enviar
+        // Enviar email de bienvenida (solo si está configurado)
+        if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
+          try {
+            await sendNewsletterWelcome(email, nombre);
+            console.log('✅ Email de bienvenida enviado a:', email);
+          } catch (emailError) {
+            console.warn('⚠️  No se pudo enviar email de bienvenida:', emailError);
+          }
         }
 
         return res.status(200).json({
@@ -53,12 +55,17 @@ export const subscribe = async (req: Request, res: Response) => {
 
     await em.persistAndFlush(subscription);
 
-    // Enviar email de bienvenida
-    try {
-      await sendNewsletterWelcome(email, nombre);
-    } catch (emailError) {
-      console.error('Error al enviar email de bienvenida:', emailError);
-      // No fallar si el email no se puede enviar
+    // Enviar email de bienvenida (solo si está configurado)
+    if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {
+      try {
+        await sendNewsletterWelcome(email, nombre);
+        console.log('✅ Email de bienvenida enviado a:', email);
+      } catch (emailError) {
+        console.warn('⚠️  No se pudo enviar email de bienvenida:', emailError);
+        // No fallar si el email no se puede enviar
+      }
+    } else {
+      console.log('ℹ️  Email no configurado, suscripción guardada sin envío de email');
     }
 
     return res.status(201).json({

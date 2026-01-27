@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Cargar variables de entorno desde la raíz
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
 
 import hardcoverRoutes from './routes/hardcover.routes';
 import googleBooksRoutes from './routes/googleBooks.routes';

@@ -13,7 +13,7 @@ interface Actividad {
     apellido: string;
     avatar?: string;
   };
-  tipo: 'resena' | 'seguimiento' | 'lista' | 'favorito'; // 'reaccion' eliminado - no se muestra en feed
+  tipo: 'resena' | 'respuesta' | 'seguimiento' | 'lista' | 'favorito'; // 'reaccion' eliminado - no se muestra en feed
   libro?: {
     id: number;
     nombre: string;
@@ -25,6 +25,11 @@ interface Actividad {
     id: number;
     contenido?: string;
     estrellas: number;
+    esRespuesta?: boolean;
+    resenaPadreAutor?: {
+      nombre: string;
+      apellido: string;
+    };
   };
   fecha: string;
 }
@@ -57,12 +62,14 @@ const UserAvatar: React.FC<{
   };
 
   const avatarSrc = getAvatarSrc();
-  const displayName = usuario.nombre || usuario.username || "?";
+  const displayName = usuario.nombre || usuario.username || "U";
   const initials = displayName
     .split(" ")
-    .map(s => s[0]?.toUpperCase() || "?")
+    .filter(s => s.length > 0)
+    .map(s => s[0]?.toUpperCase())
+    .filter(c => c && /[A-Z]/.test(c))
     .slice(0, 2)
-    .join("");
+    .join("") || displayName[0]?.toUpperCase() || "U";
 
   const placeholder = (
     <div className={`${size} rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold text-lg`}>
@@ -197,6 +204,12 @@ const FeedActividadPage: React.FC = () => {
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
         );
+      case 'respuesta':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        );
       case 'seguimiento':
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,6 +236,7 @@ const FeedActividadPage: React.FC = () => {
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
       case 'resena': return 'from-yellow-500 to-orange-500';
+      case 'respuesta': return 'from-green-500 to-emerald-500';
       case 'seguimiento': return 'from-blue-500 to-cyan-500';
       case 'lista': return 'from-purple-500 to-pink-500';
       case 'favorito': return 'from-red-500 to-pink-500';
@@ -230,9 +244,16 @@ const FeedActividadPage: React.FC = () => {
     }
   };
 
-  const getTipoTexto = (tipo: string) => {
+  const getTipoTexto = (tipo: string, actividad?: Actividad) => {
     switch (tipo) {
-      case 'resena': return 'escribió una reseña';
+      case 'resena':
+        return 'escribió una reseña';
+      case 'respuesta':
+        if (actividad?.resena?.resenaPadreAutor) {
+          const autorNombre = `${actividad.resena.resenaPadreAutor.nombre} ${actividad.resena.resenaPadreAutor.apellido}`.trim();
+          return `respondió a la reseña de ${autorNombre}`;
+        }
+        return 'respondió a una reseña';
       case 'seguimiento': return 'comenzó a seguir a alguien';
       case 'lista': return 'actualizó una lista';
       case 'favorito': return 'agregó a favoritos';
@@ -243,6 +264,7 @@ const FeedActividadPage: React.FC = () => {
   const getTipoBadge = (tipo: string) => {
     const badges = {
       'resena': { text: 'Reseña', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+      'respuesta': { text: 'Respuesta', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
       'seguimiento': { text: 'Seguimiento', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
       'lista': { text: 'Lista', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
       'favorito': { text: 'Favorito', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
@@ -346,6 +368,7 @@ const FeedActividadPage: React.FC = () => {
           {[
             { value: 'all', label: 'Todas' },
             { value: 'resena', label: 'Reseñas' },
+            { value: 'respuesta', label: 'Respuestas' },
             { value: 'favorito', label: 'Favoritos' },
             { value: 'lista', label: 'Listas' },
             { value: 'seguimiento', label: 'Seguimientos' },
@@ -447,7 +470,7 @@ const FeedActividadPage: React.FC = () => {
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {getTipoTexto(actividad.tipo)}
+                            {getTipoTexto(actividad.tipo, actividad)}
                           </p>
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-500 font-medium bg-gray-100 dark:bg-gray-800/50 px-2.5 py-1 rounded-full flex-shrink-0">
@@ -478,25 +501,32 @@ const FeedActividadPage: React.FC = () => {
 
                       {/* Reseña (si aplica) - Mejorado */}
                       {actividad.resena && (
-                        <div className="mt-4 p-5 bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-xl border-2 border-yellow-400 dark:border-yellow-500 shadow-md">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className={`w-6 h-6 ${i < actividad.resena!.estrellas ? 'fill-yellow-500 dark:fill-yellow-400' : 'fill-gray-300 dark:fill-gray-600'}`}
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
+                        <div className={`mt-4 p-5 rounded-xl border-2 shadow-md ${
+                          actividad.tipo === 'respuesta' 
+                            ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border-green-400 dark:border-green-500'
+                            : 'bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border-yellow-400 dark:border-yellow-500'
+                        }`}>
+                          {/* Solo mostrar estrellas si NO es una respuesta */}
+                          {actividad.tipo !== 'respuesta' && (
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg
+                                    key={i}
+                                    className={`w-6 h-6 ${i < actividad.resena!.estrellas ? 'fill-yellow-500 dark:fill-yellow-400' : 'fill-gray-300 dark:fill-gray-600'}`}
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                              </div>
+                              <span className="text-base font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-900/50 px-3 py-1 rounded-full shadow-sm">
+                                {actividad.resena.estrellas} / 5
+                              </span>
                             </div>
-                            <span className="text-base font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-900/50 px-3 py-1 rounded-full shadow-sm">
-                              {actividad.resena.estrellas} / 5
-                            </span>
-                          </div>
+                          )}
                           {actividad.resena.contenido && actividad.resena.contenido.trim() && (
-                            <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed italic">
+                            <p className={`text-sm text-gray-800 dark:text-gray-200 leading-relaxed italic ${actividad.tipo === 'respuesta' ? 'mt-0' : ''}`}>
                               "{actividad.resena.contenido}"
                             </p>
                           )}

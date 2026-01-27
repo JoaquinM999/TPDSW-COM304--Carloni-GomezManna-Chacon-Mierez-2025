@@ -1,14 +1,21 @@
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 
-// Configuración del transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD, // App password de Gmail
-  },
-});
+// Función para crear el transporter (lazy loading para que cargue el .env primero)
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true para 465, false para otros puertos
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+};
 
 // Interfaz para opciones de email
 interface EmailOptions {
@@ -25,6 +32,7 @@ interface EmailOptions {
  */
 export const sendEmail = async (options: EmailOptions): Promise<any> => {
   try {
+    const transporter = getTransporter(); // Crear transporter cuando se use
     const mailOptions: Mail.Options = {
       from: `BookCode <${process.env.EMAIL_USER}>`,
       to: options.to,

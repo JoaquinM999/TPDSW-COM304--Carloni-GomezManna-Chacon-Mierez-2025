@@ -24,6 +24,11 @@ interface ActividadEnriquecida {
     id: number;
     contenido?: string;
     estrellas?: number;
+    esRespuesta?: boolean;
+    resenaPadreAutor?: {
+      nombre: string;
+      apellido: string;
+    };
   };
 }
 
@@ -93,7 +98,7 @@ export class FeedService {
       Actividad,
       whereCondition,
       {
-        populate: ['usuario', 'libro.autor', 'resena'],
+        populate: ['usuario', 'libro.autor', 'resena', 'resena.resenaPadre', 'resena.resenaPadre.usuario'],
         orderBy: { fecha: 'DESC' },
         limit,
         offset
@@ -120,7 +125,12 @@ export class FeedService {
       resena: act.resena ? {
         id: act.resena.id,
         contenido: act.resena.comentario ? act.resena.comentario.substring(0, 200) : undefined,
-        estrellas: act.resena.estrellas
+        estrellas: act.resena.estrellas,
+        esRespuesta: !!act.resena.resenaPadre,
+        resenaPadreAutor: act.resena.resenaPadre?.usuario ? {
+          nombre: act.resena.resenaPadre.usuario.nombre,
+          apellido: act.resena.resenaPadre.usuario.apellido || ''
+        } : undefined
       } : undefined
     }));
 

@@ -6,6 +6,7 @@ import { Resena } from './resena.entity';
 
 export enum TipoActividad {
   RESEÑA = 'resena',
+  RESPUESTA = 'respuesta',
   FAVORITO = 'favorito',
   SEGUIMIENTO = 'seguimiento',
   LISTA = 'lista',

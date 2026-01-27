@@ -260,7 +260,8 @@ export const Header: React.FC<HeaderProps> = ({
                       if (e.key === 'Enter') {
                         const value = (e.target as HTMLInputElement).value;
                         if (value.trim()) {
-                          navigate(`/buscar?q=${encodeURIComponent(value)}`);
+                          const query = encodeURIComponent(value.trim());
+                          navigate(`/libros?termino=${query}&filtro=todos`);
                           setShowSearch(false);
                         }
                       }

@@ -2,10 +2,13 @@ import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/mysql';
 import config from './mikro-orm.config';
 import dotenv from 'dotenv';
+import path from 'path';
 import cors from 'cors';
 import redis from './redis';
 import express from 'express';
-import 'dotenv/config';
+
+// Cargar variables de entorno desde la raíz
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
 
 import hardcoverRoutes from './routes/hardcover.routes';
 import googleBooksRoutes from './routes/googleBooks.routes';

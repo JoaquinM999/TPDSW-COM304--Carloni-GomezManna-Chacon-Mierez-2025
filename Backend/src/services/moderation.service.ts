@@ -95,8 +95,8 @@ export class ModerationService {
       flags.profanity = true;
     }
 
-    // 3. Verificar longitud mínima (evitar spam)
-    if (text.length < 10) {
+    // 3. Verificar longitud mínima (evitar spam) - Reducido a 3 para permitir respuestas cortas
+    if (text.length < 3) {
       reasons.push('Comentario demasiado corto (posible spam)');
       flags.spam = true;
     }

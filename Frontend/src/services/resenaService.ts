@@ -63,7 +63,16 @@ export const agregarReseña = async (
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     console.error('❌ Error response:', data);
-    throw new Error(data.error || 'Error al agregar reseña');
+    
+    // Crear error con toda la información de moderación
+    const error: any = new Error(data.error || 'Error al agregar reseña');
+    error.details = data.details;
+    error.reasons = data.reasons || [];
+    error.moderationScore = data.moderationScore;
+    error.blocked = data.blocked;
+    error.score = data.moderationScore; // Alias para compatibilidad
+    
+    throw error;
   }
 
   const result = await response.json();
@@ -174,7 +183,16 @@ export const crearRespuesta = async (
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || 'Error al crear respuesta');
+    
+    // Crear error con toda la información de moderación
+    const error: any = new Error(data.error || 'Error al crear respuesta');
+    error.details = data.details;
+    error.reasons = data.reasons || [];
+    error.moderationScore = data.moderationScore;
+    error.blocked = data.blocked;
+    error.score = data.moderationScore; // Alias para compatibilidad
+    
+    throw error;
   }
 
   return response.json();

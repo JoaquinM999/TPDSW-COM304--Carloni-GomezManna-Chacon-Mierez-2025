@@ -45,8 +45,8 @@
    Permisos: Aprobar/rechazar reseñas, ver estadísticas
 
 👑 ADMINISTRADOR
-   Email: admin@biblioteca.com
-   Password: Admin123!
+   Email: admin@gmail.com
+   Password: 123456
    Permisos: Acceso total al sistema
 
 ==========================================
@@ -141,21 +141,61 @@ npm run e2e
 
 | Suite | Tests | Estado |
 |-------|-------|--------|
-| Backend Unit Tests | 620 | ✅ Pasando |
-| Backend Integration Tests | Multiple | ✅ Pasando |
-| Frontend Unit Tests | 136 | ✅ Pasando |
-| Frontend E2E Tests | 1 | ✅ Pasando |
-| **Total** | **756+** | **✅ 100% Pasando** |
+| Backend Unit Tests | 49 | ✅ Pasando |
+| Frontend Unit Tests | 57 | ✅ Pasando |
+| Frontend E2E Tests | 3 (Escenarios) | ✅ Pasando |
+| **Total** | **109** | **✅ 100% Pasando** |
+
+### Backend (Unit Tests)
 
 ```bash
-# Ejecutar todos los tests
-cd Backend && npm test -- --run
-cd Frontend && npm test -- --run
-
-# Tests con UI
-cd Backend && npm run test:ui
-cd Frontend && npm run test:ui
+cd Backend
+npm install
+npx vitest run src/__tests__/unit/ --reporter verbose
 ```
+
+### Frontend (Unit Tests)
+
+```bash
+cd Frontend
+npm install
+npx vitest run --reporter verbose
+```
+
+### E2E (Playwright)
+
+> **Requisitos previos:** el Backend y el Frontend deben estar corriendo.
+
+```bash
+# 1. Levantar el Backend (en una terminal aparte)
+cd Backend
+npm run start  # o npm run dev
+
+# 2. Ejecutar los tests E2E desde Frontend
+cd Frontend
+npx playwright install          # solo la primera vez (descarga navegadores)
+npx playwright test             # ejecuta los tests
+npx playwright test --ui        # modo interactivo con UI
+npx playwright show-report      # ver reporte HTML tras la ejecución
+```
+
+> **Nota:** Los tests E2E tienen un timeout extendido de **120 segundos** para permitir la ejecución en entornos con carga alta o servidores de desarrollo más lentos.
+
+La config de Playwright (`Frontend/playwright.config.ts`) levanta automáticamente el dev server del Frontend en `http://localhost:5173` si no está corriendo.
+
+### Con cobertura
+
+```bash
+# Backend
+cd Backend
+npx vitest run --coverage
+
+# Frontend
+cd Frontend
+npx vitest run --coverage
+```
+
+> Los reportes de cobertura se generan en `coverage/` (ignorados por `.gitignore`).
 
 ---
 
@@ -174,7 +214,7 @@ cd Frontend && npm run test:ui
 
 ### ✅ Backend - Aprobación Directa (6/6)
 - [x] Cumple regularidad
-- [x] Tests automatizados (620 tests, 4x por integrante)
+- [x] Tests automatizados (~100 tests entre Backend y Frontend)
 - [x] Test de integración
 - [x] Login con autenticación JWT
 - [x] 3 niveles de acceso (Usuario, Moderador, Admin)
@@ -196,7 +236,7 @@ cd Frontend && npm run test:ui
 - [x] Modelos con interfaces/classes
 - [x] Patrones de diseño (Observer, Strategy)
 - [x] Dependencias en package.json
-- [x] Tests unitarios (136 tests)
+- [x] Tests unitarios (57 tests)
 
 ### ✅ Frontend - Aprobación Directa (5/5)
 - [x] Cumple regularidad
@@ -254,6 +294,6 @@ Frontend/
 
 ---
 
-**Última actualización:** 25 de Enero de 2026  
+**Última actualización:** 18 de Febrero de 2026  
 **Estado del Proyecto:** 🚀 LISTO PARA ENTREGA
 

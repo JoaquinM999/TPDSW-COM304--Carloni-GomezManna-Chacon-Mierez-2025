@@ -6,35 +6,21 @@
 Backend/
 └── src/__tests__/unit/
     ├── moderation.service.test.ts    # Servicio de moderación de reseñas
-    ├── auth.middleware.test.ts       # Middleware de autenticación JWT
-    ├── usuarioParser.test.ts         # Parsing y validación de usuarios
-    ├── resenaParser.test.ts          # Parsing y validación de reseñas
-    ├── resenaHelpers.test.ts         # Helpers de reseñas (where clause, contadores)
-    ├── resenaPopulateHelpers.test.ts # Estrategias de populate para reseñas
-    ├── libroParser.test.ts           # Parsing y validación de libros
-    ├── libroHelpers.test.ts          # Helpers de libros (crear, buscar entidades)
-    ├── libroSearchHelpers.test.ts    # Búsqueda de libros (filtros, dedup, sanitize)
-    ├── autorParser.test.ts           # Parsing y validación de autores
-    ├── autorSearchHelpers.test.ts    # Búsqueda de autores (local, externa, cache)
-    ├── authValidationHelpers.test.ts # Validación de auth (login, registro, passwords)
-    └── sagaHelpers.test.ts           # Helpers de sagas (validación, autores)
+    └── auth.middleware.test.ts       # Middleware de autenticación JWT
 
 Frontend/
-├── src/utils/
-│   ├── slugUtils.test.ts            # Generación y validación de slugs
-│   ├── jwtUtils.test.ts             # Decodificación JWT y roles
-│   ├── tokenUtil.test.ts            # Gestión de tokens en localStorage
-│   └── apiParser.test.ts            # Parsing de respuestas de API
-├── src/componentes/
-│   ├── SearchBar.test.tsx            # Componente de barra de búsqueda
-│   └── LibroCard.test.tsx            # Componente de tarjeta de libro
+├── src/
+│   ├── utils/
+│   │   └── apiParser.test.ts        # Parsing de respuestas de API
+│   └── componentes/
+│       └── SearchBar.test.tsx        # Componente de barra de búsqueda
 └── e2e/
     └── resena-flow.spec.ts           # Test E2E: Login → Crear Reseña → Verificar
 ```
 
 ## Cómo Ejecutar
 
-### Backend
+### Backend (Unit Tests)
 
 ```bash
 cd Backend
@@ -42,13 +28,34 @@ npm install
 npx vitest run src/__tests__/unit/ --reporter verbose
 ```
 
-### Frontend
+### Frontend (Unit Tests)
 
 ```bash
 cd Frontend
 npm install
 npx vitest run --reporter verbose
 ```
+
+### E2E (Playwright)
+
+> **Requisitos previos:** el Backend y el Frontend deben estar corriendo.
+
+```bash
+# 1. Levantar el Backend (en una terminal aparte)
+cd Backend
+npm run start  # o npm run dev
+
+# 2. Ejecutar los tests E2E desde Frontend
+cd Frontend
+npx playwright install          # solo la primera vez (descarga navegadores)
+npx playwright test             # ejecuta los tests
+npx playwright test --ui        # modo interactivo con UI
+npx playwright show-report      # ver reporte HTML tras la ejecución
+```
+
+> **Nota:** Los tests E2E tienen un timeout extendido de **120 segundos** para permitir la ejecución en entornos con carga alta o servidores de desarrollo más lentos.
+
+La config de Playwright (`Frontend/playwright.config.ts`) levanta automáticamente el dev server del Frontend en `http://localhost:5173` si no está corriendo.
 
 ### Con cobertura
 
@@ -70,18 +77,14 @@ npx vitest run --coverage
 - **Mocks**: `vi.mock()` para dependencias externas (JWT, Sentiment, localStorage, APIs)
 - **Limpieza**: `afterEach` con `vi.restoreAllMocks()` o `localStorage.clear()`
 - **Nomenclatura**: `describe('función()')` → `it('debe + comportamiento esperado')`
-- **Framework**: Vitest para unit tests, Playwright para E2E
+- **Frameworks**: Vitest para unit tests, Playwright para E2E
 
 ## Qué Cubre Cada Test
 
-| Área | Archivos | Tests | Cobertura |
-|------|----------|-------|-----------|
+| Área | Archivo | Tests | Cobertura |
+|------|---------|-------|-----------|
 | **Moderación** | `moderation.service.test.ts` | 34 | Profanidad, spam, toxicidad, scoring, cleanText |
 | **Auth Middleware** | `auth.middleware.test.ts` | 15 | JWT válido/inválido, token expirado, payload |
-| **Parsers Backend** | `*Parser.test.ts` (×4) | ~120 | Input validation, sanitización HTML, filtros, queries |
-| **Helpers Backend** | `*Helpers.test.ts` (×5) | ~150 | Where clauses, búsqueda, dedup, serialización |
-| **Auth Validation** | `authValidationHelpers.test.ts` | ~30 | Login, registro, password strength, email |
-| **Utils Frontend** | `slugUtils`, `jwtUtils`, `tokenUtil` | 53 | Slugs, JWT decode, localStorage tokens |
-| **API Parser** | `apiParser.test.ts` | 49 | Parsing de respuestas (libros, reseñas, autores) |
-| **Componentes** | `SearchBar`, `LibroCard` | 17 | Render, props, interacción, accesibilidad |
-| **E2E** | `resena-flow.spec.ts` | 3 | Login → Crear Reseña → Verificar publicación |
+| **API Parser** | `apiParser.test.ts` | 49 | Parsing de respuestas (libros, reseñas, autores, sagas, paginación) |
+| **SearchBar** | `SearchBar.test.tsx` | 8 | Render, props, input, sugerencias, accesibilidad |
+| **E2E** | `resena-flow.spec.ts` | 3 | Login → Navegar a libro del seed → Crear Reseña → Login inválido → Protección de rutas |

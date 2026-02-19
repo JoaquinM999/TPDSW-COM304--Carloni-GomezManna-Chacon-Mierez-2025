@@ -1,4 +1,4 @@
-# 🎊 TPDSW-COM304 - Sistema de Gestión de Libros y Reseñas
+# TPDSW-COM304 - Sistema de Gestión de Libros y Reseñas
 
 **Trabajo Práctico de Desarrollo de Software - COM304**  
 **Universidad Tecnologica Nacional**
@@ -7,7 +7,7 @@
 
 ## 🎥 Video Demo
 
-**📹 Link:** [Ver Video Demo]()  
+**📹 Link:** En proceso
 **⏱️ Duración:** 10 minutos  
 **📋 Contenido:**
 - Demostración de funcionalidades principales

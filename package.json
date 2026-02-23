@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --project Backend/tsconfig.json Backend/src/index.ts",
-    "build": "cd Backend && tsc",
+    "build": "cd Backend && npm install && tsc",
     "start": "node Backend/dist/index.js"
   },
   "dependencies": {

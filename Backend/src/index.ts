@@ -42,16 +42,31 @@ import { authenticateJWT } from './middleware/auth.middleware';
 dotenv.config();
 
 async function main() {
-  const orm = await MikroORM.init(config);
-
-  // Nota: ensureDatabase() y updateSchema() son solo para desarrollo.
-  // En producción, usa las migraciones de MikroORM para manejar cambios en la DB.
-  await orm.getSchemaGenerator().ensureDatabase();
-  await orm.getSchemaGenerator().updateSchema();
-
-  // Crear la aplicación Express después de inicializar ORM
+  // Crear la aplicación Express primero
   const app = express(); 
   app.use(express.json());
+
+  // Start listening on port FIRST before initializing DB
+  const PORT = process.env.PORT || 3000;
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Servidor en puerto ${PORT}`);
+  });
+
+  // Initialize ORM in background - don't block port binding
+  let orm: any = null;
+  try {
+    orm = await MikroORM.init(config);
+
+    // Nota: ensureDatabase() y updateSchema() son solo para desarrollo.
+    // En producción, usa las migraciones de MikroORM para manejar cambios en la DB.
+    await orm.getSchemaGenerator().ensureDatabase();
+    await orm.getSchemaGenerator().updateSchema();
+    console.log('✅ Database initialized successfully');
+  } catch (dbError: any) {
+    console.error('⚠️ Database initialization failed:', dbError.message);
+    console.error('The service will still be available on port ' + PORT + ', but database queries will fail');
+    // Don't crash - let the server continue so Render can detect it's running
+  }
 
   const allowedOrigins = [
     "http://localhost:5173", 
@@ -120,11 +135,6 @@ async function main() {
   // Guardar ORM en app para acceder desde req.app.get('orm')
   app.set('orm', orm);
 
-  const PORT = process.env.PORT || 3000;
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Servidor en puerto ${PORT}`);
-  });
-
   // Graceful shutdown - cerrar conexiones correctamente
   const shutdown = async (signal: string) => {
     console.log(`\n${signal} recibido. Cerrando servidor...`);
@@ -133,8 +143,10 @@ async function main() {
       console.log('🔌 Servidor HTTP cerrado');
       
       try {
-        await orm.close();
-        console.log('🗄️ Conexiones de base de datos cerradas');
+        if (orm) {
+          await orm.close();
+          console.log('🗄️ Conexiones de base de datos cerradas');
+        }
         
         await redis.quit();
         console.log('🔴 Redis desconectado');

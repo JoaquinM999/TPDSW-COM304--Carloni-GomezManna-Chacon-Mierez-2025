@@ -10,9 +10,9 @@ import { Libro } from '../entities/libro.entity';
  * Interface para las entidades relacionadas del libro
  */
 export interface LibroRelatedEntities {
-  autor: Autor;
+  autor: Autor | null;
   categoria: Categoria;
-  editorial: Editorial;
+  editorial?: Editorial;
   saga?: Saga;
 }
 

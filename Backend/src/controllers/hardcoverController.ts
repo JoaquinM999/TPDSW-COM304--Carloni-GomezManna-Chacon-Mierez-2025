@@ -20,7 +20,9 @@ export async function trendingBooksController(req: Request, res: Response) {
 
 export async function getBookBySlugController(req: Request, res: Response) {
   try {
-    const { slug } = req.params;
+    const slugParam = req.params.slug;
+    // Handle both string and string[] cases from req.params
+    const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
 
     if (!slug) {
       return res.status(400).json({ error: 'Slug es requerido' });

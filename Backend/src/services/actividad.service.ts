@@ -27,10 +27,8 @@ export class ActividadService {
 
     let libro = null;
     if (libroId) {
-      // Cargar libro con slug y externalId para notificaciones
-      libro = await em.findOne(Libro, { id: libroId }, {
-        fields: ['id', 'nombre', 'slug', 'externalId']
-      });
+      // Cargar libro completo para poder usarlo en notificaciones
+      libro = await em.findOne(Libro, { id: libroId });
     }
 
     let resena = null;
@@ -121,7 +119,7 @@ export class ActividadService {
       if (seguidores.length === 0) return;
 
       // Crear mensaje según el tipo de actividad
-      const nombreCompleto = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+      const nombreCompleto = usuario.nombre || usuario.username;
       let mensaje = '';
       let url = '';
 

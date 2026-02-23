@@ -128,3 +128,4 @@ if (!redisUrl) {
 }
 
 export default redis;
+export { redis };

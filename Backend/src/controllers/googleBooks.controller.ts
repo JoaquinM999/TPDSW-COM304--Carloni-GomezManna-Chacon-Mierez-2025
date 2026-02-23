@@ -38,7 +38,9 @@ const extractTitleFromSlug = (slug: string): string => {
 };
 
 export const obtenerLibroPorId = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const idParam = req.params.id;
+  // Handle both string and string[] cases from req.params
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
   if (!id) return res.status(400).json({ message: 'Falta parámetro id' });
 
   try {

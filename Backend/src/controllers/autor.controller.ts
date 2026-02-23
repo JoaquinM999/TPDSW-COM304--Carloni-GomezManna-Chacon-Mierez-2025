@@ -298,7 +298,9 @@ export const getAutorById = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const identifier = req.params.id;
+    const idParam = req.params.id;
+    // Handle both string and string[] cases from req.params
+    const identifier = Array.isArray(idParam) ? idParam[0] : idParam;
 
     console.log('🔍 getAutorById - Identifier:', identifier);
 

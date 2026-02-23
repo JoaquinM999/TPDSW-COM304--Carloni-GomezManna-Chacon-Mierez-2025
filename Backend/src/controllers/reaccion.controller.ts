@@ -99,10 +99,10 @@ export const addOrUpdateReaccion = async (req: Request, res: Response) => {
             
             await notificacionService.notificarNuevaReaccion(
               resena.usuario.id,
-              usuarioReaccion.nombre || usuarioReaccion.username || 'Alguien',
+              usuarioReaccion.username || 'Alguien',
               tipoMayuscula,
               resenaId,
-              resena.libro.nombre,
+              resena.libro.nombre || 'Libro sin título',
               libroSlug
             );
           }

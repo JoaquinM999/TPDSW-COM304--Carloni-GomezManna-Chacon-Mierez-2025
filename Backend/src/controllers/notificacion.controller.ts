@@ -66,7 +66,9 @@ export const marcarComoLeida = async (req: Request, res: Response) => {
         return res.status(401).json({ error: 'Usuario no autenticado' });
       }
       const usuarioId = usuarioPayload.id;
-      const { id } = req.params;
+      const idParam = req.params.id;
+      // Handle both string and string[] cases from req.params
+      const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
       const service = new NotificacionService(orm.em);
       await service.marcarComoLeida(parseInt(id), usuarioId);
@@ -115,7 +117,9 @@ export const eliminarNotificacion = async (req: Request, res: Response) => {
         return res.status(401).json({ error: 'Usuario no autenticado' });
       }
       const usuarioId = usuarioPayload.id;
-      const { id } = req.params;
+      const idParam = req.params.id;
+      // Handle both string and string[] cases from req.params
+      const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
       const service = new NotificacionService(orm.em);
       await service.eliminarNotificacion(parseInt(id), usuarioId);

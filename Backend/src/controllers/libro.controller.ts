@@ -465,7 +465,9 @@ export const getOrCreateLibroFromExternal = async (req: Request, res: Response) 
   const em = orm.em.fork();
 
   try {
-    const { externalId } = req.params;
+    const externalIdParam = req.params.externalId;
+    // Handle both string and string[] cases from req.params
+    const externalId = Array.isArray(externalIdParam) ? externalIdParam[0] : externalIdParam;
 
     if (!externalId) {
       return res.status(400).json({ error: 'externalId es requerido' });

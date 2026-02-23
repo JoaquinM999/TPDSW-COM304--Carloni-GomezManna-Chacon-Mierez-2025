@@ -329,7 +329,9 @@ export const searchAuthor = async (req: Request, res: Response) => {
 };
 
 export const getAuthor = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const idParam = req.params.id;
+  // Handle both string and string[] cases from req.params
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
   let authorKey: string;
 

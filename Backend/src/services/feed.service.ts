@@ -11,14 +11,13 @@ interface ActividadEnriquecida {
   usuario: {
     id: number;
     nombre?: string;
-    apellido?: string;
     username: string;
     avatar?: string;
   };
   libro?: {
     id: number;
     nombre?: string;
-    autor?: { nombre: string };
+    autor?: { nombre?: string };
   };
   resena?: {
     id: number;
@@ -26,8 +25,7 @@ interface ActividadEnriquecida {
     estrellas?: number;
     esRespuesta?: boolean;
     resenaPadreAutor?: {
-      nombre: string;
-      apellido: string;
+      nombre?: string;
     };
   };
 }
@@ -113,7 +111,6 @@ export class FeedService {
       usuario: {
         id: act.usuario.id,
         nombre: act.usuario.nombre,
-        apellido: act.usuario.apellido || '',
         username: act.usuario.username,
         avatar: act.usuario.avatar
       },
@@ -128,8 +125,7 @@ export class FeedService {
         estrellas: act.resena.estrellas,
         esRespuesta: !!act.resena.resenaPadre,
         resenaPadreAutor: act.resena.resenaPadre?.usuario ? {
-          nombre: act.resena.resenaPadre.usuario.nombre,
-          apellido: act.resena.resenaPadre.usuario.apellido || ''
+          nombre: act.resena.resenaPadre.usuario.nombre
         } : undefined
       } : undefined
     }));

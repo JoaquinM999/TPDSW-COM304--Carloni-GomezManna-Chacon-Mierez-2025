@@ -522,8 +522,8 @@ export const createRespuesta = async (req: Request, res: Response) => {
         
         await notificacionService.notificarRespuestaResena(
           parent.usuario.id,
-          usuario.nombre || usuario.username || 'Alguien',
-          libro.nombre,
+          usuario.username || 'Alguien',
+          libro.nombre || 'Libro sin título',
           parentId,
           libroSlug
         );

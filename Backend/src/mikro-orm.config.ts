@@ -48,13 +48,14 @@ const config: Options<MySqlDriver> = {
   allowGlobalContext: true,
   pool: {
     min: 1,
-    max: 3,
+    max: 2,
     acquireTimeoutMillis: 30000,
     idleTimeoutMillis: 30000,
   },
   driverOptions: {
     connection: {
       ssl: { rejectUnauthorized: false },
+      connectionLimit: 2,
     },
   },
 };

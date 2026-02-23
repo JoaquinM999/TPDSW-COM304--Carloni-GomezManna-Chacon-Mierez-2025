@@ -1,4 +1,5 @@
-import fetch, { RequestInit } from "node-fetch";
+import fetch from "node-fetch";
+import type { RequestInit } from "node-fetch";
 import redis from "../redis";
 import { LRUCache } from "lru-cache";
 

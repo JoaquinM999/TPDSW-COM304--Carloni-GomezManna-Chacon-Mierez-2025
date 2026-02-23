@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import Mail from 'nodemailer/lib/mailer';
+import type { Transporter } from 'nodemailer';
 
 // Función para crear el transporter (lazy loading para que cargue el .env primero)
 const getTransporter = () => {
@@ -33,7 +33,7 @@ interface EmailOptions {
 export const sendEmail = async (options: EmailOptions): Promise<any> => {
   try {
     const transporter = getTransporter(); // Crear transporter cuando se use
-    const mailOptions: Mail.Options = {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: `BookCode <${process.env.EMAIL_USER}>`,
       to: options.to,
       subject: options.subject,

@@ -161,6 +161,162 @@ cd Frontend
 npm install
 npx vitest run --reporter verbose
 ```
+# TPDSW-COM304 - Sistema de Gestión de Libros y Reseñas
+
+**Trabajo Práctico de Desarrollo de Software - COM304**
+**Universidad Tecnologica Nacional**
+
+---
+
+## 🎥 Video Demo
+
+**📹 Link:** En proceso
+
+---
+
+## 🔗 Links de Deploy
+
+https://tpdsw-fawn.vercel.app/
+
+Infraestructura:
+Usando Vercel para el Frontend, Render para el Backend y Cloud Clever para la base de datos.
+
+---
+
+## 🔐 Credenciales de Prueba
+
+```
+==========================================
+🔐 CREDENCIALES PARA PRUEBA DE LA APP
+==========================================
+
+👤 USUARIO NORMAL
+   Email: demo@biblioteca.com
+   Password: Demo123!
+   Permisos: Crear reseñas, listas, favoritos, seguir usuarios
+
+👮 MODERADOR
+   Email: moderador@biblioteca.com
+   Password: Mod123!
+   Permisos: Aprobar/rechazar reseñas, ver estadísticas
+
+👑 ADMINISTRADOR
+   Email: admin@gmail.com
+   Password: 123456
+   Permisos: Acceso total al sistema
+
+==========================================
+```
+
+---
+
+## 📚 Documentación API
+
+**📖 Documentación completa:** [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md)
+
+La API incluye endpoints para:
+- Autenticación (login, register, password reset)
+- Libros (CRUD, búsqueda, filtros)
+- Usuarios (perfil, gestión)
+- Reseñas (CRUD, moderación, respuestas)
+- Listas (CRUD, contenido)
+- Favoritos
+- Reacciones (likes, helpful)
+- Seguimiento de usuarios
+- Notificaciones
+- Votaciones
+- Newsletter
+- Estadísticas (Admin)
+
+---
+
+## 👥 Integrantes del Grupo
+
+| Legajo | Nombre | Mail | Rol |
+|--------|--------|------|-----|
+| 47791 | Gomez Manna, Joaquina Esperanza | Desarrollador Backend/Frontend |
+| 51095 | Carloni, Nahuel Iván | Desarrollador Backend/Frontend |
+| 50980 | Chacón, Agustina Celeste  | Desarrollador Backend/Frontend |
+| 49938 | Mierez, Joaquín | Desarrollador Backend/Frontend |
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### Requisitos Previos
+- Node.js 18+
+- PostgreSQL 14+
+- Redis (opcional, para sesiones)
+
+### Backend
+
+```bash
+cd Backend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env
+# Editar .env con tus credenciales
+
+# Ejecutar migraciones
+npm run migrate
+
+# Iniciar servidor (desarrollo)
+npm run dev
+
+# Ejecutar tests
+npm test
+
+# Ver cobertura
+npm run test:coverage
+```
+
+### Frontend
+
+```bash
+cd Frontend
+
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Ejecutar tests
+npm test
+
+# Tests E2E
+npm run e2e
+```
+
+---
+
+## 🧪 Testing
+
+| Suite | Tests | Estado |
+|-------|-------|--------|
+| Backend Unit Tests | 49 | ✅ Pasando |
+| Frontend Unit Tests | 57 | ✅ Pasando |
+| Frontend E2E Tests | 3 (Escenarios) | ✅ Pasando |
+| **Total** | **109** | **✅ 100% Pasando** |
+
+### Backend (Unit Tests)
+
+```bash
+cd Backend
+npm install
+npx vitest run src/__tests__/unit/ --reporter verbose
+```
+
+### Frontend (Unit Tests)
+
+```bash
+cd Frontend
+npm install
+npx vitest run --reporter verbose
+```
 
 ### E2E (Playwright)
 
@@ -199,65 +355,6 @@ npx vitest run --coverage
 
 ---
 
-## 📋 Cumplimiento de Requisitos
-
-### ✅ Backend - Regularidad (9/9)
-- [x] Desarrollarse en JavaScript/TypeScript
-- [x] Framework web (Express con middlewares)
-- [x] API REST
-- [x] Base de datos persistente (PostgreSQL)
-- [x] Mapper (MikroORM)
-- [x] Arquitectura en capas
-- [x] Validación de datos
-- [x] Manejo de errores
-- [x] Dependencias en package.json
-
-### ✅ Backend - Aprobación Directa (6/6)
-- [x] Cumple regularidad
-- [x] Tests automatizados (~100 tests entre Backend y Frontend)
-- [x] Test de integración
-- [x] Login con autenticación JWT
-- [x] 3 niveles de acceso (Usuario, Moderador, Admin)
-- [x] Rutas protegidas y ambientes (.env)
-
-### ✅ Frontend - Regularidad (16/16)
-- [x] Framework (React 18)
-- [x] HTML5 semántico
-- [x] CSS con Tailwind CSS 4
-- [x] Metodología Airbnb JS
-- [x] Mobile-first design
-- [x] 5 breakpoints (sm, md, lg, xl, 2xl)
-- [x] Buenas prácticas UX/UI
-- [x] Manejo de eventos
-- [x] Manejo de errores amigable
-- [x] Reactividad (React hooks)
-- [x] Input/Output properties
-- [x] Servicios (API calls)
-- [x] Modelos con interfaces/classes
-- [x] Patrones de diseño (Observer, Strategy)
-- [x] Dependencias en package.json
-- [x] Tests unitarios (57 tests)
-
-### ✅ Frontend - Aprobación Directa (5/5)
-- [x] Cumple regularidad
-- [x] Test unitario de componente
-- [x] Test E2E (resena-flow.spec.ts)
-- [x] Login implementado
-- [x] Rutas protegidas por rol
-
-### ✅ Funcional - Regularidad
-- [x] CRUD Usuario, Autor, Libro, Reseña, Lista
-- [x] CRUD dependientes (Libro→Autor, Reseña→Usuario/Libro)
-- [x] Listados con filtros (categoría, rating, búsqueda)
-- [x] CUU: Reseñas, Listas personalizadas
-
-### ✅ Funcional - Aprobación Directa
-- [x] CRUDs de todas las clases de negocio
-- [x] CUU: Moderación, Notificaciones, Recomendaciones
-- [x] CUU relacionados (reseñas → notificaciones)
-
----
-
 ## 🏗️ Arquitectura
 
 ```
@@ -284,16 +381,5 @@ Frontend/
 
 ---
 
-## 📅 Fechas Importantes
-
-| Entrega | Fecha |
-|---------|-------|
-| **Regularidad/Aprobación Directa** | **17/10/2025** |
-| Primer Recuperatorio | 31/10/2025 |
-| Última instancia | 14/11/2025 |
-
----
-
-**Última actualización:** 18 de Febrero de 2026  
-**Estado del Proyecto:** 🚀 LISTO PARA ENTREGA
+**Última actualización:** 24 de Febrero de 2026
 

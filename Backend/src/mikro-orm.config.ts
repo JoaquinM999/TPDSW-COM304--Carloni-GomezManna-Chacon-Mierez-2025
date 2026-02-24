@@ -48,6 +48,7 @@ const config: Options<MySqlDriver> = {
     pathTs: './migrations',
   },
   allowGlobalContext: true,
+  connect: false,
   pool: {
     min: 0,
     max: poolMax,

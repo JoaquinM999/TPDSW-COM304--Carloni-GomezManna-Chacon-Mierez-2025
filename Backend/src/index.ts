@@ -56,6 +56,14 @@ async function main() {
   let orm: any = null;
   try {
     orm = await MikroORM.init(config);
+    
+    // Try to connect, but don't fail if it times out
+    try {
+      await orm.connect();
+      console.log('✅ Database connection established');
+    } catch (connectError: any) {
+      console.warn('⚠️ Database connection failed at startup:', connectError.message);
+    }
 
     const isProduction = process.env.NODE_ENV === 'production';
     const isRender = process.env.RENDER === 'true';
@@ -70,9 +78,9 @@ async function main() {
       console.log('ℹ️ Schema sync disabled (set DB_SCHEMA_SYNC=true to enable)');
     }
 
-    console.log('✅ Database initialized successfully');
+    console.log('✅ ORM initialized successfully');
   } catch (dbError: any) {
-    console.error('⚠️ Database initialization failed:', dbError.message);
+    console.error('⚠️ ORM initialization failed:', dbError.message);
     console.error('The service will still be available on port ' + PORT + ', but database queries will fail');
     // Don't crash - let the server continue so Render can detect it's running
   }

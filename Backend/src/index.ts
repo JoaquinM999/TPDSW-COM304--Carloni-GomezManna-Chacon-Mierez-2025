@@ -58,14 +58,16 @@ async function main() {
     orm = await MikroORM.init(config);
 
     const isProduction = process.env.NODE_ENV === 'production';
+    const isRender = process.env.RENDER === 'true';
+    const schemaSyncEnabled = process.env.DB_SCHEMA_SYNC === 'true' || (!isProduction && !isRender);
 
-    if (!isProduction) {
+    if (schemaSyncEnabled) {
       // Nota: ensureDatabase() y updateSchema() son solo para desarrollo.
       // En producción, usa las migraciones de MikroORM para manejar cambios en la DB.
       await orm.getSchemaGenerator().ensureDatabase();
       await orm.getSchemaGenerator().updateSchema();
     } else {
-      console.log('ℹ️ Production mode: skipping ensureDatabase/updateSchema');
+      console.log('ℹ️ Schema sync disabled (set DB_SCHEMA_SYNC=true to enable)');
     }
 
     console.log('✅ Database initialized successfully');

@@ -261,7 +261,7 @@ export const HeroSection: React.FC = () => {
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {stats.map(({ icon: Icon, label, value, color }, idx) => (
           <motion.div
             key={idx}

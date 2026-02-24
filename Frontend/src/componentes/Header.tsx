@@ -149,7 +149,11 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
   const handleSearchClick = () => {
-    if (isMobileOrTablet) setShowSearch(true);
+    if (isMobileOrTablet) {
+      navigate('/libros');
+      return;
+    }
+    setShowSearch(true);
   };
 
   return (
@@ -159,7 +163,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Logo */}
           <div className="flex items-center z-10">
             <Link to="/">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">{siteName}</h1>
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">{siteName}</h1>
             </Link>
           </div>
 
@@ -218,13 +222,13 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Iconos derecha */}
-          <div className="flex items-center space-x-3 sm:space-x-4 z-10">
+          <div className="flex items-center space-x-2 sm:space-x-4 z-10">
             {/* Search */}
             <div
               onMouseEnter={handleMouseEnterSearch}
               onMouseLeave={handleMouseLeaveSearch}
               onClick={handleSearchClick}
-              className="relative w-[140px] sm:w-[180px] flex items-center justify-end cursor-pointer"
+              className="relative w-8 sm:w-[180px] flex items-center justify-end cursor-pointer"
             >
               <AnimatePresence>
                 {!showSearch && (
@@ -241,11 +245,11 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </AnimatePresence>
               <AnimatePresence>
-                {showSearch && (
+                {showSearch && !isMobileOrTablet && (
                   <motion.input
                     key="input"
                     initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 140, opacity: 1 }}
+                    animate={{ width: 160, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.3 }}
                     type="text"
@@ -272,10 +276,16 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Quick Access */}
-            <QuickAccess />
+            <div className="hidden sm:block">
+              <QuickAccess />
+            </div>
 
             {/* Notifications - Nuevo componente integrado */}
-            {showNotifications && isAuth && <NotificationBell />}
+            {showNotifications && isAuth && (
+              <div className="hidden sm:block">
+                <NotificationBell />
+              </div>
+            )}
 
             {/* User */}
             <div className="relative">
@@ -351,7 +361,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Theme Toggle - Pegado al borde derecho absoluto */}
-            <div className="ml-auto mr-4">
+            <div className="hidden sm:block">
               <ThemeToggle />
             </div>
           </div>

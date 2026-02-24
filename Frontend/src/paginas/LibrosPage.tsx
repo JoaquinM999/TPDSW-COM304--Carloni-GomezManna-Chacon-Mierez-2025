@@ -295,12 +295,12 @@ export default function TodosLosLibros() {
           Buscar por título, autor, ISBN o queries (ej: <code className="bg-white dark:bg-gray-700 dark:text-gray-200 px-1 rounded">subject:fantasy</code>).
         </p>
 
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <div className="flex-shrink-0">
+        <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+          <div className="w-full sm:w-auto flex-shrink-0">
             <select
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium min-w-[120px]"
+              className="w-full px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium sm:min-w-[120px]"
             >
               <option value="todos">Todos</option>
               <option value="titulo">Título</option>
@@ -310,11 +310,11 @@ export default function TodosLosLibros() {
             </select>
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="w-full sm:w-auto flex-shrink-0">
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'relevance' | 'rating_high_to_low')}
-              className="px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium min-w-[140px]"
+              className="w-full px-4 py-4 rounded-3xl border border-slate-200 dark:border-gray-600 shadow-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-600 focus:border-cyan-400 dark:focus:border-cyan-500 transition-all duration-300 text-gray-700 dark:text-gray-200 font-medium sm:min-w-[140px]"
             >
               <option value="relevance">Relevancia</option>
               <option value="rating_high_to_low">Mejor Calificado</option>
@@ -383,7 +383,7 @@ export default function TodosLosLibros() {
 
         {!error && libros.length > 0 && (
           <>
-            <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {libros.map((libro) => {
                 // Usar /libro/:slug para todos los libros (locales usan slug, externos usan externalId)
                 const libroUrl = `/libro/${libro.id}`;

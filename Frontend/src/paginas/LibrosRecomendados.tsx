@@ -309,7 +309,7 @@ export const LibrosRecomendados: React.FC = () => {
           {/* Vista Grid con animación stagger */}
           {vista === 'grid' && (
             <motion.div 
-              className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
               role="list"
               aria-label="Lista de libros recomendados"
               initial="hidden"

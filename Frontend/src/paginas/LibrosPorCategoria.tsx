@@ -55,7 +55,7 @@ export default function LibrosPorCategoria() {
       <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
         Libros por Categoría
       </h2>
-      <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {libros.map((libro) => (
           <Link
             key={libro.id}

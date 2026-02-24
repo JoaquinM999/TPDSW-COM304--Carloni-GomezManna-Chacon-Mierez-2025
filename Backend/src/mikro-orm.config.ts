@@ -29,7 +29,9 @@ import { Newsletter } from './entities/newsletter.entity';
 import { PasswordResetToken } from './entities/passwordResetToken.entity';
 import { Notificacion } from './entities/notificacion.entity';
 
-const poolMax = Number(process.env.DB_POOL_MAX ?? 1);
+// Pool configuration: optimized for free-tier databases with 5 connection limit
+const poolMax = Number(process.env.DB_POOL_MAX ?? 2); // Default 2 for Clever Cloud free tier
+const poolMin = Number(process.env.DB_POOL_MIN ?? 0);
 
 const config: Options<MySqlDriver> = {
   host: process.env.DB_HOST ?? 'localhost',
@@ -48,17 +50,23 @@ const config: Options<MySqlDriver> = {
     pathTs: './migrations',
   },
   allowGlobalContext: true,
-  connect: false,
+  connect: false, // Don't auto-connect - we'll manage it explicitly
+  
+  // Pool configuration - critical for free-tier databases
   pool: {
-    min: 0,
-    max: poolMax,
-    acquireTimeoutMillis: 30000,
-    idleTimeoutMillis: 30000,
+    min: poolMin,           // 0 = no pre-allocated connections
+    max: poolMax,           // 2 = respects Clever Cloud 5-connection limit
+    acquireTimeoutMillis: 30000,  // Wait up to 30s to acquire connection
+    idleTimeoutMillis: 30000,     // Close idle connections after 30s
   },
+  
+  // MySQL driver connection options
   driverOptions: {
     connection: {
       ssl: { rejectUnauthorized: false },
-      connectionLimit: poolMax,
+      connectionLimit: poolMax,  // Redundant but explicit
+      waitForConnections: true,
+      queueLimit: 0,  // No limit on queued requests
     },
   },
 };

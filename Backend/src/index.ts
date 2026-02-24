@@ -1,6 +1,5 @@
 import 'reflect-metadata';
-import { MikroORM } from '@mikro-orm/mysql';
-import config from './mikro-orm.config';
+import { initializeORM, getORM, closeORM, isORMInitialized } from './orm';
 import dotenv from 'dotenv';
 import path from 'path';
 import cors from 'cors';
@@ -9,6 +8,7 @@ import express from 'express';
 
 // Cargar variables de entorno desde la raíz
 dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+dotenv.config();
 
 import hardcoverRoutes from './routes/hardcover.routes';
 import googleBooksRoutes from './routes/googleBooks.routes';
@@ -39,10 +39,8 @@ import { notificacionRoutes } from './routes/notificacion.routes';
 
 import { authenticateJWT } from './middleware/auth.middleware';
 
-dotenv.config();
-
 async function main() {
-  // Crear la aplicación Express primero
+  // Crear la aplicación Express
   const app = express(); 
   app.use(express.json());
 
@@ -52,37 +50,13 @@ async function main() {
     console.log(`🚀 Servidor en puerto ${PORT}`);
   });
 
-  // Initialize ORM in background - don't block port binding
-  let orm: any = null;
+  // Initialize ORM singleton - will only initialize once globally
   try {
-    orm = await MikroORM.init(config);
-    
-    // Try to connect, but don't fail if it times out
-    try {
-      await orm.connect();
-      console.log('✅ Database connection established');
-    } catch (connectError: any) {
-      console.warn('⚠️ Database connection failed at startup:', connectError.message);
-    }
-
-    const isProduction = process.env.NODE_ENV === 'production';
-    const isRender = process.env.RENDER === 'true';
-    const schemaSyncEnabled = process.env.DB_SCHEMA_SYNC === 'true' || (!isProduction && !isRender);
-
-    if (schemaSyncEnabled) {
-      // Nota: ensureDatabase() y updateSchema() son solo para desarrollo.
-      // En producción, usa las migraciones de MikroORM para manejar cambios en la DB.
-      await orm.getSchemaGenerator().ensureDatabase();
-      await orm.getSchemaGenerator().updateSchema();
-    } else {
-      console.log('ℹ️ Schema sync disabled (set DB_SCHEMA_SYNC=true to enable)');
-    }
-
-    console.log('✅ ORM initialized successfully');
-  } catch (dbError: any) {
-    console.error('⚠️ ORM initialization failed:', dbError.message);
-    console.error('The service will still be available on port ' + PORT + ', but database queries will fail');
-    // Don't crash - let the server continue so Render can detect it's running
+    console.log('[APP] Initializing ORM singleton...');
+    await initializeORM();
+    console.log('[APP] ORM singleton initialized');
+  } catch (error) {
+    console.error('[APP] Failed to initialize ORM:', error);
   }
 
   const allowedOrigins = [
@@ -107,14 +81,24 @@ async function main() {
         return callback(null, true);
       }
       
-
       console.log('❌ Origin rejected:', origin);
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true
   }));
 
-  // Configurar rutas después de inicializar ORM
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    const ormStatus = isORMInitialized() ? 'connected' : 'disconnected';
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      orm: ormStatus,
+      port: PORT
+    });
+  });
+
+  // Configurar rutas
   app.use('/api/auth', authRoutes);
   app.use('/api/usuarios', usuarioRoutes); 
   app.use('/api/favoritos', favoritosRoutes);
@@ -149,8 +133,11 @@ async function main() {
     });
   });
 
-  // Guardar ORM en app para acceder desde req.app.get('orm')
-  app.set('orm', orm);
+  // Store ORM in app context for backward compatibility
+  const orm = getORM();
+  if (orm) {
+    app.set('orm', orm);
+  }
 
   // Graceful shutdown - cerrar conexiones correctamente
   const shutdown = async (signal: string) => {
@@ -160,10 +147,7 @@ async function main() {
       console.log('🔌 Servidor HTTP cerrado');
       
       try {
-        if (orm) {
-          await orm.close();
-          console.log('🗄️ Conexiones de base de datos cerradas');
-        }
+        await closeORM();
         
         await redis.quit();
         console.log('🔴 Redis desconectado');
@@ -187,35 +171,7 @@ async function main() {
   process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
-main().catch(console.error);
-
-//import 'reflect-metadata'
-//import { MikroORM } from '@mikro-orm/mysql'
-//import config from './shared/mikro-orm.config'
-//import { Usuario } from './entities/usuario.entity'
-
-//async function main(){
-    //const orm = await MikroORM.init(config);
-    //const em = orm.em.fork();
-
-    //const user = new Usuario();
-    //user.username = "Joaquina";
-    //user.email = "joagm@test.com";
-    //user.id=1;
-    //user.password="123";
-
-    //await orm.getSchemaGenerator().ensureDatabase();
-    //await orm.getSchemaGenerator().updateSchema();
-
-    //await em.persistAndFlush(user);
-
-    //const users = await em.find(Usuario, {});
-    //console.log(users);
-
-    
-
-    //await orm.close();
-
-//}
-
-//main().catch(console.error);
+main().catch((error) => {
+  console.error('[APP] Fatal error:', error);
+  process.exit(1);
+});

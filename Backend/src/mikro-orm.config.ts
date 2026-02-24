@@ -49,7 +49,7 @@ const config: Options<MySqlDriver> = {
   },
   allowGlobalContext: true,
   pool: {
-    min: 1,
+    min: 0,
     max: poolMax,
     acquireTimeoutMillis: 30000,
     idleTimeoutMillis: 30000,

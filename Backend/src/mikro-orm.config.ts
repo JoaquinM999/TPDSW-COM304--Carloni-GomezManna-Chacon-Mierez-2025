@@ -29,6 +29,8 @@ import { Newsletter } from './entities/newsletter.entity';
 import { PasswordResetToken } from './entities/passwordResetToken.entity';
 import { Notificacion } from './entities/notificacion.entity';
 
+const poolMax = Number(process.env.DB_POOL_MAX ?? 1);
+
 const config: Options<MySqlDriver> = {
   host: process.env.DB_HOST ?? 'localhost',
   port: Number(process.env.DB_PORT ?? 3306),
@@ -48,14 +50,14 @@ const config: Options<MySqlDriver> = {
   allowGlobalContext: true,
   pool: {
     min: 1,
-    max: 2,
+    max: poolMax,
     acquireTimeoutMillis: 30000,
     idleTimeoutMillis: 30000,
   },
   driverOptions: {
     connection: {
       ssl: { rejectUnauthorized: false },
-      connectionLimit: 2,
+      connectionLimit: poolMax,
     },
   },
 };

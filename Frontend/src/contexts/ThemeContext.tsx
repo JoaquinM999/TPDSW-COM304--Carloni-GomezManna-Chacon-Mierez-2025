@@ -40,9 +40,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Guardar en localStorage
     localStorage.setItem('theme', theme);
-    
-    // Log para debugging
-    console.log('🌙 Theme changed to:', theme, '- Classes:', root.className);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

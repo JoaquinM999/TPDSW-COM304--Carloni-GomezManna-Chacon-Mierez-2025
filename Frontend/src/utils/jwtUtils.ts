@@ -26,6 +26,5 @@ export const getToken = (): string | null => {
 // Check if user is admin
 export const isAdmin = (): boolean => {
   const role = getUserRole();
-  console.log('User role:', role);
   return role === 'admin';
 };

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Tag } from 'lucide-react';
-import { getCategorias } from '../services/categoriaService';
 
 interface Categoria {
   id: number;
@@ -108,7 +107,6 @@ export const CategoriasPage: React.FC = () => {
                     src={categoria.imagen || ''}
                     alt={categoria.nombre}
                     className="w-full h-full object-cover"
-                    onLoad={() => console.log(`Imagen cargada para ${categoria.nombre}: ${categoria.imagen}`)}
                     onError={(e) => {
                       console.error(`Error cargando imagen para ${categoria.nombre}: ${categoria.imagen}`);
                       const target = e.target as HTMLImageElement;

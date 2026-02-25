@@ -78,15 +78,20 @@ export const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const isDev = import.meta.env.DEV;
   
   // Cargar estadísticas al montar el componente
   useEffect(() => {
     const loadStats = async () => {
       setIsLoadingStats(true);
       try {
-        console.log('📊 Cargando estadísticas...');
+        if (isDev) {
+          console.log('📊 Cargando estadísticas...');
+        }
         const data = await getStatsWithCache();
-        console.log('✅ Estadísticas recibidas:', data);
+        if (isDev) {
+          console.log('✅ Estadísticas recibidas:', data);
+        }
         setPlatformStats(data);
       } catch (error) {
         console.error('❌ Error loading platform stats:', error);
@@ -97,7 +102,9 @@ export const HeroSection: React.FC = () => {
           lectoresActivos: 15000,
           librosFavoritos: 180000,
         };
-        console.log('⚠️ Usando valores por defecto:', fallbackStats);
+        if (isDev) {
+          console.log('⚠️ Usando valores por defecto:', fallbackStats);
+        }
         setPlatformStats(fallbackStats);
       } finally {
         setIsLoadingStats(false);

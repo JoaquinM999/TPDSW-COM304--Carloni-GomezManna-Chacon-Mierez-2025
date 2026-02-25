@@ -5,6 +5,7 @@
 import { API_BASE_URL } from '../config/api.config';
 
 const API_URL = API_BASE_URL;
+const isDev = import.meta.env.DEV;
 
 export interface PlatformStats {
   librosCreados: number;
@@ -18,7 +19,9 @@ export interface PlatformStats {
  */
 export const getStats = async (): Promise<PlatformStats> => {
   try {
-    console.log('🌐 Llamando a API:', `${API_URL}/stats`);
+    if (isDev) {
+      console.log('🌐 Llamando a API:', `${API_URL}/stats`);
+    }
     const response = await fetch(`${API_URL}/stats`, {
       method: 'GET',
       headers: {
@@ -26,14 +29,18 @@ export const getStats = async (): Promise<PlatformStats> => {
       },
     });
 
-    console.log('📡 Respuesta API status:', response.status);
+    if (isDev) {
+      console.log('📡 Respuesta API status:', response.status);
+    }
 
     if (!response.ok) {
       throw new Error(`Stats API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('📊 Datos recibidos de la API:', data);
+    if (isDev) {
+      console.log('📊 Datos recibidos de la API:', data);
+    }
     return data;
   } catch (error) {
     console.error('❌ Error fetching platform stats:', error);
@@ -45,7 +52,9 @@ export const getStats = async (): Promise<PlatformStats> => {
       lectoresActivos: 15000,
       librosFavoritos: 180000,
     };
-    console.log('⚠️ Usando fallback:', fallback);
+    if (isDev) {
+      console.log('⚠️ Usando fallback:', fallback);
+    }
     return fallback;
   }
 };
@@ -95,7 +104,9 @@ export const getStatsWithCache = async (): Promise<PlatformStats> => {
   // Intentar primero con caché
   const cached = getCachedStats();
   if (cached) {
-    console.log('Using cached stats');
+    if (isDev) {
+      console.log('Using cached stats');
+    }
     
     // Actualizar en background
     getStats().then(freshStats => {

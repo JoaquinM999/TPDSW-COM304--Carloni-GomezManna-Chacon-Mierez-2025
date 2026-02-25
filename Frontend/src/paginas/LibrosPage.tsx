@@ -15,6 +15,14 @@ interface Libro {
   averageRating?: number;
 }
 
+const normalizeImageUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  if (url.startsWith('https://')) return url;
+  if (url.startsWith('http://')) return url.replace('http://', 'https://');
+  if (url.startsWith('//')) return `https:${url}`;
+  return url;
+};
+
 export default function TodosLosLibros() {
   const location = useLocation();
   const [libros, setLibros] = useState<Libro[]>([]);
@@ -89,7 +97,7 @@ export default function TodosLosLibros() {
         let total: number | null = null;
 
         // 1️⃣ Buscar en la base de datos local primero
-        if (debouncedSearchTerm && debouncedSearchTerm.length) {
+        if (debouncedSearchTerm && debouncedSearchTerm.length >= 2) {
           try {
             const localUrl = buildApiUrl(`/libro/search?query=${encodeURIComponent(debouncedSearchTerm)}`);
             const localRes = await fetch(localUrl, { signal });
@@ -103,16 +111,17 @@ export default function TodosLosLibros() {
                 titulo: libro.nombre || 'Sin título',
                 autores: libro.autor ? [`${libro.autor.nombre} ${libro.autor.apellido}`] : [],
                 descripcion: libro.sinopsis || undefined,
-                imagen: libro.imagen || null,
+                imagen: normalizeImageUrl(libro.imagen || null),
                 enlace: null,
                 isLocal: true // Marcador para distinguir libros locales
               }));
               
               allItems = mappedLocal;
-              console.log(`📚 Encontrados ${mappedLocal.length} libros en la base de datos`);
             }
           } catch (localErr) {
-            console.warn('Error buscando en BD local:', localErr);
+            if ((localErr as any)?.name !== 'AbortError') {
+              console.warn('Error buscando en BD local:', localErr);
+            }
           }
         }
 
@@ -184,12 +193,13 @@ export default function TodosLosLibros() {
               [],
             descripcion:
               it.descripcion ?? it.description ?? it.volumeInfo?.description ?? undefined,
-            imagen:
+            imagen: normalizeImageUrl(
               it.imagen ??
               it.image ??
               it.volumeInfo?.imageLinks?.thumbnail ??
               it.volumeInfo?.imageLinks?.smallThumbnail ??
-              null,
+              null
+            ),
             enlace: it.enlace ?? it.link ?? it.volumeInfo?.infoLink ?? null,
             isLocal: false
           };
@@ -197,7 +207,6 @@ export default function TodosLosLibros() {
 
         // 3️⃣ Combinar resultados locales + Google Books
         allItems = [...allItems, ...mappedGoogleBooks];
-        console.log(`🌐 Total de libros combinados: ${allItems.length} (${allItems.filter((l: any) => l.isLocal).length} locales + ${mappedGoogleBooks.length} de Google Books)`);
 
         // Always fetch ratings for all libros in parallel for hover display
         const ratingPromises = allItems.map(async (libro) => {
@@ -246,9 +255,6 @@ export default function TodosLosLibros() {
           setHasMore(finalLibros.length > 0);
         }
 
-        // logs en consola para debugging
-        console.debug("Fetch URL:", url);
-        console.debug("Final libros length:", finalLibros.length, "startIndex:", startIndex, "total:", total);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           // request cancelado

@@ -31,6 +31,7 @@ interface GoogleBook {
 
 const CrearSagaAdmin: React.FC = () => {
   const navigate = useNavigate();
+  const isDev = import.meta.env.DEV;
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [libros, setLibros] = useState<Libro[]>([]);
   const [googleBooks, setGoogleBooks] = useState<GoogleBook[]>([]);
@@ -52,6 +53,13 @@ const CrearSagaAdmin: React.FC = () => {
   const [totalLibros, setTotalLibros] = useState<number>(0);
   const librosPerPage = 12;
 
+  // Debounce searchTerm -> debouncedSearchTerm
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -136,23 +144,25 @@ const CrearSagaAdmin: React.FC = () => {
     } else if (searchSource === 'google') {
       const fetchGoogleBooks = async () => {
         try {
+          if (isDev) {
+            console.log('[CrearSaga] Buscando en Google Books con query:', finalQuery);
+          }
           const response = await axios.get(`${API_BASE_URL}/google-books/buscar?q=${encodeURIComponent(finalQuery)}`);
           const results = response.data;
+          if (isDev) {
+            console.log('[CrearSaga] Resultados Google Books:', results.length || 0, 'libros');
+          }
           setGoogleBooks(results);
           setFilteredGoogleBooks(results);
           setFilteredLibros([]);
         } catch (err) {
-          console.error('Error searching Google Books:', err);
+          console.error('[CrearSaga] Error searching Google Books:', err);
           setFilteredGoogleBooks([]);
           setFilteredLibros([]);
         }
       };
-      if (debouncedSearchTerm) {
-        fetchGoogleBooks();
-      } else {
-        setFilteredGoogleBooks([]);
-        setFilteredLibros([]);
-      }
+      // Always fetch when in google mode (uses finalQuery which defaults to 'subject:fantasy')
+      fetchGoogleBooks();
     }
   }, [searchTerm, libros, searchSource, finalQuery, debouncedSearchTerm]);
 

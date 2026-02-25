@@ -50,32 +50,18 @@ Frontend con Vercel, Backend con Render y bdd con Clever Cloud.
 
 ## 📚 Documentación API
 
-**📖 Documentación completa:** [`API_DOCUMENTATION.md`](./API_DOCUMENTATION.md)
-
-La API incluye endpoints para:
-- Autenticación (login, register, password reset)
-- Libros (CRUD, búsqueda, filtros)
-- Usuarios (perfil, gestión)
-- Reseñas (CRUD, moderación, respuestas)
-- Listas (CRUD, contenido)
-- Favoritos
-- Reacciones (likes, helpful)
-- Seguimiento de usuarios
-- Notificaciones
-- Votaciones
-- Newsletter
-- Estadísticas (Admin)
+***
 
 ---
 
 ## 👥 Integrantes del Grupo
 
-| Legajo | Nombre | Mail | Rol |
-|--------|--------|------|-----|
-| 47791 | Gomez Manna, Joaquina Esperanza | Desarrollador Backend/Frontend |
-| 51095 | Carloni, Nahuel Iván | Desarrollador Backend/Frontend |
-| 50980 | Chacón, Agustina Celeste  | Desarrollador Backend/Frontend |
-| 49938 | Mierez, Joaquín | Desarrollador Backend/Frontend |
+| Legajo | Nombre | Mail |
+|--------|--------|------|
+| 47791 | Gomez Manna, Joaquina Esperanza |  |
+| 51095 | Carloni, Nahuel Iván |  |
+| 50980 | Chacón, Agustina Celeste  |  |
+| 49938 | Mierez, Joaquín |  |
 
 ---
 
@@ -173,7 +159,6 @@ npx playwright test --ui        # modo interactivo con UI
 npx playwright show-report      # ver reporte HTML tras la ejecución
 ```
 
-> **Nota:** Los tests E2E tienen un timeout extendido de **120 segundos** para permitir la ejecución en entornos con carga alta o servidores de desarrollo más lentos.
 
 La config de Playwright (`Frontend/playwright.config.ts`) levanta automáticamente el dev server del Frontend en `http://localhost:5173` si no está corriendo.
 

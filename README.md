@@ -19,8 +19,6 @@ Infraestructura:
 
 Frontend con Vercel, Backend con Render y bdd con Clever Cloud.
 
-```
-
 
 ## 📚 Documentación API
 

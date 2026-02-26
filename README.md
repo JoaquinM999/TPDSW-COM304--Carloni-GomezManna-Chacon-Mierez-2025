@@ -19,34 +19,8 @@ Infraestructura:
 
 Frontend con Vercel, Backend con Render y bdd con Clever Cloud.
 
----
-
-## 🔐 Credenciales de Prueba
-
-```
-==========================================
-🔐 CREDENCIALES PARA PRUEBA DE LA APP
-==========================================
-
-👤 USUARIO NORMAL
-   Email: demo@biblioteca.com
-   Password: Demo123!
-   Permisos: Crear reseñas, listas, favoritos, seguir usuarios
-
-👮 MODERADOR
-   Email: moderador@biblioteca.com
-   Password: Mod123!
-   Permisos: Aprobar/rechazar reseñas, ver estadísticas
-
-👑 ADMINISTRADOR
-   Email: admin@gmail.com
-   Password: 123456
-   Permisos: Acceso total al sistema
-
-==========================================
 ```
 
----
 
 ## 📚 Documentación API
 

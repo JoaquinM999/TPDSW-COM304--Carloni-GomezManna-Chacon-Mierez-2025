@@ -26,10 +26,12 @@ Frontend con Vercel, Backend con Render y bdd con Clever Cloud.
 ### 👥 Grupo
 
 #### Integrantes
-- 47791 - Gomez Manna, Joaquina Esperanza
-- 51095 - Carloni, Nahuel Iván
-- 50980 - Chacón, Agustina Celeste (com 301)
-- 49938 - Mierez, Joaquín
+| Legajo | Nombre | Mail |
+|--------|--------|------|
+| 47791 | Gomez Manna, Joaquina Esperanza |  |
+| 51095 | Carloni, Nahuel Iván |  |
+| 50980 | Chacón, Agustina Celeste |  |
+| 49938 | Mierez, Joaquín |  |
 
 ### 📚 Tema
 
@@ -93,7 +95,7 @@ Regularidad:
 - ApellidoAutor
 - IdAutor
 
-#### Autor
+#### Lista
 - NombreLista
 - UltimaFechaModificacion
 
@@ -114,17 +116,6 @@ Regularidad:
 ## 📚 Documentación API
 
 ***
-
----
-
-## 👥 Integrantes del Grupo
-
-| Legajo | Nombre | Mail |
-|--------|--------|------|
-| 47791 | Gomez Manna, Joaquina Esperanza |  |
-| 51095 | Carloni, Nahuel Iván |  |
-| 50980 | Chacón, Agustina Celeste  |  |
-| 49938 | Mierez, Joaquín |  |
 
 ---
 

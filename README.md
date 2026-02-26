@@ -5,6 +5,42 @@
 
 ---
 
+## 🚀 Setup Inicial (Para desarrollo local)
+
+### ⚡ Instalación rápida de dependencias
+
+Después de clonar el repositorio, ejecuta este comando en la raíz del proyecto para instalar todas las dependencias:
+
+```bash
+npm run dev:setup
+```
+
+### 👨‍💻 Iniciar Backend y Frontend
+
+**Opción más simple (recomendado):**
+```bash
+# Terminal 1 - Backend (instala deps automáticamente)
+npm run dev:backend
+
+# Terminal 2 - Frontend (instala deps automáticamente)
+npm run dev:frontend
+```
+
+**Opción manual:**
+```bash
+# Backend
+cd Backend
+npm install
+npm run dev
+
+# Frontend (en otra terminal)
+cd Frontend
+npm install
+npm run dev
+```
+
+---
+
 ## 🎥 Video Demo
 
 **📹 Link:** En proceso
@@ -73,51 +109,65 @@ Regularidad:
 
 ### Requisitos Previos
 - Node.js 18+
-- PostgreSQL 14+
+- PostgreSQL 14+ (o servicio gestionado)
 - Redis (opcional, para sesiones)
 
-### Backend
+Este proyecto tiene dos servicios principales en carpetas separadas: `Backend/` y `Frontend/`.
+Cada uno expone scripts estándar en su `package.json` para instalar, ejecutar y testear.
+
+Siguientes pasos (Windows / macOS / Linux):
+
+1) Instalar dependencias en ambos subproyectos
 
 ```bash
 cd Backend
-
-# Instalar dependencias
 npm install
-
-# Configurar variables de entorno
-cp .env
-# Editar .env con tus credenciales
-
-# Ejecutar migraciones
-npm run migrate
-
-# Iniciar servidor (desarrollo)
-npm run dev
-
-# Ejecutar tests
-npm test
-
-# Ver cobertura
-npm run test:coverage
+cd ../Frontend
+npm install
 ```
 
-### Frontend
+2) Configurar variables de entorno en la raiz del proyecto
+
+3) Ejecutar migraciones y levantar el Backend
 
 ```bash
-cd Frontend
+cd Backend
+# Ejecutar migraciones (si aplica)
+npm run migrate
 
-# Instalar dependencias
-npm install
+#(seeds tambien si es necesario para la creación de sagas, categorías y los tres usuarios default)
 
-# Iniciar servidor de desarrollo
+# Levantar backend en modo desarrollo
 npm run dev
+```
 
-# Ejecutar tests
+4) Levantar el Frontend
+
+```bash
+cd ../Frontend
+# Levantar frontend en modo desarrollo
+npm run dev
+```
+
+5) Comandos útiles (tests y e2e)
+
+```bash
+# Backend unit tests
+cd Backend
 npm test
 
-# Tests E2E
-npm run e2e
+# Frontend unit tests
+cd ../Frontend
+npm test
+
+# Frontend E2E (Playwright) - requiere Backend + Frontend corriendo
+npx playwright install    # solo la primera vez
+npx playwright test
 ```
+
+Notas:
+- Los scripts expuestos en `Backend/package.json` y `Frontend/package.json` siguen las convenciones de npm. Revisa esos archivos si necesitas comandos adicionales.
+- En Windows usa PowerShell o la terminal recomendada; los ejemplos incluyen alternativas cuando difieren.
 
 ---
 
@@ -208,5 +258,5 @@ Frontend/
 
 ---
 
-**Última actualización:** 24 de Febrero de 2026
+**Última actualización:** 26 de Febrero de 2026
 

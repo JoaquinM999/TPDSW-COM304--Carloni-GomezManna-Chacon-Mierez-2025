@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
+    "install:all": "npm install && cd Backend && npm install && cd ../Frontend && npm install && cd ..",
+    "dev:backend": "cd Backend && npm install && npm run dev",
+    "dev:frontend": "cd Frontend && npm install && npm run dev",
+    "dev:setup": "npm run install:all && echo '✅ Todas las dependencias instaladas'",
     "dev": "ts-node-dev --respawn --transpile-only --project Backend/tsconfig.json Backend/src/index.ts",
     "build": "cd Backend && npm install && tsc",
     "start": "node Backend/dist/index.js"

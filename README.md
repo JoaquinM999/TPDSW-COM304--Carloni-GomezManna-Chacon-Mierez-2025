@@ -62,56 +62,6 @@ Regularidad:
 | CRUD dependiente | 1. Todas las relaciones establecidas |
 | CUU/Epic | 1. Implementar un sistema automático para revisar y moderar reseñas de usuarios usando alguna librería especifica.<br>2. Permitir a los usuarios reaccionar a reseñas (ej. likes)<br>3. Mostrar recomendaciones personalizadas<br>4. Implementar la funcionalidad de "seguir" para que los usuarios puedan seguir a otros y ver sus actividades o reseñas. |
 
-### 🧩 Clases
-
-#### Usuario
-- Nombre
-- Apellido
-- IdUsuario
-- Mail
-- Teléfono
-- Tipo
-
-#### Reseña
-- IdReseña
-- FechaReseña
-- Reaccion[0..1]
-
-#### Categoría
-- Nombre
-- idCategoria
-
-#### Libro
-- Nombre
-- IdLibro
-- Sinopsis
-
-#### Favoritos
-- IdAutor
-- FechaAgregado
-
-#### Autor
-- Nombre
-- ApellidoAutor
-- IdAutor
-
-#### Lista
-- NombreLista
-- UltimaFechaModificacion
-
-#### ContenidoLista
-- IdLibro
-- NombreLibro
-
-#### Saga
-- IdSaga
-- NombreSaga
-
-#### Editorial
-- IdEditorial
-- NombreEditorial
-- Idioma
-
 
 ## 📚 Documentación API
 

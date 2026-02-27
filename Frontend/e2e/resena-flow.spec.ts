@@ -32,10 +32,43 @@ test.describe('Sistema de Reseñas - Flujo Completo E2E', () => {
     await page.goto('/');
   });
 
-  test('Flujo completo: Login → Navegar a libro del seed → Crear Reseña → Verificar', async ({ page }) => {
+  test('Flujo completo: Login → Navegar a libro del seed → Crear Reseña → Verificar', async ({ page, request }) => {
     // ========================================
     // PASO 1: LOGIN
     // ========================================
+
+    // Asegurar usuario demo fijo (sin datos random):
+    // 1) si existe y login funciona, usarlo
+    // 2) si no existe, crearlo
+    const email = 'demo@biblioteca.com';
+    const username = 'demo';
+    const password = 'Demo123!';
+
+    let loginProbe = await request.post('http://localhost:3000/api/auth/login', {
+      data: { email, password },
+    });
+
+    if (!loginProbe.ok()) {
+      const registerResponse = await request.post('http://localhost:3000/api/auth/register', {
+        data: { email, username, password },
+      });
+
+      // Si falla el registro (p.ej. duplicado), intentamos login otra vez
+      // para cubrir carreras o datos parcialmente existentes.
+      loginProbe = await request.post('http://localhost:3000/api/auth/login', {
+        data: { email, password },
+      });
+
+      if (!loginProbe.ok()) {
+        const registerBody = await registerResponse.text();
+        const loginBody = await loginProbe.text();
+        throw new Error(
+          `No se pudo asegurar el usuario demo. ` +
+          `Register status: ${registerResponse.status()} - ${registerBody} | ` +
+          `Login status: ${loginProbe.status()} - ${loginBody}`
+        );
+      }
+    }
 
     // Ir directamente a la página de login
     await page.goto('/LoginPage');
@@ -43,9 +76,9 @@ test.describe('Sistema de Reseñas - Flujo Completo E2E', () => {
     // Esperar a que aparezca el formulario de login
     await expect(page.locator('form')).toBeVisible();
 
-    // Rellenar credenciales del usuario demo (creado con create-demo-users.ts)
-    await page.fill('input[name="email"]', 'demo@biblioteca.com');
-    await page.fill('input[name="password"]', 'Demo123!');
+    // Rellenar credenciales del usuario creado para este run
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', password);
 
     // Hacer clic en submit
     await page.click('button[type="submit"]');

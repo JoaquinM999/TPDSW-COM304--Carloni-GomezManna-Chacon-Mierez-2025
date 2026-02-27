@@ -213,6 +213,11 @@ npx playwright test --ui        # modo interactivo con UI
 npx playwright show-report      # ver reporte HTML tras la ejecución
 ```
 
+Nota sobre `resena-flow.spec.ts`:
+- Usa la cuenta demo fija `demo@biblioteca.com` / `Demo123!`.
+- Antes del flujo principal, verifica si esa cuenta puede iniciar sesión.
+- Si no existe, intenta crearla automáticamente y luego reintenta el login.
+
 
 La config de Playwright (`Frontend/playwright.config.ts`) levanta automáticamente el dev server del Frontend en `http://localhost:5173` si no está corriendo.
 

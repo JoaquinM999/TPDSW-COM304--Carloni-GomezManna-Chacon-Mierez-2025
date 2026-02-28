@@ -101,7 +101,7 @@ Regularidad:
 
 ## 📚 Documentación API
 
-***
+- Documentación API Backend: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)
 
 ---
 
@@ -173,6 +173,24 @@ Notas:
 
 ## 🧪 Testing
 
+### Estructura de Tests
+
+```
+Backend/
+└── src/__tests__/unit/
+	├── moderation.service.test.ts    # Servicio de moderación de reseñas
+	└── auth.middleware.test.ts       # Middleware de autenticación JWT
+
+Frontend/
+├── src/
+│   ├── utils/
+│   │   └── apiParser.test.ts         # Parsing de respuestas de API
+│   └── componentes/
+│       └── SearchBar.test.tsx        # Componente de barra de búsqueda
+└── e2e/
+	└── resena-flow.spec.ts           # Test E2E: Login → Crear Reseña → Verificar
+```
+
 | Suite | Tests | Estado |
 |-------|-------|--------|
 | Backend Unit Tests | 49 | ✅ Pasando |
@@ -213,6 +231,8 @@ npx playwright test --ui        # modo interactivo con UI
 npx playwright show-report      # ver reporte HTML tras la ejecución
 ```
 
+> **Nota:** Los tests E2E tienen un timeout extendido de **120 segundos** para permitir la ejecución en entornos con carga alta o servidores de desarrollo más lentos.
+
 Nota sobre `resena-flow.spec.ts`:
 - Usa la cuenta demo fija `demo@biblioteca.com` / `Demo123!`.
 - Antes del flujo principal, verifica si esa cuenta puede iniciar sesión.
@@ -234,6 +254,24 @@ npx vitest run --coverage
 ```
 
 > Los reportes de cobertura se generan en `coverage/` (ignorados por `.gitignore`).
+
+### Convenciones de Tests
+
+- **Patrón AAA**: Arrange → Act → Assert en cada test.
+- **Mocks**: `vi.mock()` para dependencias externas (JWT, Sentiment, localStorage, APIs).
+- **Limpieza**: `afterEach` con `vi.restoreAllMocks()` o `localStorage.clear()`.
+- **Nomenclatura**: `describe('función()')` → `it('debe + comportamiento esperado')`.
+- **Frameworks**: Vitest para unit tests, Playwright para E2E.
+
+### Qué cubre cada test
+
+| Área | Archivo | Tests | Cobertura |
+|------|---------|-------|-----------|
+| **Moderación** | `moderation.service.test.ts` | 34 | Profanidad, spam, toxicidad, scoring, cleanText |
+| **Auth Middleware** | `auth.middleware.test.ts` | 15 | JWT válido/inválido, token expirado, payload |
+| **API Parser** | `apiParser.test.ts` | 49 | Parsing de respuestas (libros, reseñas, autores, sagas, paginación) |
+| **SearchBar** | `SearchBar.test.tsx` | 8 | Render, props, input, sugerencias, accesibilidad |
+| **E2E** | `resena-flow.spec.ts` | 3 | Login → Navegar a libro del seed → Crear Reseña → Login inválido → Protección de rutas |
 
 ---
 

@@ -109,7 +109,7 @@ Regularidad:
 
 ### Requisitos Previos
 - Node.js 18+
-- PostgreSQL 14+ (o servicio gestionado)
+- MySQL 14+ (o servicio gestionado)
 - Redis (opcional, para sesiones)
 
 Este proyecto tiene dos servicios principales en carpetas separadas: `Backend/` y `Frontend/`.

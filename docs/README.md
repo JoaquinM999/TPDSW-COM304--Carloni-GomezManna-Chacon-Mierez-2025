@@ -43,7 +43,7 @@ npm run dev
 
 ## 🎥 Video Demo
 
-**📹 Link:** En proceso
+https://youtu.be/OV2I2X6kp80
 
 ---
 

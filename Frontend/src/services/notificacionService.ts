@@ -1,10 +1,12 @@
 import { API_BASE_URL } from '../config/api.config';
+import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { getAccessToken } from './authService';
 
 const API_URL = API_BASE_URL;
 
 export interface Notificacion {
   id: number;
-  tipo: 'NUEVA_RESENA' | 'NUEVA_REACCION' | 'NUEVO_SEGUIDOR' | 'ACTIVIDAD_SEGUIDO' | 'RESPUESTA_RESENA' | 'LIBRO_FAVORITO';
+  tipo: 'NUEVA_RESENA' | 'NUEVA_REACCION' | 'NUEVO_SEGUIDOR' | 'ACTIVIDAD_SEGUIDO' | 'RESPUESTA_RESENA' | 'LIBRO_FAVORITO' | 'RESENA_RECHAZADA';
   mensaje: string;
   leida: boolean;
   data?: any;
@@ -17,17 +19,18 @@ export interface Notificacion {
  */
 export const obtenerNotificaciones = async (limit: number = 20): Promise<Notificacion[]> => {
   try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      throw new Error('No autenticado');
-    }
+    if (!getAccessToken()) return [];
 
-    const response = await fetch(`${API_URL}/notificaciones?limit=${limit}`, {
+    const response = await fetchWithRefresh(`${API_URL}/notificaciones?limit=${limit}`, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });
+
+    if (response.status === 401 || response.status === 403) {
+      return [];
+    }
 
     if (!response.ok) {
       throw new Error('Error al obtener notificaciones');
@@ -46,17 +49,18 @@ export const obtenerNotificaciones = async (limit: number = 20): Promise<Notific
  */
 export const contarNoLeidas = async (): Promise<number> => {
   try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      return 0;
-    }
+    if (!getAccessToken()) return 0;
 
-    const response = await fetch(`${API_URL}/notificaciones/count`, {
+    const response = await fetchWithRefresh(`${API_URL}/notificaciones/count`, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });
+
+    if (response.status === 401 || response.status === 403) {
+      return 0;
+    }
 
     if (!response.ok) {
       throw new Error('Error al contar notificaciones');
@@ -65,7 +69,6 @@ export const contarNoLeidas = async (): Promise<number> => {
     const data = await response.json();
     return data.count || 0;
   } catch (error) {
-    console.error('Error en contarNoLeidas:', error);
     return 0;
   }
 };
@@ -75,15 +78,13 @@ export const contarNoLeidas = async (): Promise<number> => {
  */
 export const marcarComoLeida = async (id: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!getAccessToken()) {
       throw new Error('No autenticado');
     }
 
-    const response = await fetch(`${API_URL}/notificaciones/${id}/leida`, {
+    const response = await fetchWithRefresh(`${API_URL}/notificaciones/${id}/leida`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });
@@ -102,15 +103,13 @@ export const marcarComoLeida = async (id: number): Promise<void> => {
  */
 export const marcarTodasComoLeidas = async (): Promise<void> => {
   try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!getAccessToken()) {
       throw new Error('No autenticado');
     }
 
-    const response = await fetch(`${API_URL}/notificaciones/marcar-todas-leidas`, {
+    const response = await fetchWithRefresh(`${API_URL}/notificaciones/marcar-todas-leidas`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });
@@ -129,15 +128,13 @@ export const marcarTodasComoLeidas = async (): Promise<void> => {
  */
 export const eliminarNotificacion = async (id: number): Promise<void> => {
   try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!getAccessToken()) {
       throw new Error('No autenticado');
     }
 
-    const response = await fetch(`${API_URL}/notificaciones/${id}`, {
+    const response = await fetchWithRefresh(`${API_URL}/notificaciones/${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });

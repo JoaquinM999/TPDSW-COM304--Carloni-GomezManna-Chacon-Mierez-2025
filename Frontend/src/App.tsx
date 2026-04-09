@@ -43,6 +43,7 @@ import AdminModerationPage from './paginas/AdminModerationPage';
 import AdminActividadPage from './paginas/AdminActividadPage';
 import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
+import AdminCatalogoPage from './paginas/AdminCatalogoPage';
 import { ModerationDashboard } from './paginas/Admin/ModerationDashboard';
 import SiguiendoPage from './paginas/SiguiendoPage';
 import SeguidoresPage from './paginas/SeguidoresPage';
@@ -176,6 +177,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
             <Route path="/admin/actividad" element={<AdminActividadPage />} />
             <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
             <Route path="/admin/permiso" element={<AdminPermisoPage />} />
+            <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
             <Route path="/siguiendo" element={<SiguiendoPage />} />
             <Route path="/feed" element={<FeedActividadPage />} />
           </Routes>

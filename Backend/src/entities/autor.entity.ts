@@ -31,6 +31,17 @@ export class Autor {
   @Property({ type: 'text', nullable: true })
   biografia?: string; // Biografía del autor (puede venir de las APIs)
 
+  @Property({ default: false })
+  @Index()
+  createdByAdmin?: boolean = false;
+
+  @Property({ default: true })
+  @Index()
+  activo?: boolean = true;
+
+  @Property({ type: 'date', nullable: true })
+  deletedAt?: Date;
+
   @OneToMany(() => Libro, libro => libro.autor, { cascade: [Cascade.PERSIST, Cascade.REMOVE] })
   libros = new Collection<Libro>(this);
 

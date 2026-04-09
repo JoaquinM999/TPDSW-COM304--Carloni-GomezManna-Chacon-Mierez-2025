@@ -220,4 +220,34 @@ export class NotificacionService {
     
     console.log('✅ notificarRespuestaResena completado');
   }
+
+  /**
+   * Notificar cuando un administrador rechaza una reseña
+   */
+  async notificarResenaRechazada(
+    autorResenaId: number,
+    libroTitulo: string,
+    resenaId: number,
+    libroSlug?: string,
+    comentarioModerador?: string
+  ): Promise<void> {
+    const url = libroSlug ? `/libro/${libroSlug}` : `/resenas/${resenaId}`;
+    const comentarioLimpio = (comentarioModerador || '').trim();
+    const comentarioBreve = comentarioLimpio.length > 140
+      ? `${comentarioLimpio.slice(0, 137)}...`
+      : comentarioLimpio;
+
+    const mensajeBase = `Tu reseña de "${libroTitulo}" no pudo publicarse.`;
+    const mensaje = comentarioBreve
+      ? `${mensajeBase} Comentario del equipo: ${comentarioBreve}`
+      : mensajeBase;
+
+    await this.crearNotificacion({
+      usuarioId: autorResenaId,
+      tipo: TipoNotificacion.RESENA_RECHAZADA,
+      mensaje,
+      data: { resenaId, comentarioModerador: comentarioBreve || undefined },
+      url
+    });
+  }
 }

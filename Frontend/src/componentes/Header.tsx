@@ -1,7 +1,7 @@
 // src/componentes/Header.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { User, Menu, X, Star, Book, Search, Users, Settings, Shield } from "lucide-react";
+import { User, Menu, X, Star, Book, Search, Users, Settings, Shield, ChevronDown, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isAuthenticated, logoutUser } from "../services/authService";
 import { isAdmin } from "../utils/jwtUtils";
@@ -98,6 +98,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [showSearch, setShowSearch] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
+  const [isMobileAdminOpen, setIsMobileAdminOpen] = useState(false);
 
   const searchTimeoutRef = useRef<number | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
@@ -109,6 +111,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const closeAllMenus = useCallback(() => {
     setMenuState({ user: false, dropdown: null });
+    setIsAdminDropdownOpen(false);
+    setIsMobileAdminOpen(false);
     if (isMobileOrTablet) setShowSearch(false);
   }, [isMobileOrTablet]);
 
@@ -290,7 +294,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* User */}
             <div className="relative">
               <button
-                onClick={() => setMenuState((prev) => ({ ...prev, user: !prev.user, notifications: false }))}
+                onClick={() => {
+                  setMenuState((prev) => ({ ...prev, user: !prev.user, notifications: false }));
+                  if (menuState.user) {
+                    setIsAdminDropdownOpen(false);
+                  }
+                }}
                 className="focus:outline-none"
               >
                 <motion.div className="inline-block" whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}>
@@ -300,7 +309,7 @@ export const Header: React.FC<HeaderProps> = ({
               <AnimatePresence>
                 {menuState.user && (
                   <motion.div
-                    className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded shadow-lg dark:shadow-gray-900/50 z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
+                    className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded shadow-lg dark:shadow-gray-900/50 z-50 border border-gray-100 dark:border-gray-700 transition-colors duration-200"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -318,15 +327,36 @@ export const Header: React.FC<HeaderProps> = ({
                         </Link>
                         {isAdmin() && (
                           <>
-                            <Link to="/admin/moderation" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                              Moderación
-                            </Link>
-                            <Link to="/admin/crear-libro" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                              Crear Libro
-                            </Link>
-                            <Link to="/admin/crear-saga" className="block px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                              Crear Saga
-                            </Link>
+                            <button
+                              onClick={() => setIsAdminDropdownOpen((prev) => !prev)}
+                              className="w-full flex items-center justify-between px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                            >
+                              <span className="font-medium">Administrador</span>
+                              {isAdminDropdownOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                            </button>
+                            <AnimatePresence>
+                              {isAdminDropdownOpen && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="overflow-hidden"
+                                >
+                                  <Link to="/admin/moderation" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                    Moderación
+                                  </Link>
+                                  <Link to="/admin/catalogo" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                    Administrar Catálogo
+                                  </Link>
+                                  <Link to="/admin/crear-libro" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                    Crear Libro
+                                  </Link>
+                                  <Link to="/admin/crear-saga" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                    Crear Saga
+                                  </Link>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </>
                         )}
                         <button
@@ -440,16 +470,67 @@ export const Header: React.FC<HeaderProps> = ({
                     </Link>
                   </li>
                   {isAdmin() && (
-                    <li>
-                      <Link
-                        to="/admin/moderation"
-                        className="flex items-center space-x-2 px-3 py-2 rounded hover:bg-green-100 hover:text-green-700"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Shield className="w-5 h-5" />
-                        <span>Admin</span>
-                      </Link>
-                    </li>
+                    <>
+                      <li>
+                        <button
+                          className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                          onClick={() => setIsMobileAdminOpen((prev) => !prev)}
+                        >
+                          <span className="flex items-center space-x-2">
+                            <Shield className="w-5 h-5" />
+                            <span>Administrador</span>
+                          </span>
+                          {isMobileAdminOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
+                      </li>
+                      <AnimatePresence>
+                        {isMobileAdminOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <li>
+                              <Link
+                                to="/admin/moderation"
+                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span>Moderación</span>
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="/admin/catalogo"
+                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span>Administrar Catálogo</span>
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="/admin/crear-libro"
+                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span>Crear Libro</span>
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="/admin/crear-saga"
+                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span>Crear Saga</span>
+                              </Link>
+                            </li>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
                   )}
                 </>
               )}

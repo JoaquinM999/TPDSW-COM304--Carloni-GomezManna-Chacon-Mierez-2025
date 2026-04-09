@@ -58,6 +58,7 @@ export const getAutores = async (req: Request, res: Response) => {
     
     // ✅ Construir query usando el parser
     const where = buildAutorQuery(filters);
+    where.activo = true;
     
     // ✅ OPTIMIZACIÓN: Usar findAndCount con paginación en BD
     const [autores, total] = await em.findAndCount(Autor, where, {
@@ -312,7 +313,7 @@ export const getAutorById = async (req: Request, res: Response) => {
     // Si es un número válido, buscar por ID
     if (!isNaN(autorId) && autorId > 0) {
       console.log('🔢 Buscando por ID numérico:', autorId);
-      autor = await em.findOne(Autor, { id: autorId });
+      autor = await em.findOne(Autor, { id: autorId, activo: true });
     } 
     // Si no es un número, buscar por nombre completo
     else {
@@ -331,6 +332,7 @@ export const getAutorById = async (req: Request, res: Response) => {
         
         // Buscar exacto primero
         autor = await em.findOne(Autor, { 
+          activo: true,
           nombre: nombre,
           apellido: apellido 
         });
@@ -340,6 +342,7 @@ export const getAutorById = async (req: Request, res: Response) => {
           console.log('⚠️ No encontrado exacto, intentando búsqueda flexible');
           autor = await em.findOne(Autor, { 
             $and: [
+              { activo: true },
               { nombre: { $like: `%${nombre}%` } },
               { apellido: { $like: `%${apellido}%` } }
             ]
@@ -349,6 +352,7 @@ export const getAutorById = async (req: Request, res: Response) => {
         // Si solo hay una palabra, buscar en ambos campos
         console.log('🔍 Una sola palabra, buscando en nombre y apellido:', decodedName);
         autor = await em.findOne(Autor, { 
+          activo: true,
           $or: [
             { nombre: { $like: `%${decodedName}%` } },
             { apellido: { $like: `%${decodedName}%` } }
@@ -461,7 +465,9 @@ export const saveExternalAuthorOnDemand = async (req: Request, res: Response) =>
       details: error.message 
     });
   }
-};export const createAutor = async (req: Request, res: Response) => {
+};
+
+export const createAutor = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
@@ -502,7 +508,12 @@ export const saveExternalAuthorOnDemand = async (req: Request, res: Response) =>
     }
 
     // Crear nuevo autor
-    const autor = em.create(Autor, req.body);
+    const autor = em.create(Autor, {
+      ...req.body,
+      createdByAdmin: true,
+      activo: true,
+      deletedAt: undefined,
+    });
     await em.persistAndFlush(autor);
     
     // 🚀 CACHE: Invalidar cache de autores al crear uno nuevo
@@ -541,8 +552,10 @@ export const deleteAutor = async (req: Request, res: Response) => {
   const autor = await orm.em.findOne(Autor, { id: +req.params.id });
   if (!autor) return res.status(404).json({ error: 'Autor no encontrado' });
 
-  await orm.em.removeAndFlush(autor);
-  res.json({ mensaje: 'Autor eliminado' });
+  autor.activo = false;
+  autor.deletedAt = new Date();
+  await orm.em.flush();
+  res.json({ mensaje: 'Autor dado de baja' });
 };
 
 /**
@@ -573,11 +586,12 @@ export const searchAutoresLocal = async (req: Request, res: Response) => {
 
     // Buscar en BD local
     const autores = await searchAutoresLocalDB(em, trimmedQuery!);
+    const autoresActivos = autores.filter((a: any) => a.activo !== false);
 
     // Guardar en cache
-    await saveToCache(cacheKey, autores);
+    await saveToCache(cacheKey, autoresActivos);
 
-    res.json(autores);
+    res.json(autoresActivos);
   } catch (error: any) {
     console.error('❌ Error en searchAutoresLocal:', error.message);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -611,7 +625,7 @@ export const searchAutoresWithExternal = async (req: Request, res: Response) => 
     }
 
     // Buscar en BD local
-    const autoresLocales = await searchAutoresLocalDB(em, trimmedQuery!);
+    const autoresLocales = (await searchAutoresLocalDB(em, trimmedQuery!)).filter((a: any) => a.activo !== false);
 
     // Si hay suficientes resultados locales, no buscar en APIs externas
     if (autoresLocales.length >= 5) {
@@ -701,6 +715,7 @@ export const searchAutores = async (req: Request, res: Response) => {
     // Paso 1: Buscar en BDD (fuente única de verdad)
     console.log('📚 Buscando en BDD local...');
     const autoresLocales = await em.find(Autor, {
+      activo: true,
       $or: [
         { nombre: { $like: `%${trimmedQuery}%` } },
         { apellido: { $like: `%${trimmedQuery}%` } }

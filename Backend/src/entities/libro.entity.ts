@@ -36,6 +36,17 @@ export class Libro {
   @Property({ nullable: true })
   source?: string;
 
+  @Property({ default: false })
+  @Index()
+  createdByAdmin?: boolean = false;
+
+  @Property({ default: true })
+  @Index()
+  activo?: boolean = true;
+
+  @Property({ type: 'date', nullable: true })
+  deletedAt?: Date;
+
   @ManyToOne(() => Autor, { nullable: true })
   autor?: Autor;
 

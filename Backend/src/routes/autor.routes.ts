@@ -10,6 +10,8 @@ import {
   saveExternalAuthorOnDemand 
 } from '../controllers/autor.controller';
 import redis from '../redis';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { requireAdmin } from '../middleware/admin.middleware';
 
 const router = Router();
 
@@ -17,10 +19,10 @@ router.get('/', getAutores);
 router.get('/search', searchAutores);
 router.get('/:id/stats', getAutorStats); // Debe ir ANTES de /:id
 router.get('/:id', getAutorById);
-router.post('/', createAutor);
+router.post('/', authenticateJWT, requireAdmin, createAutor);
 router.post('/external/save', saveExternalAuthorOnDemand); // Nuevo endpoint para guardar autor externo bajo demanda
-router.put('/:id', updateAutor);
-router.delete('/:id', deleteAutor);
+router.put('/:id', authenticateJWT, requireAdmin, updateAutor);
+router.delete('/:id', authenticateJWT, requireAdmin, deleteAutor);
 
 // Endpoint temporal para limpiar caché de autores
 router.delete('/cache/clear', async (req, res) => {

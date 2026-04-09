@@ -84,10 +84,10 @@ export const agregarReseña = async (
  * 🔹 Obtiene todas las reseñas pendientes de moderación (solo admin).
  * Incluye PENDING y FLAGGED para el panel de moderación.
  */
-export const obtenerResenasPendientes = async (token: string) => {
-  const response = await fetch(`${API_URL}?estado=pendiente`, {
+export const obtenerResenasPendientes = async (_token?: string) => {
+  const response = await fetchWithRefresh(`${API_URL}?estado=pendiente`, {
+    method: 'GET',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Cache-Control': 'no-cache',
     },
   });
@@ -98,39 +98,44 @@ export const obtenerResenasPendientes = async (token: string) => {
     throw error;
   }
 
-  const data = await response.json();
-  console.log('📥 Reseñas recibidas del backend:', data.length);
-  console.log('📊 Sample con moderationScore:', data[0]?.moderationScore);
-  return data;
+  return response.json();
 };
 
 /**
  * 🔹 Aprueba una reseña (solo admin).
  */
-export const aprobarResena = async (id: number, token: string) => {
-  const response = await fetch(`${API_URL}/${id}/approve`, {
+export const aprobarResena = async (id: number, _token?: string) => {
+  const response = await fetchWithRefresh(`${API_URL}/${id}/approve`, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
-  if (!response.ok) throw new Error('Error al aprobar reseña');
+  if (!response.ok) {
+    const error = new Error('Error al aprobar reseña');
+    (error as any).status = response.status;
+    throw error;
+  }
+
   return response.json();
 };
 
 /**
  * 🔹 Rechaza una reseña (solo admin).
  */
-export const rechazarResena = async (id: number, token: string) => {
-  const response = await fetch(`${API_URL}/${id}/reject`, {
+export const rechazarResena = async (id: number, _token?: string, comentario?: string) => {
+  const response = await fetchWithRefresh(`${API_URL}/${id}/reject`, {
     method: 'PUT',
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ comentario: comentario?.trim() || undefined }),
   });
 
-  if (!response.ok) throw new Error('Error al rechazar reseña');
+  if (!response.ok) {
+    const error = new Error('Error al rechazar reseña');
+    (error as any).status = response.status;
+    throw error;
+  }
+
   return response.json();
 };
 
@@ -226,10 +231,10 @@ export const obtenerResenasPopulares = async (libroId?: string, limit: number = 
 /**
  * 🔹 Obtiene estadísticas de moderación (solo admin).
  */
-export const obtenerEstadisticasModeracion = async (range: '7d' | '30d' | '90d' = '30d', token: string) => {
-  const response = await fetch(`${API_URL}/admin/moderation/stats?range=${range}`, {
+export const obtenerEstadisticasModeracion = async (range: '7d' | '30d' | '90d' = '30d', _token?: string) => {
+  const response = await fetchWithRefresh(`${API_URL}/admin/moderation/stats?range=${range}`, {
+    method: 'GET',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Cache-Control': 'no-cache',
     },
   });

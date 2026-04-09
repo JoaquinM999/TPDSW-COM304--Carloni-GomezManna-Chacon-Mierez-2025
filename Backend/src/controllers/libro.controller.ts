@@ -24,6 +24,7 @@ import {
   validateSearchQuery,
   searchLibrosOptimized
 } from '../utils/libroSearchHelpers';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 
 export const getLibros = async (req: Request, res: Response) => {
@@ -36,6 +37,7 @@ export const getLibros = async (req: Request, res: Response) => {
     
     // ✅ Construir query usando el parser
     const where = buildLibroQuery(filters);
+    where.activo = true;
     
     // Filtro opcional por autor (legacy support)
     const { autor, autorId } = req.query;
@@ -93,7 +95,7 @@ export const getLibros = async (req: Request, res: Response) => {
 export const getLibroById = async (req: Request, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
-  const libro = await em.findOne(Libro, { id: +req.params.id });
+  const libro = await em.findOne(Libro, { id: +req.params.id, activo: true });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
   res.json(libro);
 };
@@ -113,7 +115,10 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
     // Buscar por slug o por externalId (para libros de Google Books)
     const libro = await em.findOne(
       Libro, 
-      { $or: [{ slug }, { externalId: slug }] },
+      {
+        activo: true,
+        $or: [{ slug }, { externalId: slug }],
+      },
       { populate: ['autor', 'categoria', 'editorial', 'saga'] }
     );
     
@@ -158,7 +163,7 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
   }
 };
 
-export const createLibro = async (req: Request, res: Response) => {
+export const createLibro = async (req: AuthRequest, res: Response) => {
   const orm = req.app.get('orm') as MikroORM;
   const em = orm.em.fork();
   const { nombreAutor, apellidoAutor, categoriaId, editorialId, sagaId, ...libroData } = req.body;
@@ -189,6 +194,12 @@ export const createLibro = async (req: Request, res: Response) => {
 
     // 4️⃣ Crear y guardar el libro
     const nuevoLibro = createLibroEntity(em, libroData, relatedEntities);
+    nuevoLibro.createdByAdmin = true;
+    nuevoLibro.activo = true;
+    nuevoLibro.deletedAt = undefined;
+    if (!nuevoLibro.source) {
+      nuevoLibro.source = 'local';
+    }
     await em.persistAndFlush(nuevoLibro);
 
     // Formatear respuesta para incluir autorId
@@ -238,8 +249,10 @@ export const deleteLibro = async (req: Request, res: Response) => {
   const libro = await em.findOne(Libro, { id: +req.params.id });
   if (!libro) return res.status(404).json({ error: 'Libro no encontrado' });
 
-  await em.removeAndFlush(libro);
-  res.json({ mensaje: 'Libro eliminado' });
+  libro.activo = false;
+  libro.deletedAt = new Date();
+  await em.flush();
+  res.json({ mensaje: 'Libro dado de baja' });
 };
 
 export const getLibrosByCategoria = async (req: Request, res: Response) => {
@@ -251,7 +264,7 @@ export const getLibrosByCategoria = async (req: Request, res: Response) => {
     const categoria = await em.findOne(Categoria, { id: categoriaId });
     if (!categoria) return res.status(404).json({ error: 'Categoría no encontrada' });
 
-    const libros = await em.find(Libro, { categoria: categoriaId });
+    const libros = await em.find(Libro, { categoria: categoriaId, activo: true });
     res.json(libros);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener libros por categoría' });
@@ -273,6 +286,7 @@ export const getLibrosByEstrellasMinimas = async (req: Request, res: Response) =
       SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas
       FROM libro l
       LEFT JOIN resena r ON r.libro_id = l.id
+      WHERE l.activo = 1
       GROUP BY l.id
       HAVING promedio_estrellas >= ?
       ORDER BY promedio_estrellas DESC
@@ -299,6 +313,7 @@ export const getLibrosByEstrellasMinimasQB = async (req: Request, res: Response)
       SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas
       FROM libro l
       LEFT JOIN resena r ON r.libro_id = l.id
+      WHERE l.activo = 1
       GROUP BY l.id
       HAVING promedio_estrellas >= ?
       ORDER BY promedio_estrellas DESC
@@ -316,7 +331,7 @@ export const getReviewsByBookIdController = async (req: Request, res: Response) 
     const em = orm.em.fork();
     const bookId = +req.params.id;
 
-    const libro = await em.findOne(Libro, { id: bookId });
+    const libro = await em.findOne(Libro, { id: bookId, activo: true });
     if (!libro) {
       return res.status(404).json({ error: 'Libro no encontrado' });
     }
@@ -398,7 +413,7 @@ export const getNuevosLanzamientos = async (req: Request, res: Response) => {
     // Obtener libros creados en los últimos 6 meses
     const libros = await em.find(
       Libro,
-      { createdAt: { $gte: monthsAgo } },
+      { createdAt: { $gte: monthsAgo }, activo: true },
       {
         populate: ['autor', 'categoria', 'editorial', 'resenas'],
         orderBy: { createdAt: 'DESC' },

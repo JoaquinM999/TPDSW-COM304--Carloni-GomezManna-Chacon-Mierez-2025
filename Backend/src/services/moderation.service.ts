@@ -16,6 +16,14 @@ export interface ModerationResult {
   };
 }
 
+export const MODERATION_THRESHOLDS = {
+  AUTO_REJECT_SCORE: 15,
+  AUTO_FLAG_SCORE: 30,
+  AUTO_APPROVE_SCORE: 85,
+} as const;
+
+export type ModerationDecision = 'auto_reject' | 'auto_flag' | 'auto_approve' | 'manual_review';
+
 export class ModerationService {
   private sentiment: Sentiment;
   private profanityWords: Set<string>;
@@ -156,13 +164,13 @@ export class ModerationService {
     // Decisión de auto-rechazo: contenido extremadamente problemático
     // Score muy bajo (<15) O múltiples flags críticos simultáneos
     const shouldAutoReject = 
-      score < 15 || 
+      score < MODERATION_THRESHOLDS.AUTO_REJECT_SCORE || 
       (flags.profanity && flags.toxicity) || 
       (flags.spam && flags.profanity && flags.toxicity) ||
       (flags.toxicity && flags.profanity && sentimentScore < -8);
 
-    // Decisión final: aprobar si score >= 70 y no hay flags críticos de profanidad o toxicidad
-    const isApproved = score >= 70 && !flags.profanity && !flags.toxicity;
+    // Decisión final: auto-aprobar solo puntajes altos sin flags críticos.
+    const isApproved = score >= MODERATION_THRESHOLDS.AUTO_APPROVE_SCORE && !flags.profanity && !flags.toxicity;
 
     return {
       isApproved,
@@ -173,6 +181,17 @@ export class ModerationService {
       shouldAutoReject,
       flags
     };
+  }
+
+  getDecision(result: ModerationResult): ModerationDecision {
+    if (result.shouldAutoReject) return 'auto_reject';
+    if (result.score >= MODERATION_THRESHOLDS.AUTO_APPROVE_SCORE && !result.flags.profanity && !result.flags.toxicity) {
+      return 'auto_approve';
+    }
+    if (result.score < MODERATION_THRESHOLDS.AUTO_FLAG_SCORE || result.flags.profanity || result.flags.toxicity) {
+      return 'auto_flag';
+    }
+    return 'manual_review';
   }
 
   /**

@@ -120,7 +120,8 @@ export function serializarResenaModeracion(resena: Resena): any {
       id: resena.usuario.id,
       nombre: resena.usuario.nombre,
       username: resena.usuario.username,
-      email: resena.usuario.email
+      email: resena.usuario.email,
+      avatar: resena.usuario.avatar
     },
     libro: resena.libro ? {
       id: resena.libro.id,

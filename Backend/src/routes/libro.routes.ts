@@ -6,6 +6,7 @@ import {
   getListasForLibro, getNuevosLanzamientos, getOrCreateLibroFromExternal
 } from '../controllers/libro.controller';
 import { authenticateJWT } from '../middleware/auth.middleware';
+import { requireAdmin } from '../middleware/admin.middleware';
 
 const router = Router();
 
@@ -22,8 +23,8 @@ router.get('/:externalId/listas', authenticateJWT, getListasForLibro);
 
 router.get('/:id/reviews', getReviewsByBookIdController);
 router.get('/:id', getLibroById);
-router.post('/', createLibro);
-router.put('/:id', updateLibro);
-router.delete('/:id', deleteLibro);
+router.post('/', authenticateJWT, requireAdmin, createLibro);
+router.put('/:id', authenticateJWT, requireAdmin, updateLibro);
+router.delete('/:id', authenticateJWT, requireAdmin, deleteLibro);
 
 export { router as libroRoutes };

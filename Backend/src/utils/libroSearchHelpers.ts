@@ -109,7 +109,12 @@ export function buildSearchFilter(query: string, searchIn?: Array<'titulo' | 'au
     });
   }
 
-  return { $or: orConditions } as FilterQuery<Libro>;
+  return {
+    $and: [
+      { activo: true },
+      { $or: orConditions }
+    ]
+  } as FilterQuery<Libro>;
 }
 
 /**

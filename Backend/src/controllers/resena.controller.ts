@@ -9,7 +9,7 @@ import { Autor } from '../entities/autor.entity';
 import { ActividadService } from '../services/actividad.service';
 import { NotificacionService } from '../services/notificacion.service';
 import redis from '../redis';
-import { moderationService } from '../services/moderation.service';
+import { moderationService, MODERATION_THRESHOLDS } from '../services/moderation.service';
 import { 
   parseResenaInput, 
   parseResenaFilters, 
@@ -248,39 +248,57 @@ export const createResena = async (req: Request, res: Response) => {
 
     // Análisis de moderación automática
     const moderationResult = moderationService.analyzeReview(comentario, estrellas);
+    const moderationDecision = moderationService.getDecision(moderationResult);
     console.log('🤖 Análisis de moderación:', {
       score: moderationResult.score,
       isApproved: moderationResult.isApproved,
+      decision: moderationDecision,
       shouldAutoReject: moderationResult.shouldAutoReject,
       reasons: moderationResult.reasons
     });
 
-    // 🚫 AUTO-RECHAZO: Si el contenido es extremadamente problemático, rechazar inmediatamente
-    if (moderationResult.shouldAutoReject) {
+    // Auto-rechazo: persistimos la reseña para auditoría y devolvemos error de negocio al cliente.
+    if (moderationDecision === 'auto_reject') {
       console.log('🚫 RESEÑA AUTO-RECHAZADA - Contenido extremadamente inapropiado');
       console.log('Razones:', moderationResult.reasons.join(', '));
+
+      const blockedResena = em.create(Resena, {
+        comentario,
+        estrellas,
+        libro,
+        usuario,
+        estado: EstadoResena.FLAGGED,
+        moderationScore: moderationResult.score,
+        moderationReasons: JSON.stringify(moderationResult.reasons),
+        autoModerated: true,
+        autoRejected: true,
+        rejectionReason: moderationResult.reasons.join('; '),
+        deletedAt: new Date(),
+        fechaResena: new Date(),
+        createdAt: new Date(),
+      });
+
+      await em.persistAndFlush(blockedResena);
       
       return res.status(400).json({
         error: 'Tu reseña contiene contenido inapropiado y no puede ser publicada',
         details: 'Por favor, revisa nuestras normas de comunidad y asegúrate de que tu comentario sea respetuoso y constructivo.',
         reasons: moderationResult.reasons,
         moderationScore: moderationResult.score,
+        reviewId: blockedResena.id,
         blocked: true
       });
     }
 
     // Determinar estado inicial basado en moderación
     let estadoInicial = EstadoResena.PENDING;
-    if (moderationResult.isApproved && moderationResult.score >= 85) {
-      // Auto-aprobar SOLO reseñas con score MUY alto (≥85) y sin flags críticos
+    if (moderationDecision === 'auto_approve') {
       estadoInicial = EstadoResena.APPROVED;
       console.log('✅ Reseña auto-aprobada con score:', moderationResult.score);
-    } else if (moderationResult.score < 30 || moderationResult.flags.profanity || moderationResult.flags.toxicity) {
-      // Auto-flagged si: score muy bajo O contiene profanidad O toxicidad
+    } else if (moderationDecision === 'auto_flag') {
       estadoInicial = EstadoResena.FLAGGED;
       console.log('⚠️ Reseña auto-flagged por:', moderationResult.reasons.join(', '));
     } else {
-      // Enviar a moderación manual si está en zona gris (30-84) sin flags críticos
       estadoInicial = EstadoResena.PENDING;
       console.log('⏳ Reseña enviada a moderación manual - Score:', moderationResult.score);
     }
@@ -294,12 +312,8 @@ export const createResena = async (req: Request, res: Response) => {
       estado: estadoInicial,
       moderationScore: moderationResult.score,
       moderationReasons: JSON.stringify(moderationResult.reasons),
-      autoModerated: moderationResult.score >= 85 || moderationResult.score < 30,
-      autoRejected: moderationResult.shouldAutoReject,
-      rejectionReason: moderationResult.shouldAutoReject 
-        ? moderationResult.reasons.join('; ') 
-        : undefined,
-      deletedAt: moderationResult.shouldAutoReject ? new Date() : undefined,
+      autoModerated: moderationDecision !== 'manual_review',
+      autoRejected: false,
       fechaResena: new Date(),
       createdAt: new Date(),
     });
@@ -407,13 +421,20 @@ export const approveResena = async (req: Request, res: Response) => {
     if (!usuario || usuario.rol !== RolUsuario.ADMIN)
       return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
 
-    const resena = await em.findOne(Resena, { id: +req.params.id });
+    const resena = await em.findOne(
+      Resena,
+      { id: +req.params.id },
+      { populate: ['usuario', 'libro'] }
+    );
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
-    if (resena.estado !== EstadoResena.PENDING)
+    if (![EstadoResena.PENDING, EstadoResena.FLAGGED].includes(resena.estado)) {
       return res.status(400).json({ error: 'La reseña ya ha sido moderada' });
+    }
 
     resena.estado = EstadoResena.APPROVED;
+    resena.deletedAt = undefined;
+    resena.autoRejected = false;
     await em.persistAndFlush(resena);
 
     res.json({ message: 'Reseña aprobada', resena });
@@ -437,11 +458,36 @@ export const rejectResena = async (req: Request, res: Response) => {
     const resena = await em.findOne(Resena, { id: +req.params.id });
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
-    if (resena.estado !== EstadoResena.PENDING)
+    if (![EstadoResena.PENDING, EstadoResena.FLAGGED].includes(resena.estado)) {
       return res.status(400).json({ error: 'La reseña ya ha sido moderada' });
+    }
+
+    const comentarioModerador =
+      typeof req.body?.comentario === 'string' ? req.body.comentario.trim() : '';
 
     resena.estado = EstadoResena.FLAGGED;
+    resena.deletedAt = undefined;
+    resena.autoRejected = false;
+    if (comentarioModerador) {
+      resena.rejectionReason = comentarioModerador;
+    }
     await em.persistAndFlush(resena);
+
+    try {
+      const notificacionService = new NotificacionService(em);
+      await em.populate(resena.libro, ['slug', 'externalId']);
+      const libroSlug = resena.libro.slug || resena.libro.externalId || resena.libro.id.toString();
+
+      await notificacionService.notificarResenaRechazada(
+        resena.usuario.id,
+        resena.libro.nombre || 'Libro sin título',
+        resena.id,
+        libroSlug,
+        comentarioModerador || undefined
+      );
+    } catch (notifError) {
+      console.error('❌ Error al enviar notificación de rechazo:', notifError);
+    }
 
     res.json({ message: 'Reseña rechazada', resena });
   } catch (error) {
@@ -631,15 +677,20 @@ export const analyzeResena = async (req: Request, res: Response) => {
 
     // Realizar análisis de moderación
     const moderationResult = moderationService.analyzeReview(comentario, estrellasNum);
+    const moderationDecision = moderationService.getDecision(moderationResult);
+
+    const recommendationMap: Record<string, string> = {
+      auto_reject: '🚫 Reseña será rechazada automáticamente - Contenido extremadamente inapropiado',
+      auto_approve: `✅ Reseña será aprobada automáticamente (score >= ${MODERATION_THRESHOLDS.AUTO_APPROVE_SCORE})`,
+      auto_flag: `⚠️ Reseña será marcada automáticamente para revisión (score < ${MODERATION_THRESHOLDS.AUTO_FLAG_SCORE} o flags críticos)`,
+      manual_review: '⏳ Reseña requiere moderación manual',
+    };
 
     res.json({
       analysis: moderationResult,
-      recommendation: moderationResult.shouldAutoReject
-        ? '🚫 Reseña será rechazada automáticamente - Contenido extremadamente inapropiado'
-        : moderationResult.isApproved 
-          ? '✅ Reseña será aprobada automáticamente' 
-          : '⏳ Reseña requiere moderación manual',
-      willBeBlocked: moderationResult.shouldAutoReject,
+      decision: moderationDecision,
+      recommendation: recommendationMap[moderationDecision],
+      willBeBlocked: moderationDecision === 'auto_reject',
       cleanedText: moderationResult.hasProfanity 
         ? moderationService.cleanText(comentario)
         : comentario
@@ -749,13 +800,13 @@ export const getModerationStats = async (req: Request, res: Response) => {
 
     // Contadores por estado
     const total = allResenas.length;
-    const autoApproved = allResenas.filter(r => r.estado === EstadoResena.APPROVED && r.autoRejected === false).length;
-    const autoRejected = allResenas.filter(r => r.estado === EstadoResena.FLAGGED && r.autoRejected === true).length;
-    const pending = allResenas.filter(r => r.estado === EstadoResena.PENDING).length;
-    const flagged = allResenas.filter(r => r.estado === EstadoResena.FLAGGED).length;
-    const manuallyReviewed = allResenas.filter(r => 
-      (r.estado === EstadoResena.APPROVED && r.autoRejected === true) || // Aprobadas después de rechazo automático
-      (r.estado === EstadoResena.FLAGGED && r.autoRejected === false) // Rechazadas manualmente
+    const autoApproved = allResenas.filter(r => r.estado === EstadoResena.APPROVED && r.autoModerated === true && r.autoRejected !== true).length;
+    const autoRejected = allResenas.filter(r => r.autoRejected === true).length;
+    const pendingQueue = allResenas.filter(r => r.deletedAt == null && (r.estado === EstadoResena.PENDING || r.estado === EstadoResena.FLAGGED)).length;
+    const manuallyReviewed = allResenas.filter(r =>
+      r.deletedAt == null &&
+      r.autoModerated === false &&
+      (r.estado === EstadoResena.APPROVED || r.estado === EstadoResena.FLAGGED || r.estado === EstadoResena.REJECTED)
     ).length;
 
     // Calcular score promedio
@@ -796,8 +847,8 @@ export const getModerationStats = async (req: Request, res: Response) => {
       last7Days.push({
         date: date.toISOString().split('T')[0],
         approved: dayResenas.filter(r => r.estado === EstadoResena.APPROVED).length,
-        rejected: dayResenas.filter(r => r.estado === EstadoResena.REJECTED).length,
-        pending: dayResenas.filter(r => r.estado === EstadoResena.PENDING || r.estado === EstadoResena.FLAGGED).length
+        rejected: dayResenas.filter(r => r.estado === EstadoResena.FLAGGED || r.estado === EstadoResena.REJECTED).length,
+        pending: dayResenas.filter(r => r.deletedAt == null && (r.estado === EstadoResena.PENDING || r.estado === EstadoResena.FLAGGED)).length
       });
     }
 
@@ -805,7 +856,7 @@ export const getModerationStats = async (req: Request, res: Response) => {
       total,
       autoApproved,
       autoRejected,
-      pending: pending + flagged, // Combinamos pending y flagged
+      pending: pendingQueue,
       manuallyReviewed,
       averageScore,
       topReasons,
@@ -816,7 +867,7 @@ export const getModerationStats = async (req: Request, res: Response) => {
       total,
       autoApproved,
       autoRejected,
-      pending: pending + flagged,
+      pending: pendingQueue,
       averageScore
     });
 

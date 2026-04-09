@@ -36,6 +36,7 @@ import { statsRoutes } from './routes/stats.routes';
 import votacionRoutes from './routes/votacion.routes';
 import newsletterRoutes from './routes/newsletter.routes';
 import { notificacionRoutes } from './routes/notificacion.routes';
+import { adminCatalogRoutes } from './routes/adminCatalog.routes';
 
 import { authenticateJWT } from './middleware/auth.middleware';
 
@@ -125,6 +126,7 @@ async function main() {
   app.use('/api/votacion', votacionRoutes);
   app.use('/api/newsletter', newsletterRoutes);
   app.use('/api/notificaciones', notificacionRoutes);
+  app.use('/api/admin/catalogo', adminCatalogRoutes);
 
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error('Error:', err);

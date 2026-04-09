@@ -164,6 +164,8 @@ export const NotificationBell = () => {
         return '📚';
       case 'LIBRO_FAVORITO':
         return '❤️';
+      case 'RESENA_RECHAZADA':
+        return '🚫';
       default:
         return '🔔';
     }

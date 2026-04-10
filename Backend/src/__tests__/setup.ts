@@ -39,6 +39,7 @@ afterEach(async () => {
     'seguimiento',
     'actividad',
     'newsletter',
+    'newsletter_campaign',
     'password_reset_token',
     'libro',
     'autor',

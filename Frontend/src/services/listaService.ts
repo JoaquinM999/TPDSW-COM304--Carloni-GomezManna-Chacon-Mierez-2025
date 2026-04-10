@@ -100,7 +100,7 @@ export const listaService = {
     return response.json();
   },
 
-  async addLibroALista(listaId: number, libro: { id: string; titulo: string; autores: string[]; descripcion: string | null; imagen: string | null; enlace: string | null; source: 'hardcover' | 'google' }): Promise<void> {
+  async addLibroALista(listaId: number, libro: { id: string; titulo: string; autores: string[]; descripcion: string | null; imagen: string | null; enlace: string | null; source: 'hardcover' | 'google' | 'local' | 'bookcode' }): Promise<void> {
     const response = await fetchWithRefresh('/api/contenido-lista', {
       method: 'POST',
       headers: {

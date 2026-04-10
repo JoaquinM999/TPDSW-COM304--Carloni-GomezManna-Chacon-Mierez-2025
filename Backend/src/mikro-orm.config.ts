@@ -26,6 +26,7 @@ import { Actividad } from './entities/actividad.entity';
 import { Permiso } from './entities/permiso.entity';
 import { RatingLibro } from './entities/ratingLibro.entity';
 import { Newsletter } from './entities/newsletter.entity';
+import { NewsletterCampaign } from './entities/newsletterCampaign.entity';
 import { PasswordResetToken } from './entities/passwordResetToken.entity';
 import { Notificacion } from './entities/notificacion.entity';
 
@@ -42,6 +43,7 @@ const config: Options<MySqlDriver> = {
   entities: [
     Usuario, Autor, Categoria, Editorial, Libro, Resena, ContenidoLista, Favorito,
     Lista, Reaccion, Saga, Seguimiento, Actividad, Permiso, RatingLibro, Newsletter,
+    NewsletterCampaign,
     PasswordResetToken, Notificacion
   ],
   debug: process.env.NODE_ENV !== 'production',

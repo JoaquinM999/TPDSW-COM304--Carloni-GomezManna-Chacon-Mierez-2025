@@ -9,8 +9,9 @@ import LoginModal from './componentes/LoginModal';
 import { ToastProvider } from './componentes/ToastProvider';
 import { PageTransition } from './componentes/PageTransition';
 import axios from 'axios';
-import { setupAxiosInterceptors } from './services/authService';
+import { isAuthenticated, setupAxiosInterceptors } from './services/authService';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { isAdmin } from './utils/jwtUtils';
 
 import LoginPage from './paginas/LoginPage';
 import RegistrationPage from './paginas/RegistrationPage';
@@ -44,6 +45,9 @@ import AdminActividadPage from './paginas/AdminActividadPage';
 import AdminRatingLibroPage from './paginas/AdminRatingLibroPage';
 import AdminPermisoPage from './paginas/AdminPermisoPage';
 import AdminCatalogoPage from './paginas/AdminCatalogoPage';
+import AdminNewsletterPage from './paginas/AdminNewsletterPage';
+import AdminNewsletterHistoryPage from './paginas/AdminNewsletterHistoryPage';
+import NewsletterUnsubscribePage from './paginas/NewsletterUnsubscribePage';
 import { ModerationDashboard } from './paginas/Admin/ModerationDashboard';
 import SiguiendoPage from './paginas/SiguiendoPage';
 import SeguidoresPage from './paginas/SeguidoresPage';
@@ -67,6 +71,22 @@ interface LayoutProps {
 
 function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
   const location = useLocation();
+  const isAdminSession = isAuthenticated() && isAdmin();
+
+  const herramientasLinks: FooterLink[] = [
+    { name: 'Crear Categoría', href: '/crear-categoria' },
+    { name: 'Crear Editorial', href: '/crear-editorial' },
+    { name: 'Mis Favoritos', href: '/favoritos' },
+    { name: 'Mi Actividad', href: '/feed' },
+  ];
+
+  if (isAdminSession) {
+    herramientasLinks.unshift(
+      { name: 'Crear Libro', href: '/admin/crear-libro' },
+      { name: 'Crear Saga', href: '/admin/crear-saga' },
+      { name: 'Admin Newsletter', href: '/admin/newsletter' }
+    );
+  }
 
   const customFooterLinks: FooterCategory[] = [
     {
@@ -81,14 +101,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
     },
     {
       title: 'Herramientas',
-      links: [
-        { name: 'Crear Libro', href: '/crear-libro' },
-        { name: 'Crear Saga', href: '/crear-saga' },
-        { name: 'Crear Categoría', href: '/crear-categoria' },
-        { name: 'Crear Editorial', href: '/crear-editorial' },
-        { name: 'Mis Favoritos', href: '/favoritos' },
-        { name: 'Mi Actividad', href: '/feed' },
-      ],
+      links: herramientasLinks,
     },
     {
       title: 'Cuenta',
@@ -178,6 +191,9 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
             <Route path="/admin/ratingLibro" element={<AdminRatingLibroPage />} />
             <Route path="/admin/permiso" element={<AdminPermisoPage />} />
             <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
+            <Route path="/admin/newsletter" element={<AdminNewsletterPage />} />
+            <Route path="/admin/newsletter/historial" element={<AdminNewsletterHistoryPage />} />
+            <Route path="/unsubscribe/:token" element={<NewsletterUnsubscribePage />} />
             <Route path="/siguiendo" element={<SiguiendoPage />} />
             <Route path="/feed" element={<FeedActividadPage />} />
           </Routes>

@@ -17,7 +17,7 @@ export const obtenerFavoritos = async (): Promise<{
   libroId: number;
   fechaAgregado: string;
   externalId: string;
-  source: "hardcover" | "google";
+  source: "hardcover" | "google" | "local" | "bookcode";
 }[]> => {
   const token = getToken();
 
@@ -40,7 +40,7 @@ export const agregarFavorito = async (libroData: {
   descripcion: string | null;
   imagen: string | null;
   enlace: string | null;
-  source: "hardcover" | "google";
+  source: "hardcover" | "google" | "local" | "bookcode";
 }): Promise<number> => {
   const token = getToken();
 

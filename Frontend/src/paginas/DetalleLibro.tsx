@@ -40,7 +40,7 @@ interface Libro {
   enlace: string | null;
   slug?: string;
   activities_count?: number;
-  source: "hardcover" | "google";
+  source: "hardcover" | "google" | "local" | "bookcode";
 }
 
 interface Reseña {
@@ -489,9 +489,9 @@ const DetalleLibro: React.FC = () => {
           data = await response.json();
           
           // ✅ Validar y preservar el source original para evitar duplicados
-          const validSource = (data.source === "hardcover" || data.source === "google") 
+          const validSource = (data.source === "hardcover" || data.source === "google" || data.source === "local" || data.source === "bookcode") 
             ? data.source 
-            : "google"; // Si no tiene source válido, usar google como fallback
+            : "local"; // Si no tiene source válido, tratarlo como libro local de la BD
           
           // ✅ CRÍTICO: Usar externalId si existe, sino usar id
           const libroId = data.externalId || data.id.toString();
@@ -799,9 +799,9 @@ const DetalleLibro: React.FC = () => {
         setEsFavorito(null);
       } else {
         // ✅ Validar que el source sea válido para evitar duplicados
-        const validSource = (libro.source === "hardcover" || libro.source === "google") 
+        const validSource = (libro.source === "hardcover" || libro.source === "google" || libro.source === "local" || libro.source === "bookcode") 
           ? libro.source 
-          : "google"; // Fallback a google si viene de la BD sin source válido
+          : "local"; // Fallback a local si viene de la BD sin source válido
 
         console.log('🔍 Agregando a favoritos:', { 
           id: libro.id, 
@@ -1538,7 +1538,7 @@ const DetalleLibro: React.FC = () => {
                 {libro.source && (
                   <div className="flex justify-center lg:justify-start">
                     <span className="inline-flex items-center text-sm font-medium text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-4 py-2 rounded-full border border-gray-200 dark:border-slate-700">
-                      Fuente: {libro.source === "hardcover" ? "Hardcover" : libro.source === "bookcode" ? "BookCode" : "Google Books"}
+                      Fuente: {libro.source === "hardcover" ? "Hardcover" : (libro.source === "bookcode" || libro.source === "local") ? "BookCode" : "Google Books"}
                     </span>
                   </div>
                 )}

@@ -11,7 +11,7 @@ interface LibroData {
   descripcion: string | null;
   imagen: string | null;
   enlace: string | null;
-  source: "hardcover" | "google";
+  source: "hardcover" | "google" | "local" | "bookcode";
 }
 
 /**

@@ -329,7 +329,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <>
                             <button
                               onClick={() => setIsAdminDropdownOpen((prev) => !prev)}
-                              className="w-full flex items-center justify-between px-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                              className="w-full flex items-center justify-between px-4 py-2 bg-slate-100/80 dark:bg-slate-700/30 hover:bg-slate-200 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                             >
                               <span className="font-medium">Administrador</span>
                               {isAdminDropdownOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -342,16 +342,19 @@ export const Header: React.FC<HeaderProps> = ({
                                   exit={{ opacity: 0, height: 0 }}
                                   className="overflow-hidden"
                                 >
-                                  <Link to="/admin/moderation" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                  <Link to="/admin/moderation" className="block pl-8 pr-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200">
                                     Moderación
                                   </Link>
-                                  <Link to="/admin/catalogo" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                  <Link to="/admin/catalogo" className="block pl-8 pr-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200">
                                     Administrar Catálogo
                                   </Link>
-                                  <Link to="/admin/crear-libro" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                  <Link to="/admin/newsletter" className="block pl-8 pr-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200">
+                                    Newsletter
+                                  </Link>
+                                  <Link to="/admin/crear-libro" className="block pl-8 pr-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200">
                                     Crear Libro
                                   </Link>
-                                  <Link to="/admin/crear-saga" className="block pl-8 pr-4 py-2 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                  <Link to="/admin/crear-saga" className="block pl-8 pr-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200">
                                     Crear Saga
                                   </Link>
                                 </motion.div>
@@ -473,7 +476,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <>
                       <li>
                         <button
-                          className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded bg-slate-100 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                           onClick={() => setIsMobileAdminOpen((prev) => !prev)}
                         >
                           <span className="flex items-center space-x-2">
@@ -494,7 +497,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <li>
                               <Link
                                 to="/admin/moderation"
-                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                className="flex items-center space-x-2 px-8 py-2 rounded bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
                                 <span>Moderación</span>
@@ -503,7 +506,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <li>
                               <Link
                                 to="/admin/catalogo"
-                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                className="flex items-center space-x-2 px-8 py-2 rounded bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
                                 <span>Administrar Catálogo</span>
@@ -511,8 +514,17 @@ export const Header: React.FC<HeaderProps> = ({
                             </li>
                             <li>
                               <Link
+                                to="/admin/newsletter"
+                                className="flex items-center space-x-2 px-8 py-2 rounded bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span>Newsletter</span>
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
                                 to="/admin/crear-libro"
-                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                className="flex items-center space-x-2 px-8 py-2 rounded bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
                                 <span>Crear Libro</span>
@@ -521,7 +533,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <li>
                               <Link
                                 to="/admin/crear-saga"
-                                className="flex items-center space-x-2 px-8 py-2 rounded hover:bg-green-100 hover:text-green-700 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                                className="flex items-center space-x-2 px-8 py-2 rounded bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-200"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
                                 <span>Crear Saga</span>

@@ -55,7 +55,10 @@ export const sendEmail = async (options: EmailOptions): Promise<any> => {
  * @param email - Email del suscriptor
  * @param nombre - Nombre del suscriptor (opcional)
  */
-export const sendNewsletterWelcome = async (email: string, nombre?: string): Promise<any> => {
+export const sendNewsletterWelcome = async (email: string, nombre?: string, unsubscribeLink?: string): Promise<any> => {
+  const defaultUnsubscribe = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe`;
+  const finalUnsubscribeLink = unsubscribeLink || defaultUnsubscribe;
+
   const html = `
 <!DOCTYPE html>
 <html lang="es">
@@ -113,7 +116,7 @@ export const sendNewsletterWelcome = async (email: string, nombre?: string): Pro
                 © ${new Date().getFullYear()} BookCode. Todos los derechos reservados.
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe" style="color: #667eea; text-decoration: none;">Cancelar suscripción</a>
+                <a href="${finalUnsubscribeLink}" style="color: #667eea; text-decoration: none;">Cancelar suscripción</a>
               </p>
             </td>
           </tr>

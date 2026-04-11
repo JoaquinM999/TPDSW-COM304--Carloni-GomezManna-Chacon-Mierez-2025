@@ -69,7 +69,7 @@ function SortableItem({ contenido, onRemove, navigate }: {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 flex gap-4 group ${isDragging ? 'z-50' : ''}`}
+      className={`bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 flex gap-4 group ${isDragging ? 'z-50' : ''}`}
     >
       {/* Drag Handle */}
       <div 
@@ -104,11 +104,11 @@ function SortableItem({ contenido, onRemove, navigate }: {
               {contenido.orden}
             </span>
           )}
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {contenido.libro.nombre}
           </h3>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
+        <p className="text-gray-600 dark:text-gray-400 mb-2">
           por {contenido.libro.autores?.[0] || 'Autor desconocido'}
         </p>
         
@@ -134,7 +134,7 @@ function SortableItem({ contenido, onRemove, navigate }: {
           e.stopPropagation();
           onRemove(contenido.libro.id);
         }}
-        className="flex-shrink-0 p-3 text-gray-400 dark:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        className="flex-shrink-0 p-3 text-gray-400 dark:text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
         title="Eliminar de la lista"
       >
         <X className="w-5 h-5" />
@@ -258,7 +258,7 @@ export default function DetalleListaMejorada() {
   const handleRemoveLibro = async (libroId: number) => {
     toast((t) => (
       <div className="flex flex-col gap-3">
-        <p className="font-semibold text-gray-900">¿Eliminar este libro de la lista?</p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">¿Eliminar este libro de la lista?</p>
         <div className="flex gap-2">
           <button
             onClick={async () => {
@@ -373,7 +373,7 @@ export default function DetalleListaMejorada() {
                 <button
                   onClick={guardarOrden}
                   disabled={saving}
-                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-lg hover:bg-gray-100 dark:bg-gray-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 dark:bg-gray-700 dark:text-purple-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-5 h-5" />
                   {saving ? 'Guardando...' : 'Guardar orden'}
@@ -388,7 +388,7 @@ export default function DetalleListaMejorada() {
           {/* Búsqueda */}
           <div className="mb-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Buscar en esta lista..."
@@ -403,11 +403,11 @@ export default function DetalleListaMejorada() {
           <div className="flex flex-wrap items-center gap-4">
             {/* Ordenar */}
             <div className="flex items-center gap-2">
-              <SortAsc className="w-5 h-5 text-gray-600" />
+              <SortAsc className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <select
                 value={orderBy}
                 onChange={(e) => setOrderBy(e.target.value as OrderBy)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="personalizado">Orden personalizado</option>
                 <option value="alfabetico">Alfabético</option>
@@ -421,7 +421,7 @@ export default function DetalleListaMejorada() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded transition ${
-                  viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100'
+                  viewMode === 'grid' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
                 title="Vista cuadrícula"
               >
@@ -430,7 +430,7 @@ export default function DetalleListaMejorada() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded transition ${
-                  viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-gray-100'
+                  viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
                 title="Vista lista"
               >
@@ -442,7 +442,7 @@ export default function DetalleListaMejorada() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-                showFilters ? 'bg-purple-600 text-white' : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50'
+                showFilters ? 'bg-purple-600 text-white' : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               <Filter className="w-5 h-5" />
@@ -515,7 +515,7 @@ export default function DetalleListaMejorada() {
         {contenidos.length === 0 ? (
           <div className="text-center py-16">
             <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-xl text-gray-600">No hay libros en esta lista</p>
+            <p className="text-xl text-gray-600 dark:text-gray-300">No hay libros en esta lista</p>
             <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
               {search || filterAutor || filterCategoria || filterRating
                 ? 'Intenta ajustar los filtros'

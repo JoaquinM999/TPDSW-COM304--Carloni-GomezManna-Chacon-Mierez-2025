@@ -12,7 +12,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
   const pageVariants = {
     initial: {
       opacity: 0,
-      y: 20,
+      y: 10,
     },
     animate: {
       opacity: 1,
@@ -20,18 +20,18 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
     },
     exit: {
       opacity: 0,
-      y: -20,
+      y: -10,
     },
   };
 
   const pageTransition = {
     type: 'tween' as const,
-    ease: 'anticipate' as const,
-    duration: 0.4,
+    ease: [0.22, 1, 0.36, 1] as const,
+    duration: 0.28,
   };
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="sync">
       <motion.div
         key={location.pathname}
         initial="initial"

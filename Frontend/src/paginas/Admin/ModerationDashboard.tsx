@@ -48,10 +48,10 @@ export const ModerationDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <Shield className="w-16 h-16 text-blue-500 animate-pulse mx-auto mb-4" />
-          <p className="text-gray-600">Cargando estadísticas...</p>
+          <p className="text-gray-600 dark:text-gray-300">Cargando estadísticas...</p>
         </div>
       </div>
     );
@@ -59,10 +59,10 @@ export const ModerationDashboard: React.FC = () => {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 font-semibold mb-2">{error || 'Error al cargar estadísticas'}</p>
+          <p className="text-red-600 dark:text-red-400 font-semibold mb-2">{error || 'Error al cargar estadísticas'}</p>
           <button 
             onClick={fetchStats}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -79,15 +79,15 @@ export const ModerationDashboard: React.FC = () => {
   const pendingRate = ((stats.pending / stats.total) * 100).toFixed(1);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard de Moderación</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard de Moderación</h1>
           </div>
-          <p className="text-gray-600">Estadísticas y métricas del sistema de moderación automática</p>
+          <p className="text-gray-600 dark:text-gray-300">Estadísticas y métricas del sistema de moderación automática</p>
         </div>
 
         {/* Time Range Selector */}
@@ -99,7 +99,7 @@ export const ModerationDashboard: React.FC = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 timeRange === range
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               {range === '7d' ? 'Últimos 7 días' : range === '30d' ? 'Últimos 30 días' : 'Últimos 90 días'}
@@ -110,66 +110,66 @@ export const ModerationDashboard: React.FC = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Reviews */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-blue-100 p-3 rounded-lg">
                 <BarChart3 className="w-6 h-6 text-blue-600" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.total}</h3>
-            <p className="text-gray-600 text-sm">Reseñas Totales</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{stats.total}</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Reseñas Totales</p>
           </div>
 
           {/* Auto Approved */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-green-100 p-3 rounded-lg">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <span className="text-green-600 font-semibold">{approvalRate}%</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.autoApproved}</h3>
-            <p className="text-gray-600 text-sm">Auto-Aprobadas</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{stats.autoApproved}</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Auto-Aprobadas</p>
           </div>
 
           {/* Auto Rejected */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-red-100 p-3 rounded-lg">
                 <XCircle className="w-6 h-6 text-red-600" />
               </div>
               <span className="text-red-600 font-semibold">{rejectionRate}%</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.autoRejected}</h3>
-            <p className="text-gray-600 text-sm">Auto-Rechazadas</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{stats.autoRejected}</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Auto-Rechazadas</p>
           </div>
 
           {/* Pending */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="bg-yellow-100 p-3 rounded-lg">
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <span className="text-yellow-600 font-semibold">{pendingRate}%</span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.pending}</h3>
-            <p className="text-gray-600 text-sm">Pendientes de Revisión</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{stats.pending}</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Pendientes de Revisión</p>
           </div>
         </div>
 
         {/* Additional Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Average Score */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center gap-3 mb-4">
               <TrendingUp className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Puntuación Promedio</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Puntuación Promedio</h3>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900">{stats.averageScore}</span>
-              <span className="text-gray-500">/100</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-gray-100">{stats.averageScore}</span>
+              <span className="text-gray-500 dark:text-gray-400">/100</span>
             </div>
-            <div className="mt-4 bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
               <div
                 className={`h-full rounded-full ${
                   stats.averageScore >= 70
@@ -184,26 +184,26 @@ export const ModerationDashboard: React.FC = () => {
           </div>
 
           {/* Manual Reviews */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center gap-3 mb-4">
               <Shield className="w-6 h-6 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Revisión Manual</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Revisión Manual</h3>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900">{stats.manuallyReviewed}</span>
-              <span className="text-gray-500">reseñas</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-gray-100">{stats.manuallyReviewed}</span>
+              <span className="text-gray-500 dark:text-gray-400">reseñas</span>
             </div>
-            <p className="text-gray-600 text-sm mt-2">
+            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
               Revisadas manualmente por moderadores
             </p>
           </div>
         </div>
 
         {/* Top Reasons */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <AlertTriangle className="w-6 h-6 text-orange-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Razones Más Comunes de Rechazo</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Razones Más Comunes de Rechazo</h3>
           </div>
           <div className="space-y-4">
             {stats.topReasons.map((item, index) => {
@@ -211,12 +211,12 @@ export const ModerationDashboard: React.FC = () => {
               return (
                 <div key={index}>
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-700">{item.reason}</span>
-                    <span className="text-gray-600 font-medium">
+                    <span className="text-gray-700 dark:text-gray-200">{item.reason}</span>
+                    <span className="text-gray-600 dark:text-gray-400 font-medium">
                       {item.count} ({percentage}%)
                     </span>
                   </div>
-                  <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div
                       className="bg-orange-500 h-full rounded-full"
                       style={{ width: `${percentage}%` }}
@@ -229,10 +229,10 @@ export const ModerationDashboard: React.FC = () => {
         </div>
 
         {/* Trend Chart (Simple bar visualization) */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-6 h-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Tendencia de los Últimos 7 Días</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tendencia de los Últimos 7 Días</h3>
           </div>
           <div className="space-y-4">
             {stats.recentTrend.map((day, index) => {
@@ -244,10 +244,10 @@ export const ModerationDashboard: React.FC = () => {
               return (
                 <div key={index}>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-gray-700 dark:text-gray-200 font-medium">
                       {new Date(day.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </span>
-                    <span className="text-gray-600">Total: {total}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Total: {total}</span>
                   </div>
                   <div className="flex h-8 rounded-lg overflow-hidden">
                     <div
@@ -279,15 +279,15 @@ export const ModerationDashboard: React.FC = () => {
           <div className="flex gap-6 mt-6 justify-center">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600">Aprobadas</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Aprobadas</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-600">Rechazadas</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Rechazadas</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span className="text-sm text-gray-600">Pendientes</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Pendientes</span>
             </div>
           </div>
         </div>

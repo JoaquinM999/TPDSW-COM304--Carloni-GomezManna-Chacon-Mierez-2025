@@ -96,8 +96,8 @@ const Step1: React.FC<Step1Props> = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900">Información básica</h3>
-        <p className="mt-2 text-sm text-gray-600">Ingresa tus datos personales</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Información básica</h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Ingresa tus datos personales</p>
       </div>
 
 
@@ -109,7 +109,7 @@ const Step1: React.FC<Step1Props> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
+              <User className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
               id="username"
@@ -118,7 +118,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.username}
               onChange={(e) => updateData({ username: e.target.value })}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Tu username"
             />
           </div>
@@ -130,7 +130,7 @@ const Step1: React.FC<Step1Props> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
               id="email"
@@ -139,7 +139,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.email}
               onChange={(e) => updateData({ email: e.target.value })}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="tu@email.com"
             />
           </div>
@@ -151,7 +151,7 @@ const Step1: React.FC<Step1Props> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
               id="password"
@@ -160,7 +160,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.password}
               onChange={(e) => updateData({ password: e.target.value })}
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Mínimo 6 caracteres"
             />
             <button
@@ -170,9 +170,9 @@ const Step1: React.FC<Step1Props> = ({
               tabIndex={-1}
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-5 w-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-5 w-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
               )}
             </button>
           </div>
@@ -184,7 +184,7 @@ const Step1: React.FC<Step1Props> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
               id="confirmPassword"
@@ -193,7 +193,7 @@ const Step1: React.FC<Step1Props> = ({
               required
               value={data.confirmPassword}
               onChange={(e) => updateData({ confirmPassword: e.target.value })}
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Confirma tu contraseña"
             />
             <button
@@ -203,9 +203,9 @@ const Step1: React.FC<Step1Props> = ({
               tabIndex={-1}
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-5 w-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-5 w-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
               )}
             </button>
           </div>
@@ -221,20 +221,20 @@ const Step1: React.FC<Step1Props> = ({
             onChange={(e) => updateData({ acceptTerms: e.target.checked })}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
           />
-          <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
             Acepto los{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">
+            <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
               términos y condiciones
             </a>{' '}
             y la{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">
+            <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
               política de privacidad
             </a>
           </label>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-lg p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -242,7 +242,7 @@ const Step1: React.FC<Step1Props> = ({
                 </svg>
               </div>
               <div className="ml-3">
-                <div className="text-sm text-red-700">
+                <div className="text-sm text-red-700 dark:text-red-300">
                   {error}
                 </div>
               </div>

@@ -30,6 +30,13 @@ interface ConfirmToggleState {
   nombre: string;
 }
 
+interface AuthorWithBooksError {
+  autorId: number;
+  autorNombre: string;
+  booksCount: number;
+  books: Array<{ id: number; nombre: string; activo: boolean }>;
+}
+
 interface EditLibroModalState {
   libroId: number;
   nombre: string;
@@ -79,6 +86,7 @@ const AdminCatalogoPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<NoticeState | null>(null);
   const [confirmToggle, setConfirmToggle] = useState<ConfirmToggleState | null>(null);
+  const [authorWithBooksError, setAuthorWithBooksError] = useState<AuthorWithBooksError | null>(null);
 
   const [categorias, setCategorias] = useState<CategoriaOption[]>([]);
   const [autorOptions, setAutorOptions] = useState<AdminAutor[]>([]);
@@ -312,7 +320,18 @@ const AdminCatalogoPage: React.FC = () => {
       await loadData();
       notifySuccess(!activoActual ? 'Autor reactivado correctamente' : 'Autor dado de baja correctamente');
     } catch (err: any) {
-      notifyError(err.message || 'No se pudo cambiar el estado del autor');
+      // Verificar si el error es por autor con libros asociados
+      if (err.errorCode === 'AUTHOR_HAS_BOOKS') {
+        const autor = autores.find(a => a.id === id);
+        setAuthorWithBooksError({
+          autorId: id,
+          autorNombre: autor ? `${autor.nombre} ${autor.apellido}` : 'Desconocido',
+          booksCount: err.booksCount || 0,
+          books: err.books || [],
+        });
+      } else {
+        notifyError(err.message || 'No se pudo cambiar el estado del autor');
+      }
     } finally {
       setBusyId(null);
     }
@@ -1014,6 +1033,73 @@ const AdminCatalogoPage: React.FC = () => {
                   className={`px-3 py-2 rounded-lg text-sm font-semibold text-white ${confirmToggle.activoActual ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                 >
                   {confirmToggle.activoActual ? 'Dar de baja' : 'Reactivar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {authorWithBooksError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-100 dark:border-gray-700 p-5"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                  <span className="text-lg">⚠️</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  No se puede dar de baja
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                El autor <span className="font-semibold">"{authorWithBooksError.autorNombre}"</span> tiene {authorWithBooksError.booksCount} libro(s) asociado(s). Debes dar de baja los libros primero.
+              </p>
+              
+              <div className="mb-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg p-3 border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto">
+                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Libros a desactivar:</h4>
+                <div className="space-y-2">
+                  {authorWithBooksError.books.map((libro) => (
+                    <div key={libro.id} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 flex-1 truncate">
+                        {libro.nombre}
+                      </span>
+                      {libro.activo && (
+                        <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 text-xs font-semibold">
+                          Activo
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => setAuthorWithBooksError(null)}
+                  className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-sm font-semibold"
+                >
+                  Entendido
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthorWithBooksError(null);
+                    setTab('libros');
+                    setEstado('activo');
+                  }}
+                  className="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+                >
+                  Ir a libros
                 </button>
               </div>
             </motion.div>

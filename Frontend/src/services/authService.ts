@@ -66,6 +66,38 @@ export const register = async (username: string, email: string, password: string
   }
 };
 
+export const requestPasswordReset = async (email: string): Promise<string> => {
+  const response = await fetch(`${API_BASE_URL}/auth/request-password-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await response.json();
+
+  if (response.ok) {
+    return data.message || 'Si el email existe, recibirás un enlace de recuperación';
+  } else {
+    throw new Error(data.error || 'No se pudo solicitar la recuperación de contraseña');
+  }
+};
+
+export const resetPasswordWithToken = async (token: string, newPassword: string): Promise<string> => {
+  const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  });
+
+  const data = await response.json();
+
+  if (response.ok) {
+    return data.message || 'Contraseña actualizada exitosamente';
+  } else {
+    throw new Error(data.error || 'No se pudo restablecer la contraseña');
+  }
+};
+
 export const getToken = (): string | null => {
   return localStorage.getItem('accessToken');
 };

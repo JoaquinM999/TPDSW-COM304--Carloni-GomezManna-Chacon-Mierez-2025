@@ -3,6 +3,23 @@
 /* Definir el selector para dark mode en Tailwind v4 */
 @variant dark (&:is(.dark *));
 
+html,
+body,
+#root {
+  min-height: 100%;
+  background-color: #ffffff;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #030712;
+}
+
+body {
+  margin: 0;
+}
+
 /* @tailwind base;
 @tailwind components;
 @tailwind utilities;

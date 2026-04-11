@@ -15,6 +15,8 @@ import { isAdmin } from './utils/jwtUtils';
 
 import LoginPage from './paginas/LoginPage';
 import RegistrationPage from './paginas/RegistrationPage';
+import ForgotPasswordPage from './paginas/ForgotPasswordPage';
+import ResetPasswordPage from './paginas/ResetPasswordPage';
 import { CategoriasPage } from './paginas/CategoriasPage';
 import { DetalleLibro } from './paginas/DetalleLibro';
 import { FavoritosPage } from './paginas/FavoritosPage';
@@ -22,8 +24,6 @@ import LibrosPage from './paginas/LibrosPage';
 import { PerfilUsuario } from './paginas/PerfilUsuario';
 import { CrearLibro } from './paginas/CrearLibro';
 // de crear libro hay /crear-libro dentro de perfilpage
-import { CrearCategoria } from './paginas/CrearCategoria';
-import { CrearEditorial } from './paginas/CrearEditorial';
 import { CrearSaga } from './paginas/CrearSaga';
 import CrearSagaAdmin from './paginas/CrearSagaAdmin';
 import PerfilPage from './paginas/PerfilPage';
@@ -74,8 +74,6 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
   const isAdminSession = isAuthenticated() && isAdmin();
 
   const herramientasLinks: FooterLink[] = [
-    { name: 'Crear Categoría', href: '/crear-categoria' },
-    { name: 'Crear Editorial', href: '/crear-editorial' },
     { name: 'Mis Favoritos', href: '/favoritos' },
     { name: 'Mi Actividad', href: '/feed' },
   ];
@@ -115,7 +113,11 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
     },
   ];
 
-  const hideLayout = location.pathname === '/LoginPage' || location.pathname === '/registro';
+  const hideLayout =
+    location.pathname === '/LoginPage' ||
+    location.pathname === '/registro' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname.startsWith('/reset-password/');
 
   // Hide newsletter and features section on /perfil and /configuracion
   const hideNewsletterAndFeatures = location.pathname === '/perfil' || location.pathname === '/configuracion';
@@ -126,7 +128,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
       <ScrollToTop />
       {!hideLayout && (
         <Header siteName="BookCode" showNotifications={true} userAuthenticated={false} />
@@ -172,6 +174,8 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
             {/* Rutas originales */}
             <Route path="/LoginPage" element={<LoginPage />} />
             <Route path="/registro" element={<RegistrationPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="/perfil" element={<PerfilPage />} />
             <Route path="/perfil/:id" element={<PerfilUsuario />} />
             <Route path="/perfil/:id/seguidores" element={<SeguidoresPage />} />
@@ -181,8 +185,6 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
             <Route path="/favoritos" element={<FavoritosPage />} />
             <Route path="/libros" element={<LibrosPage />} />
             <Route path="/admin/crear-libro" element={<CrearLibro />} />
-            <Route path="/crear-categoria" element={<CrearCategoria />} />
-            <Route path="/crear-editorial" element={<CrearEditorial />} />
             <Route path="/crear-saga" element={<CrearSaga />} />
             <Route path="/admin/crear-saga" element={<CrearSagaAdmin />} />
             <Route path="/admin/moderation" element={<AdminModerationPage />} />

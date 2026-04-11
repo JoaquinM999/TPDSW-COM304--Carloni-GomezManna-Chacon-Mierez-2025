@@ -272,26 +272,42 @@ export const HeroSection: React.FC = () => {
         {stats.map(({ icon: Icon, label, value, color }, idx) => (
           <motion.div
             key={idx}
-            className="relative rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-white/40 dark:border-gray-700/70 shadow-md cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-900/60 backdrop-blur-xl hover:border-white/60 dark:hover:border-gray-600/90 transition-colors duration-300"
+            className="relative rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-slate-200/90 dark:border-gray-700/80 shadow-[0_12px_34px_rgba(15,23,42,0.09)] dark:shadow-lg cursor-default select-none flex flex-col items-center justify-center text-center overflow-hidden bg-gradient-to-br from-white via-slate-50/95 to-sky-50/65 dark:from-gray-800/95 dark:via-gray-800/90 dark:to-gray-900/80 backdrop-blur-xl hover:border-slate-300 dark:hover:border-gray-500/90 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)] dark:hover:shadow-[0_20px_46px_rgba(17,24,39,0.17)] transition-all duration-300"
             whileHover="hover"
-            initial="rest"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
             animate="rest"
             variants={{
-              rest: { scale: 1, rotate: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-              hover: { scale: 1.08, rotate: 1.5, boxShadow: '0 16px 40px rgba(0,0,0,0.12)' }
+              rest: { scale: 1, rotate: 0, boxShadow: '0 12px 34px rgba(15,23,42,0.09)' },
+              hover: { scale: 1.07, rotate: 1.2, boxShadow: '0 22px 48px rgba(15,23,42,0.16)' }
             }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: 'easeOut', delay: idx * 0.04 }}
           >
+            <div
+              className="absolute top-0 left-6 right-6 h-px opacity-45 dark:opacity-20"
+              style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+              aria-hidden="true"
+            ></div>
+
+            {/* Glow de color por card */}
+            <div
+              className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-45 dark:opacity-35"
+              style={{ background: `${color}66` }}
+              aria-hidden="true"
+            ></div>
+
             {/* Efecto de brillo de fondo */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 dark:via-gray-600/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 dark:via-gray-600/25 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
 
             {/* Icono */}
             <motion.div
               variants={iconVariants}
-              className="mb-4 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl"
+              className="mb-4 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl ring-1 ring-black/10 dark:ring-white/10"
               style={{
-                background: `${color}15`,
+                background: `${color}24`,
                 color: color,
+                boxShadow: `0 10px 26px ${color}44`,
               }}
             >
               <Icon className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true" />
@@ -301,13 +317,13 @@ export const HeroSection: React.FC = () => {
             {isLoadingStats ? (
               <div className="h-10 sm:h-12 md:h-14 lg:h-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg w-24 sm:w-28 md:w-32 transition-colors duration-300"></div>
             ) : (
-              <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-gray-900 dark:text-white drop-shadow-sm transition-colors duration-300">
+              <p className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition-colors duration-300">
                 <AnimatedCounter end={value} suffix="+" duration={2000} />
               </p>
             )}
 
             {/* Etiqueta */}
-            <p className="mt-1 text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">
+            <p className="mt-1 text-xs sm:text-sm md:text-base text-slate-700 dark:text-gray-300 font-semibold transition-colors duration-300">
               {label}
             </p>
           </motion.div>

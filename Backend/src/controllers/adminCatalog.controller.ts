@@ -290,10 +290,28 @@ export const updateAdminCatalogAutorEstado = async (req: AuthRequest, res: Respo
       createdByAdmin: true,
       googleBooksId: null,
       openLibraryKey: null,
-    });
+    }, { populate: ['libros'] });
 
     if (!autor) {
       return res.status(404).json({ error: 'Autor administrable no encontrado' });
+    }
+
+    // Validación: Si se intenta dar de baja (activo = false) y tiene libros activos
+    if (!activo && autor.libros && autor.libros.length > 0) {
+      const librosActivos = autor.libros.filter(l => l.activo !== false);
+      
+      if (librosActivos.length > 0) {
+        return res.status(409).json({
+          error: `No se puede dar de baja un autor con ${librosActivos.length} libro(s) asociado(s)`,
+          errorCode: 'AUTHOR_HAS_BOOKS',
+          booksCount: librosActivos.length,
+          books: librosActivos.map(l => ({
+            id: l.id,
+            nombre: l.nombre,
+            activo: l.activo,
+          })),
+        });
+      }
     }
 
     autor.activo = activo;

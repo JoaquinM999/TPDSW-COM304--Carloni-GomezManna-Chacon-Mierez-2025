@@ -25,6 +25,8 @@ interface EmailOptions {
   text?: string;
 }
 
+const FRONTEND_BASE_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+
 /**
  * Envía un email usando Nodemailer
  * @param options - Opciones del email (to, subject, html, text)
@@ -56,7 +58,7 @@ export const sendEmail = async (options: EmailOptions): Promise<any> => {
  * @param nombre - Nombre del suscriptor (opcional)
  */
 export const sendNewsletterWelcome = async (email: string, nombre?: string, unsubscribeLink?: string): Promise<any> => {
-  const defaultUnsubscribe = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe`;
+  const defaultUnsubscribe = `${FRONTEND_BASE_URL}/unsubscribe`;
   const finalUnsubscribeLink = unsubscribeLink || defaultUnsubscribe;
 
   const html = `
@@ -97,7 +99,7 @@ export const sendNewsletterWelcome = async (email: string, nombre?: string, unsu
               </ul>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" 
+                <a href="${FRONTEND_BASE_URL}" 
                    style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 16px;">
                   Explorar BookCode
                 </a>
@@ -143,7 +145,7 @@ export const sendNewsletterWelcome = async (email: string, nombre?: string, unsu
  * @param nombre - Nombre del usuario
  */
 export const sendPasswordReset = async (email: string, resetToken: string, nombre?: string): Promise<any> => {
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+  const resetUrl = `${FRONTEND_BASE_URL}/reset-password/${resetToken}`;
   
   const html = `
 <!DOCTYPE html>
@@ -269,7 +271,7 @@ export const sendActivityNotification = async (
               </p>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/perfil" 
+                <a href="${FRONTEND_BASE_URL}/perfil" 
                    style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">
                   Ver en BookCode
                 </a>
@@ -282,7 +284,7 @@ export const sendActivityNotification = async (
             <td style="padding: 20px 30px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; text-align: center;">
               <p style="margin: 0; color: #999999; font-size: 12px;">
                 © ${new Date().getFullYear()} BookCode. 
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings/notifications" style="color: #667eea; text-decoration: none;">Gestionar notificaciones</a>
+                <a href="${FRONTEND_BASE_URL}/settings/notifications" style="color: #667eea; text-decoration: none;">Gestionar notificaciones</a>
               </p>
             </td>
           </tr>

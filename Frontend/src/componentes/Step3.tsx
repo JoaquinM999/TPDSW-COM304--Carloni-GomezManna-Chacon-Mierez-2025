@@ -65,8 +65,8 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900">Información adicional</h3>
-        <p className="mt-2 text-sm text-gray-600">Completa tu perfil</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Información adicional</h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Completa tu perfil</p>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
@@ -81,7 +81,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
             required
             value={data.nombre}
             onChange={(e) => updateData({ nombre: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="Tu nombre completo"
           />
         </div>
@@ -96,7 +96,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
             required
             value={data.pais}
             onChange={(e) => updateData({ pais: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
           >
             <option value="">Selecciona tu país</option>
             {countries.map((country) => (
@@ -117,7 +117,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
             required
             value={data.genero}
             onChange={(e) => updateData({ genero: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100"
           >
             <option value="">Selecciona tu género</option>
             <option value="masculino">Masculino</option>
@@ -136,7 +136,7 @@ const Step3: React.FC<Step3Props> = ({ onPrev, onComplete, setError, setSuccess 
             rows={4}
             value={data.biografia}
             onChange={(e) => updateData({ biografia: e.target.value })}
-            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500"
+            className="block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="Cuéntanos un poco sobre ti..."
           />
         </div>

@@ -41,8 +41,8 @@ const Step2: React.FC<Step2Props> = ({ onNext, onPrev, error, setError }) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900">Elige tu avatar</h3>
-        <p className="mt-2 text-sm text-gray-600">Selecciona una imagen que te represente</p>
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Elige tu avatar</h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Selecciona una imagen que te represente</p>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -56,8 +56,8 @@ const Step2: React.FC<Step2Props> = ({ onNext, onPrev, error, setError }) => {
               onClick={() => handleAvatarSelect(avatar.id)}
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 data.avatar === avatar.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
               <img

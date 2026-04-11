@@ -187,7 +187,11 @@ export const adminCatalogService = {
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || 'Error al actualizar estado del autor');
+      const error: any = new Error(data.error || 'Error al actualizar estado del autor');
+      error.errorCode = data.errorCode;
+      error.booksCount = data.booksCount;
+      error.books = data.books;
+      throw error;
     }
 
     return data;

@@ -211,7 +211,7 @@ const NewsletterSection: React.FC = () => {
                 <motion.button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="rounded-xl bg-white text-indigo-600 font-bold px-8 py-4 hover:bg-gray-100 shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="rounded-xl bg-white text-indigo-600 dark:bg-gray-900 dark:text-indigo-300 font-bold px-8 py-4 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

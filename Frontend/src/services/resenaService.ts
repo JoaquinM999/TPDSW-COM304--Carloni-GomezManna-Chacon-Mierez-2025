@@ -192,11 +192,56 @@ export const crearRespuesta = async (
     // Crear error con toda la información de moderación
     const error: any = new Error(data.error || 'Error al crear respuesta');
     error.details = data.details;
+    error.errors = data.errors || [];
     error.reasons = data.reasons || [];
     error.moderationScore = data.moderationScore;
     error.blocked = data.blocked;
     error.score = data.moderationScore; // Alias para compatibilidad
     
+    throw error;
+  }
+
+  return response.json();
+};
+
+/**
+ * 🔹 Edita una reseña existente del usuario autenticado.
+ */
+export const editarResena = async (
+  id: number,
+  payload: { comentario?: string; estrellas?: number }
+) => {
+  const response = await fetchWithRefresh(`${API_URL}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const error: any = new Error(data.error || 'Error al editar reseña');
+    error.details = data.details;
+    error.errors = data.errors;
+    throw error;
+  }
+
+  return response.json();
+};
+
+/**
+ * 🔹 Elimina una reseña existente del usuario autenticado.
+ */
+export const eliminarResena = async (id: number) => {
+  const response = await fetchWithRefresh(`${API_URL}/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const error: any = new Error(data.error || 'Error al eliminar reseña');
+    error.details = data.details;
     throw error;
   }
 

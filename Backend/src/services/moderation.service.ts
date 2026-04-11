@@ -84,6 +84,7 @@ export class ModerationService {
    * @returns Resultado del análisis de moderación
    */
   analyzeReview(text: string, stars: number): ModerationResult {
+    const normalizedText = text.trim();
     const reasons: string[] = [];
     const flags = {
       toxicity: false,
@@ -104,7 +105,7 @@ export class ModerationService {
     }
 
     // 3. Verificar longitud mínima (evitar spam) - Reducido a 3 para permitir respuestas cortas
-    if (text.length < 3) {
+    if (normalizedText.length < 3) {
       reasons.push('Comentario demasiado corto (posible spam)');
       flags.spam = true;
     }
@@ -164,6 +165,7 @@ export class ModerationService {
     // Decisión de auto-rechazo: contenido extremadamente problemático
     // Score muy bajo (<15) O múltiples flags críticos simultáneos
     const shouldAutoReject = 
+      normalizedText.length < 3 ||
       score < MODERATION_THRESHOLDS.AUTO_REJECT_SCORE || 
       (flags.profanity && flags.toxicity) || 
       (flags.spam && flags.profanity && flags.toxicity) ||

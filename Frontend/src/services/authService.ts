@@ -10,6 +10,20 @@ export const saveTokens = (token: string, refreshToken?: string) => {
 
 export const getAccessToken = () => localStorage.getItem('accessToken');
 
+const decodeJwtPayload = (token: string): any | null => {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '=');
+    return JSON.parse(atob(paddedPayload));
+  } catch (error) {
+    console.error('Error decoding JWT payload:', error);
+    return null;
+  }
+};
+
 export const getNewAccessToken = async (): Promise<string> => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) {
@@ -125,34 +139,28 @@ export const getUserIdFromToken = (): number | null => {
   const token = getToken();
   if (!token) return null;
 
-  try {
-    // JWT token format: header.payload.signature
-    const payload = token.split('.')[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded.id || null;
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
+  const decoded = decodeJwtPayload(token);
+  const userId = Number(decoded?.id);
+  return Number.isFinite(userId) && userId > 0 ? userId : null;
 };
 
 export const getUserInfoFromToken = (): { id: number; email: string; username: string; rol: string } | null => {
   const token = getToken();
   if (!token) return null;
 
-  try {
-    const payload = token.split('.')[1];
-    const decoded = JSON.parse(atob(payload));
-    return {
-      id: decoded.id,
-      email: decoded.email,
-      username: decoded.username,
-      rol: decoded.rol
-    };
-  } catch (error) {
-    console.error('Error decoding token:', error);
+  const decoded = decodeJwtPayload(token);
+  const id = Number(decoded?.id);
+
+  if (!Number.isFinite(id) || id <= 0) {
     return null;
   }
+
+  return {
+    id,
+    email: decoded.email,
+    username: decoded.username,
+    rol: decoded.rol
+  };
 };
 
 export const updateCurrentUser = async (data: any): Promise<void> => {

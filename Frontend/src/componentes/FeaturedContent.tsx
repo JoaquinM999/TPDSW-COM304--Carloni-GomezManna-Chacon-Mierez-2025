@@ -23,12 +23,26 @@ export const FeaturedContent: React.FC = () => {
   const [popularBooks, setPopularBooks] = useState<PopularBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getReviewCountFromPayload = (payload: any): number => {
+    if (Array.isArray(payload)) return payload.length;
+    if (typeof payload?.total === 'number') return payload.total;
+    if (Array.isArray(payload?.reviews)) return payload.reviews.length;
+    return 0;
+  };
+
+  const getReviewsFromPayload = (payload: any): any[] => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.reviews)) return payload.reviews;
+    return [];
+  };
+
   // Cargar libros más populares desde el backend
   useEffect(() => {
     const loadPopularBooks = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(buildApiUrl('/resena/populares?limit=4'));
+        // Traemos el máximo permitido por backend para mejorar la agrupación por libro.
+        const response = await fetch(buildApiUrl('/resena/populares?limit=50'));
         
         if (!response.ok) {
           throw new Error('Error fetching popular books');
@@ -54,8 +68,9 @@ export const FeaturedContent: React.FC = () => {
         
         reviewsArray.forEach((resena: any) => {
           if (!resena.libro) return;
+          if (resena.resenaPadre) return;
           
-          const bookId = resena.libro.externalId || resena.libro.id?.toString();
+          const bookId = resena.libro.id?.toString() || resena.libro.externalId;
           if (!bookMap.has(bookId)) {
             bookMap.set(bookId, {
               libro: resena.libro,
@@ -65,18 +80,19 @@ export const FeaturedContent: React.FC = () => {
           }
           
           const bookData = bookMap.get(bookId)!;
-          if (resena.estrellas) {
-            bookData.ratings.push(resena.estrellas);
+                    const estrellas = Number(resena.estrellas);
+                    if (Number.isFinite(estrellas) && estrellas > 0) {
+                      bookData.ratings.push(estrellas);
           }
           bookData.reviewCount++;
         });
         
         // Obtener información completa de los libros desde la API de libros
         const booksPromises = Array.from(bookMap.values())
-          .sort((a, b) => b.reviewCount - a.reviewCount)
-          .slice(0, 4)
           .map(async ({ libro, ratings, reviewCount }) => {
             let autores: string[] = ['Autor desconocido'];
+            let approvedReviewCount = reviewCount;
+            let pendingReviewCount = 0;
             
             // 1. Si tiene externalId de Google Books
             if (libro.externalId && libro.source === 'google') {
@@ -120,6 +136,61 @@ export const FeaturedContent: React.FC = () => {
               }
             }
             
+            // Contadores reales de reseñas por estado (aprobadas + pendientes).
+            try {
+              const libroDbId = libro.id ? libro.id.toString() : '';
+              const libroExternalId = (libro.externalId || '').toString();
+              const useDbId = /^\d+$/.test(libroDbId);
+              const libroRef = useDbId ? libroDbId : libroExternalId;
+              if (libroRef) {
+                const sourceQuery = !useDbId && libro.source
+                  ? `&libroSource=${encodeURIComponent(libro.source)}`
+                  : '';
+                const matchQuery = useDbId ? '&libroMatch=id' : '&libroMatch=externalId';
+                const approvedUrl = buildApiUrl(`/resena?libroId=${encodeURIComponent(libroRef)}${matchQuery}${sourceQuery}&estado=approved&page=1&limit=100`);
+                const pendingUrl = buildApiUrl(`/resena?libroId=${encodeURIComponent(libroRef)}${matchQuery}${sourceQuery}&estado=pendiente&includeFlagged=false&page=1&limit=100`);
+
+                const [approvedResponse, pendingResponse] = await Promise.all([
+                  fetch(approvedUrl),
+                  fetch(pendingUrl),
+                ]);
+
+                if (approvedResponse.ok) {
+                  const approvedData = await approvedResponse.json();
+                  approvedReviewCount = getReviewCountFromPayload(approvedData);
+
+                  const approvedRatings = getReviewsFromPayload(approvedData)
+                    .filter((r: any) => !r?.resenaPadre)
+                    .map((r: any) => Number(r?.estrellas))
+                    .filter((n: number) => Number.isFinite(n) && n > 0);
+
+                  if (approvedRatings.length > 0) {
+                    // Reemplazamos la muestra de "populares" por ratings reales de aprobadas.
+                    ratings.length = 0;
+                    ratings.push(...approvedRatings);
+                  }
+                }
+
+                if (pendingResponse.ok) {
+                  const pendingData = await pendingResponse.json();
+                  pendingReviewCount = getReviewCountFromPayload(pendingData);
+
+                  const pendingRatings = getReviewsFromPayload(pendingData)
+                    .filter((r: any) => !r?.resenaPadre)
+                    .map((r: any) => Number(r?.estrellas))
+                    .filter((n: number) => Number.isFinite(n) && n > 0);
+
+                  if (pendingRatings.length > 0) {
+                    ratings.push(...pendingRatings);
+                  }
+                }
+              }
+            } catch (statsError) {
+              console.warn('Error fetching real review count:', statsError);
+            }
+
+            const realReviewCount = approvedReviewCount + pendingReviewCount;
+
             return {
               id: libro.slug || libro.externalId || libro.id?.toString() || 'unknown',
               libroId: libro.id ? Number(libro.id) : undefined,
@@ -130,12 +201,23 @@ export const FeaturedContent: React.FC = () => {
               averageRating: ratings.length > 0 
                 ? ratings.reduce((a, b) => a + b, 0) / ratings.length 
                 : 0,
-              reviewCount,
+              reviewCount: realReviewCount,
             };
           });
         
         const books = await Promise.all(booksPromises);
-        setPopularBooks(books);
+
+        const sortedBooks = books
+          .sort((a, b) => {
+            if (b.reviewCount !== a.reviewCount) {
+              return b.reviewCount - a.reviewCount;
+            }
+            // En empate de cantidad, mejor puntuados primero.
+            return b.averageRating - a.averageRating;
+          })
+          .slice(0, 4);
+
+        setPopularBooks(sortedBooks);
       } catch (error) {
         console.error('Error loading popular books:', error);
         setPopularBooks([]);
@@ -182,10 +264,13 @@ export const FeaturedContent: React.FC = () => {
 
   return (
     <section
-      className="py-10 md:py-14 bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      className="relative overflow-hidden py-10 md:py-14 bg-gradient-to-br from-sky-50 via-indigo-50/70 to-violet-100/70 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 transition-colors duration-300"
       aria-label="Libros más comentados"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-slate-400/20 via-slate-300/10 to-transparent dark:from-black/35 dark:via-black/20" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-500/25 to-transparent dark:via-slate-200/15" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Encabezado */}
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
@@ -203,7 +288,7 @@ export const FeaturedContent: React.FC = () => {
             onClick={() => navigate('/libros')}
             whileHover={{ scale: 1.05, x: 3 }}
             whileTap={{ scale: 0.95 }}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 border shadow-sm hover:shadow-md bg-white/95 text-indigo-700 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-800 dark:bg-slate-800/90 dark:text-indigo-200 dark:border-indigo-400/30 dark:hover:bg-slate-700/90 dark:hover:text-indigo-100"
           >
             Explorar más
             <ArrowRight className="w-4 h-4" />
@@ -219,12 +304,12 @@ export const FeaturedContent: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.08 }}
               onClick={() => handleCardClick(book.id)}
-              className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden transition-all duration-500 ease-out flex flex-col border border-gray-200/50 dark:border-gray-700/50 h-full group relative cursor-pointer"
+              className="bg-white dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl overflow-hidden transition-all duration-500 ease-out flex flex-col border border-gray-300/80 dark:border-gray-700/50 h-full group relative cursor-pointer"
               role="article"
               aria-label={`Libro: ${book.titulo}`}
             >
               {/* Contenedor de imagen con gradiente de fondo */}
-              <div className="relative w-full h-64 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-900/20 dark:to-blue-900/20 overflow-hidden flex-shrink-0">
+              <div className="relative w-full h-64 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-purple-900/20 dark:to-blue-900/20 overflow-hidden flex-shrink-0">
                 {book.imagen ? (
                   <div className="relative h-full flex items-center justify-center p-3">
                     <img
@@ -251,7 +336,7 @@ export const FeaturedContent: React.FC = () => {
               </div>
 
               {/* Información del libro */}
-              <div className="p-5 flex flex-col flex-grow relative z-10 bg-white/95 dark:bg-gray-800/95 min-h-[140px]">
+              <div className="p-5 flex flex-col flex-grow relative z-10 bg-white dark:bg-gray-800/95 min-h-[140px]">
                 <h3
                   className="text-base font-bold mb-2 line-clamp-2 text-gray-900 dark:text-gray-100 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300 break-words"
                   style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
@@ -289,7 +374,7 @@ export const FeaturedContent: React.FC = () => {
               </div>
 
               {/* Badge de rating */}
-              {book.averageRating > 0 && (
+              {book.reviewCount > 0 && (
                 <div
                   className="absolute top-4 right-4 z-20"
                   role="status"
@@ -316,12 +401,19 @@ export const FeaturedContent: React.FC = () => {
           onClick={() => navigate('/libros')}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="sm:hidden w-full mt-8 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+          className="sm:hidden w-full mt-8 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold border shadow-sm hover:shadow-md transition-all duration-300 bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50 dark:bg-slate-800 dark:text-indigo-200 dark:border-indigo-400/30 dark:hover:bg-slate-700"
         >
           Explorar más libros
           <ArrowRight className="w-5 h-5" />
         </motion.button>
       </div>
+
+      <img
+        src="/images/piupiu%20reseña.png"
+        alt="Piu Piu con reseña"
+        className="pointer-events-none select-none absolute -bottom-10 md:-bottom-14 right-24 md:right-36 lg:right-44 w-32 md:w-40 lg:w-44 opacity-95 saturate-125"
+        loading="lazy"
+      />
     </section>
   );
 };

@@ -220,6 +220,13 @@ describe('unit - moderation.service.ts', () => {
   // analyzeReview — Auto-rechazo
   // ================================================================
   describe('analyzeReview() — auto-rechazo', () => {
+    it('debe auto-rechazar cuando el comentario es demasiado corto (<3 chars útiles)', () => {
+      const result = service.analyzeReview('ab', 3);
+
+      expect(result.reasons).toContain('Comentario demasiado corto (posible spam)');
+      expect(result.shouldAutoReject).toBe(true);
+    });
+
     it('debe auto-rechazar cuando score < 15', () => {
       // Profanidad (-50) + spam (-35) + toxicidad (-45) + penalización múltiple
       setSentimentScore(service, -10);
@@ -292,12 +299,11 @@ describe('unit - moderation.service.ts', () => {
     });
 
     it('debe manejar texto con solo espacios', () => {
-      // '   ' tiene length 3 → no flaggea spam por corto (3 >= 3)
-      // pero tampoco da bonus por longitud
+      // Con trim(), solo espacios cuenta como comentario vacío
       const result = service.analyzeReview('   ', 3);
 
-      expect(result).toHaveProperty('isApproved');
-      expect(result).toHaveProperty('score');
+      expect(result.flags.spam).toBe(true);
+      expect(result.shouldAutoReject).toBe(true);
     });
 
     it('debe manejar calificación en límite inferior (1)', () => {

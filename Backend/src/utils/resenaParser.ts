@@ -19,7 +19,9 @@ export function parseResenaInput(body: any): {
   if (!body.comentario || typeof body.comentario !== 'string') {
     errors.push('El comentario es requerido');
   } else {
-    const comentarioValidation = validateTextLength(body.comentario, 10, 5000);
+    // Permite comentarios cortos para que pasen por moderación automática
+    // (si son demasiado cortos, se bloquean y notifican en createResena).
+    const comentarioValidation = validateTextLength(body.comentario, 1, 5000);
     if (!comentarioValidation.valid) {
       errors.push(comentarioValidation.error || 'Comentario inválido');
     }
@@ -208,7 +210,7 @@ export function parseResenaRespuesta(body: any, resenaPadreId: number): {
   if (!body.comentario || typeof body.comentario !== 'string') {
     errors.push('El comentario es requerido');
   } else {
-    const comentarioValidation = validateTextLength(body.comentario, 10, 2000);
+    const comentarioValidation = validateTextLength(body.comentario, 3, 2000);
     if (!comentarioValidation.valid) {
       errors.push(comentarioValidation.error || 'Comentario inválido');
     }

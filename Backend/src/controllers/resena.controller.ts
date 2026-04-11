@@ -44,7 +44,7 @@ export const getResenas = async (req: Request, res: Response) => {
   try {
     const orm = req.app.get('orm') as MikroORM;
     const em = orm.em.fork();
-    const { libroId, usuarioId, estado } = req.query;
+    const { libroId, libroMatch, libroSource, includeFlagged, usuarioId, estado } = req.query;
     const usuarioPayload = (req as AuthRequest).user;
 
     console.log('🔍 getResenas - libroId recibido:', libroId);
@@ -52,6 +52,9 @@ export const getResenas = async (req: Request, res: Response) => {
     // 1️⃣ Construir el WHERE clause usando helper
     const where = buildResenaWhereClause({
       libroId: libroId as string,
+      libroMatch: libroMatch as string,
+      libroSource: libroSource as string,
+      includeFlagged: includeFlagged as string,
       usuarioId: usuarioId as string,
       estado: estado as string,
       user: usuarioPayload,
@@ -80,8 +83,9 @@ export const getResenas = async (req: Request, res: Response) => {
         estadoNormalizado === 'pending' || 
         estado === EstadoResena.PENDING || 
         where.estado?.$in?.includes(EstadoResena.PENDING)) {
-      console.log('🔍 getResenas => moderation reviews:', resenas.length);
-      const serialized = resenas.map(serializarResenaModeracion);
+      const topLevelPending = filtrarYOrdenarResenasTopLevel(resenas);
+      console.log('🔍 getResenas => moderation reviews (top-level):', topLevelPending.length, '| raw:', resenas.length);
+      const serialized = topLevelPending.map(serializarResenaModeracion);
       res.json(serialized);
       return;
     }
@@ -91,7 +95,8 @@ export const getResenas = async (req: Request, res: Response) => {
 
     // 7️⃣ Paginar resultados
     const page = parseInt(req.query.page as string) || 1;
-    const limit = 10;
+    const requestedLimit = parseInt(req.query.limit as string) || 10;
+    const limit = Math.min(Math.max(requestedLimit, 1), 100);
     const paginatedTopLevel = paginarResenas(topLevel, page, limit);
 
     console.log('🔍 getResenas => where:', where, '| total top-level:', topLevel.length, '| page:', page, '| paginated:', paginatedTopLevel.length);
@@ -279,6 +284,22 @@ export const createResena = async (req: Request, res: Response) => {
       });
 
       await em.persistAndFlush(blockedResena);
+
+      // Notificar automáticamente al autor con la razón del rechazo
+      try {
+        const notificacionService = new NotificacionService(em);
+        const libroSlug = libro.slug || libro.externalId || libro.id.toString();
+
+        await notificacionService.notificarResenaRechazada(
+          usuario.id,
+          libro.nombre || 'Libro sin título',
+          blockedResena.id,
+          libroSlug,
+          moderationResult.reasons.join('; ')
+        );
+      } catch (notifError) {
+        console.error('❌ Error al enviar notificación de auto-rechazo:', notifError);
+      }
       
       return res.status(400).json({
         error: 'Tu reseña contiene contenido inapropiado y no puede ser publicada',
@@ -365,9 +386,6 @@ export const updateResena = async (req: Request, res: Response) => {
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
-    if (resena.usuario.id !== usuarioPayload.id)
-      return res.status(403).json({ error: 'No autorizado para modificar esta reseña' });
-
     // ✅ Usar parser para validar update
     const validation = parseResenaUpdateInput(req.body);
     if (!validation.valid) {
@@ -396,9 +414,6 @@ export const deleteResena = async (req: Request, res: Response) => {
 
     const usuarioPayload = (req as AuthRequest).user;
     if (!usuarioPayload) return res.status(401).json({ error: 'Usuario no autenticado' });
-    if (resena.usuario.id !== usuarioPayload.id)
-      return res.status(403).json({ error: 'No autorizado para eliminar esta reseña' });
-
     await em.removeAndFlush(resena);
     res.json({ message: 'Reseña eliminada' });
   } catch (error) {

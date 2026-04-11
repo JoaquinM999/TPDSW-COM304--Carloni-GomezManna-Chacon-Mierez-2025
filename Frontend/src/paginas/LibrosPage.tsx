@@ -13,6 +13,12 @@ interface Libro {
   imagen: string | null;
   enlace: string | null;
   averageRating?: number;
+  slug?: string | null;
+  externalId?: string | null;
+}
+
+interface LibroConPromedio extends Libro {
+  averageRating: number;
 }
 
 const normalizeImageUrl = (url: string | null | undefined): string | null => {
@@ -21,6 +27,94 @@ const normalizeImageUrl = (url: string | null | undefined): string | null => {
   if (url.startsWith('http://')) return url.replace('http://', 'https://');
   if (url.startsWith('//')) return `https:${url}`;
   return url;
+};
+
+const normalizeText = (value: string | null | undefined): string =>
+  (value || '').trim().toLowerCase();
+
+const getLibroRouteId = (libro: Partial<Libro>): string => {
+  return String(libro.slug || libro.externalId || libro.id || '').trim();
+};
+
+const getLibroIdentityKey = (libro: Partial<Libro>): string => {
+  const routeId = getLibroRouteId(libro);
+  if (routeId) return `id:${routeId}`;
+
+  const titulo = normalizeText(libro.titulo);
+  const autorPrincipal = normalizeText((libro.autores || [])[0]);
+
+  if (titulo && autorPrincipal) return `ta:${titulo}::${autorPrincipal}`;
+  if (titulo) return `t:${titulo}`;
+
+  return `fallback:${Math.random().toString(36).slice(2)}`;
+};
+
+const isUnknownAuthor = (author: string | undefined): boolean => {
+  const value = normalizeText(author);
+  return !value || value.includes('autor desconocido') || value.includes('unknown author');
+};
+
+const isBetterLibroCandidate = (next: Libro, current: Libro): boolean => {
+  const nextAuthor = next.autores?.[0];
+  const currentAuthor = current.autores?.[0];
+  const nextHasKnownAuthor = !isUnknownAuthor(nextAuthor);
+  const currentHasKnownAuthor = !isUnknownAuthor(currentAuthor);
+
+  if (nextHasKnownAuthor !== currentHasKnownAuthor) {
+    return nextHasKnownAuthor;
+  }
+
+  const nextHasImage = Boolean(next.imagen);
+  const currentHasImage = Boolean(current.imagen);
+  if (nextHasImage !== currentHasImage) {
+    return nextHasImage;
+  }
+
+  const nextDescLen = (next.descripcion || '').length;
+  const currentDescLen = (current.descripcion || '').length;
+  if (nextDescLen !== currentDescLen) {
+    return nextDescLen > currentDescLen;
+  }
+
+  return (next.averageRating || 0) >= (current.averageRating || 0);
+};
+
+const mergeLibroCandidates = (a: Libro, b: Libro): Libro => {
+  const preferred = isBetterLibroCandidate(a, b) ? a : b;
+  const secondary = preferred === a ? b : a;
+  const preferredRating = preferred.averageRating || 0;
+  const secondaryRating = secondary.averageRating || 0;
+
+  return {
+    ...secondary,
+    ...preferred,
+    id: preferred.id || secondary.id,
+    slug: preferred.slug || secondary.slug || null,
+    externalId: preferred.externalId || secondary.externalId || null,
+    averageRating: preferredRating > 0 ? preferredRating : secondaryRating,
+  };
+};
+
+const dedupeLibrosForDisplay = (items: Libro[]): Libro[] => {
+  const bySemanticKey = new Map<string, Libro>();
+
+  for (const libro of items) {
+    const titleKey = normalizeText(libro.titulo);
+    const authorKey = normalizeText(libro.autores?.[0]);
+    const semanticKey = authorKey && !isUnknownAuthor(authorKey)
+      ? `ta:${titleKey}::${authorKey}`
+      : `t:${titleKey}`;
+
+    const existing = bySemanticKey.get(semanticKey);
+    if (!existing) {
+      bySemanticKey.set(semanticKey, libro);
+      continue;
+    }
+
+    bySemanticKey.set(semanticKey, mergeLibroCandidates(libro, existing));
+  }
+
+  return Array.from(bySemanticKey.values());
 };
 
 export default function TodosLosLibros() {
@@ -82,6 +176,41 @@ export default function TodosLosLibros() {
     const controller = new AbortController();
     const signal = controller.signal;
 
+    const fetchTopRatedLocalBooks = async (): Promise<LibroConPromedio[]> => {
+      try {
+        const topRatedUrl = buildApiUrl('/libro/estrellas?minEstrellas=1');
+        const topRatedRes = await fetch(topRatedUrl, { signal });
+        if (!topRatedRes.ok) return [];
+
+        const topRatedRaw = await topRatedRes.json();
+        if (!Array.isArray(topRatedRaw)) return [];
+
+        return topRatedRaw
+          .map((libro: any) => {
+            const avg = Number(libro.promedio_estrellas ?? 0);
+            return {
+              id: String(libro.externalId || libro.id || libro.slug || ''),
+              titulo: libro.nombre || 'Sin título',
+              autores: libro.autor_nombre ? [String(libro.autor_nombre)] : [],
+              descripcion: libro.sinopsis || undefined,
+              imagen: normalizeImageUrl(libro.imagen || null),
+              enlace: libro.enlace || null,
+              averageRating: Number.isFinite(avg) ? avg : 0,
+              slug: libro.slug || null,
+              externalId: libro.externalId || null,
+            };
+          })
+          .filter((libro: LibroConPromedio) => Boolean(libro.id))
+          .filter((libro: LibroConPromedio) => libro.averageRating > 0)
+          .sort((a, b) => b.averageRating - a.averageRating);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          console.warn('Error cargando top de libros calificados:', err);
+        }
+        return [];
+      }
+    };
+
     const fetchLibros = async () => {
       const isInitialLoad = pagina === 1;
       if (isInitialLoad) {
@@ -95,6 +224,11 @@ export default function TodosLosLibros() {
         // 🔍 BÚSQUEDA COMBINADA: Base de datos + Google Books
         let allItems: any[] = [];
         let total: number | null = null;
+        let topRatedLocalBooks: LibroConPromedio[] = [];
+
+        if (sortOrder === 'rating_high_to_low' && isInitialLoad) {
+          topRatedLocalBooks = await fetchTopRatedLocalBooks();
+        }
 
         // 1️⃣ Buscar en la base de datos local primero
         if (debouncedSearchTerm && debouncedSearchTerm.length >= 2) {
@@ -107,14 +241,16 @@ export default function TodosLosLibros() {
               
               // Mapear libros de la BD al formato esperado
               const mappedLocal = localLibros.map((libro: any) => ({
-                id: libro.slug || libro.id?.toString() || 'unknown',
+                id: String(libro.externalId || libro.id || libro.slug || ''),
                 titulo: libro.nombre || 'Sin título',
                 autores: libro.autor ? [`${libro.autor.nombre} ${libro.autor.apellido}`] : [],
                 descripcion: libro.sinopsis || undefined,
                 imagen: normalizeImageUrl(libro.imagen || null),
                 enlace: null,
+                slug: libro.slug || null,
+                externalId: libro.externalId || null,
                 isLocal: true // Marcador para distinguir libros locales
-              }));
+              })).filter((libro: any) => Boolean(libro.id));
               
               allItems = mappedLocal;
             }
@@ -201,12 +337,29 @@ export default function TodosLosLibros() {
               null
             ),
             enlace: it.enlace ?? it.link ?? it.volumeInfo?.infoLink ?? null,
+            slug: it.slug ?? null,
+            externalId: it.externalId ?? it.id ?? it._id ?? null,
             isLocal: false
           };
         });
 
         // 3️⃣ Combinar resultados locales + Google Books
         allItems = [...allItems, ...mappedGoogleBooks];
+
+        const dedupedItems = new Map<string, any>();
+        for (const libro of allItems) {
+          const key = getLibroIdentityKey(libro);
+          if (!dedupedItems.has(key)) {
+            dedupedItems.set(key, libro);
+          }
+        }
+        allItems = Array.from(dedupedItems.values());
+
+        if (sortOrder === 'rating_high_to_low' && isInitialLoad && topRatedLocalBooks.length > 0) {
+          const topRatedIds = new Set(topRatedLocalBooks.map((libro) => String(libro.id)));
+          const queryItemsSinDuplicados = allItems.filter((libro) => !topRatedIds.has(String(libro.id)));
+          allItems = [...topRatedLocalBooks, ...queryItemsSinDuplicados];
+        }
 
         // Always fetch ratings for all libros in parallel for hover display
         const ratingPromises = allItems.map(async (libro) => {
@@ -219,22 +372,43 @@ export default function TodosLosLibros() {
             return { ...libro, averageRating: avgRating };
           } catch (err) {
             console.warn(`Error fetching ratings for ${libro.id}:`, err);
-            return { ...libro, averageRating: 0 };
+            return { ...libro, averageRating: libro.averageRating || 0 };
           }
         });
         const librosWithRatings = await Promise.all(ratingPromises);
 
         let finalLibros = librosWithRatings;
         if (sortOrder === 'rating_high_to_low') {
-          // Sort: rated books first (descending), then unrated
-          finalLibros = librosWithRatings.sort((a, b) => {
-            const aRated = a.averageRating > 0;
-            const bRated = b.averageRating > 0;
-            if (aRated && !bRated) return -1;
-            if (!aRated && bRated) return 1;
-            return b.averageRating - a.averageRating;
-          });
+          if (isInitialLoad && topRatedLocalBooks.length > 0) {
+            const topRatedIds = new Set(topRatedLocalBooks.map((libro) => String(libro.id)));
+            const topRatedSection = librosWithRatings
+              .filter((libro) => topRatedIds.has(String(libro.id)))
+              .sort((a, b) => b.averageRating - a.averageRating);
+
+            const querySection = librosWithRatings
+              .filter((libro) => !topRatedIds.has(String(libro.id)))
+              .sort((a, b) => {
+                const aRated = a.averageRating > 0;
+                const bRated = b.averageRating > 0;
+                if (aRated && !bRated) return -1;
+                if (!aRated && bRated) return 1;
+                return b.averageRating - a.averageRating;
+              });
+
+            finalLibros = [...topRatedSection, ...querySection];
+          } else {
+            // En páginas siguientes solo se ordenan los resultados de la query.
+            finalLibros = librosWithRatings.sort((a, b) => {
+              const aRated = a.averageRating > 0;
+              const bRated = b.averageRating > 0;
+              if (aRated && !bRated) return -1;
+              if (!aRated && bRated) return 1;
+              return b.averageRating - a.averageRating;
+            });
+          }
         }
+
+        finalLibros = dedupeLibrosForDisplay(finalLibros);
 
         if (isInitialLoad) {
           setLibros(finalLibros);
@@ -248,11 +422,11 @@ export default function TodosLosLibros() {
         // - Si conocemos total -> comparo startIndex + fetched < total
         // - Si NO conocemos total -> asumimos que hay más si la API devolvió al menos 1 item.
         if (total !== null) {
-          const fetchedCount = startIndex + finalLibros.length;
+          const fetchedCount = startIndex + items.length;
           setHasMore(fetchedCount < total);
         } else {
           // importante: si la API devolvió 0 items, no hay más; si devolvió >0, habilitamos "Siguiente" para que pruebes.
-          setHasMore(finalLibros.length > 0);
+          setHasMore(items.length > 0);
         }
 
       } catch (err: any) {
@@ -290,18 +464,19 @@ export default function TodosLosLibros() {
   const totalPages = totalItems ? Math.ceil(totalItems / librosPorPagina) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 p-6 transition-colors duration-300">
-      <header className="max-w-5xl mx-auto mb-6">
-        <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
-            Explorador de Libros
-          </span>
-        </h2>
-        <p className="text-center text-sm text-gray-600 dark:text-gray-300">
-          Buscar por título, autor, ISBN o queries (ej: <code className="bg-white dark:bg-gray-700 dark:text-gray-200 px-1 rounded">subject:fantasy</code>).
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+      <div className="bg-white/90 dark:bg-slate-900/95 backdrop-blur-lg shadow-lg border-b border-gray-200 dark:border-slate-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-700 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400">
+              Explorador de Libros
+            </span>
+          </h2>
+        </div>
+      </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+      <main className="max-w-5xl mx-auto px-6 py-8">
+        <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
           <div className="w-full sm:w-auto flex-shrink-0">
             <select
               value={searchFilter}
@@ -356,9 +531,7 @@ export default function TodosLosLibros() {
             )}
           </div>
         </div>
-      </header>
 
-      <main className="max-w-5xl mx-auto">
         {loading && libros.length === 0 && (
           <div className="flex justify-center items-center my-8">
             <DotLottieReact
@@ -392,10 +565,13 @@ export default function TodosLosLibros() {
             <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {libros.map((libro) => {
                 // Usar /libro/:slug para todos los libros (locales usan slug, externos usan externalId)
-                const libroUrl = `/libro/${libro.id}`;
+                const routeId = getLibroRouteId(libro);
+                if (!routeId) return null;
+
+                const libroUrl = `/libro/${routeId}`;
                 
                 return (
-                  <Link key={libro.id} to={libroUrl} state={{ from: location.pathname }} className="block">
+                  <Link key={`${routeId}-${libro.titulo}`} to={libroUrl} state={{ from: location.pathname }} className="block">
                     <LibroCard
                       title={libro.titulo}
                       authors={libro.autores}
@@ -430,10 +606,8 @@ export default function TodosLosLibros() {
               )}
 
               <div className="text-base text-gray-700 dark:text-gray-300 font-medium">
-                {totalItems !== null ? (
+                {totalItems !== null && (
                   <span>{totalItems.toLocaleString()} resultados totales</span>
-                ) : (
-                  <span>Libros cargados: {libros.length}</span>
                 )}
               </div>
             </div>

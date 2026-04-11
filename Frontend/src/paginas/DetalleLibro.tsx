@@ -18,9 +18,9 @@ import {
   Loader2,
   User,
 } from "lucide-react";
-import { getResenasByLibro, agregarReseña, crearRespuesta, obtenerResenasPopulares } from "../services/resenaService";
+import { getResenasByLibro, agregarReseña, crearRespuesta, obtenerResenasPopulares, editarResena, eliminarResena } from "../services/resenaService";
 import { addOrUpdateReaccion, deleteReaccion } from "../services/reaccionService";
-import { isAuthenticated, getToken } from "../services/authService";
+import { isAuthenticated, getToken, getUserIdFromToken } from "../services/authService";
 import { listaService, Lista } from "../services/listaService";
 import { obtenerFavoritos, agregarFavorito, quitarFavorito } from "../services/favoritosService";
 import { ModerationErrorModal } from "../componentes/ModerationErrorModal";
@@ -373,8 +373,27 @@ const DetalleLibro: React.FC = () => {
   
   // Helper para obtener el ID del usuario actual
   const getCurrentUserId = (): number | null => {
-    const userId = localStorage.getItem('userId');
-    return userId ? parseInt(userId, 10) : null;
+    const fromToken = getUserIdFromToken();
+    if (fromToken) return fromToken;
+
+    const userIdRaw = localStorage.getItem('userId') || localStorage.getItem('id');
+    if (userIdRaw) {
+      const parsed = Number(userIdRaw);
+      if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+    }
+
+    const userRaw = localStorage.getItem('user');
+    if (userRaw) {
+      try {
+        const user = JSON.parse(userRaw);
+        const parsed = Number(user?.id);
+        if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+      } catch {
+        // noop
+      }
+    }
+
+    return null;
   };
   
   // ⬅ Función para volver a la página anterior
@@ -409,6 +428,28 @@ const DetalleLibro: React.FC = () => {
       autoRejected?: boolean;
     };
   } | null>(null);
+  const [openReviewMenuKey, setOpenReviewMenuKey] = useState<string | null>(null);
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [editingIsReply, setEditingIsReply] = useState(false);
+  const [editingComentario, setEditingComentario] = useState("");
+  const [editingEstrellas, setEditingEstrellas] = useState(5);
+  const [reviewActionLoading, setReviewActionLoading] = useState(false);
+  const reviewMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openReviewMenuKey) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (reviewMenuRef.current && !reviewMenuRef.current.contains(event.target as Node)) {
+        setOpenReviewMenuKey(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openReviewMenuKey]);
 
   // Función para detectar si el texto contiene etiquetas HTML
   const hasHtmlTags = (text: string) => /<[^>]*>/.test(text);
@@ -972,6 +1013,65 @@ const DetalleLibro: React.FC = () => {
     dispatch({ type: 'SET_REVIEWS', payload: [r, ...reviewState.reseñas] });
   };
 
+  const startEditingReview = (review: Reseña, isReply: boolean = false) => {
+    setEditingReviewId(review.id);
+    setEditingIsReply(isReply);
+    setEditingComentario(review.comentario || "");
+    setEditingEstrellas(review.estrellas || 5);
+    setOpenReviewMenuKey(null);
+  };
+
+  const cancelEditingReview = () => {
+    setEditingReviewId(null);
+    setEditingIsReply(false);
+    setEditingComentario("");
+    setEditingEstrellas(5);
+  };
+
+  const handleSaveReviewEdit = async (reviewId: number, isReply: boolean = editingIsReply) => {
+    const comentarioLimpio = editingComentario.trim();
+    if (!comentarioLimpio) {
+      alert("La reseña no puede quedar vacía.");
+      return;
+    }
+
+    setReviewActionLoading(true);
+    try {
+      const payload = isReply
+        ? { comentario: comentarioLimpio }
+        : { comentario: comentarioLimpio, estrellas: editingEstrellas };
+
+      await editarResena(reviewId, payload);
+      cancelEditingReview();
+      await refreshResenas();
+    } catch (error: any) {
+      const backendErrors = Array.isArray(error?.errors) ? error.errors.join("\n") : null;
+      alert(backendErrors || error?.message || "No se pudo editar la reseña.");
+    } finally {
+      setReviewActionLoading(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: number) => {
+    setOpenReviewMenuKey(null);
+    if (!window.confirm("¿Seguro que querés eliminar esta reseña?")) {
+      return;
+    }
+
+    setReviewActionLoading(true);
+    try {
+      await eliminarResena(reviewId);
+      if (editingReviewId === reviewId) {
+        cancelEditingReview();
+      }
+      await refreshResenas();
+    } catch (error: any) {
+      alert(error?.message || "No se pudo eliminar la reseña.");
+    } finally {
+      setReviewActionLoading(false);
+    }
+  };
+
   const renderStars = (rating: number, sizeClass = "w-4 h-4") =>
     Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -1070,6 +1170,10 @@ const DetalleLibro: React.FC = () => {
     } catch (err: any) {
       console.error("Error creando respuesta:", err);
       
+      const validationErrors = Array.isArray(err?.errors) && err.errors.length > 0
+        ? err.errors.join("\n")
+        : null;
+
       // Detectar si es un error de moderación/rechazo
       const errorMsg = err.message || "No se pudo crear la respuesta";
       const isModerationError = errorMsg.toLowerCase().includes('moderación') || 
@@ -1083,7 +1187,7 @@ const DetalleLibro: React.FC = () => {
       if (isModerationError) {
         // Mostrar modal de error de moderación
         setModerationError({
-          message: errorMsg,
+          message: validationErrors || errorMsg,
           details: {
             autoRejected: true,
             reasons: err.reasons || [],
@@ -1095,7 +1199,7 @@ const DetalleLibro: React.FC = () => {
         dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: null } });
       } else {
         // Error normal, mostrarlo en el formulario
-        dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: false, error: errorMsg } } });
+        dispatch({ type: 'SET_REPLY_FORM', payload: { reviewId, form: { ...reviewState.replyForms[reviewId]!, submitting: false, error: validationErrors || errorMsg } } });
       }
     }
   };
@@ -1823,19 +1927,89 @@ const DetalleLibro: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                      <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2 relative" ref={openReviewMenuKey === `review-${r.id}` ? reviewMenuRef : undefined}>
                         <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(r.fechaResena)}</span>
-                        <button className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Más opciones"><MoreHorizontal className="w-4 h-4" /></button>
+                        <button
+                          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                          title="Más opciones"
+                          onClick={() => setOpenReviewMenuKey(prev => prev === `review-${r.id}` ? null : `review-${r.id}`)}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {openReviewMenuKey === `review-${r.id}` && (
+                          <div className="absolute right-0 top-7 z-10 w-40 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl p-1">
+                            <button
+                              type="button"
+                              className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                              onClick={() => startEditingReview(r)}
+                            >
+                              Editar reseña
+                            </button>
+                            <button
+                              type="button"
+                              className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              onClick={() => handleDeleteReview(r.id)}
+                            >
+                              Eliminar reseña
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className="mt-3 text-gray-700 dark:text-gray-300">
+                      {editingReviewId === r.id && !editingIsReply ? (
+                        <div className="space-y-3 rounded-2xl border border-purple-200 dark:border-purple-800 bg-purple-50/60 dark:bg-purple-900/20 p-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Calificación</label>
+                            <select
+                              value={editingEstrellas}
+                              onChange={(e) => setEditingEstrellas(Number(e.target.value))}
+                              className="rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-gray-900 dark:text-slate-100"
+                            >
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <option key={n} value={n}>{n} estrella{n > 1 ? 's' : ''}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Comentario</label>
+                            <textarea
+                              value={editingComentario}
+                              onChange={(e) => setEditingComentario(e.target.value)}
+                              rows={4}
+                              className="w-full resize-y rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-gray-900 dark:text-slate-100"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600"
+                              onClick={cancelEditingReview}
+                              disabled={reviewActionLoading}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                              onClick={() => handleSaveReviewEdit(r.id)}
+                              disabled={reviewActionLoading}
+                            >
+                              {reviewActionLoading ? 'Guardando...' : 'Guardar cambios'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
                       {/* bloque de comentario más grande: text-lg y mayor line-height */}
                       <p className={`${reviewState.expandedReviewIds[r.id] ? '' : 'line-clamp-5'} text-lg leading-relaxed`}>{r.comentario}</p>
                       {r.comentario && r.comentario.length > 300 && (
                         <button onClick={() => toggleExpand(r.id)} className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
                           {reviewState.expandedReviewIds[r.id] ? <><ChevronUp className="w-4 h-4"/> Ver menos</> : <><ChevronDown className="w-4 h-4"/> Ver más</>}
                         </button>
+                      )}
+                        </>
                       )}
                     </div>
 
@@ -1928,7 +2102,7 @@ const DetalleLibro: React.FC = () => {
                           </div>
 
                           {reviewState.replyForms[r.id]!.error && (
-                            <p className="text-sm text-red-600 dark:text-red-400">{reviewState.replyForms[r.id]!.error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-400 whitespace-pre-line">{reviewState.replyForms[r.id]!.error}</p>
                           )}
                         </div>
                       </div>
@@ -1978,13 +2152,70 @@ const DetalleLibro: React.FC = () => {
 
                                 </div>
 
-                                <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                                <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2 relative" ref={openReviewMenuKey === `reply-${r.respuestas[0].id}` ? reviewMenuRef : undefined}>
                                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(r.respuestas[0].fechaResena)}</span>
+                                  <button
+                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    title="Más opciones"
+                                    onClick={() => setOpenReviewMenuKey(prev => prev === `reply-${r.respuestas![0].id}` ? null : `reply-${r.respuestas![0].id}`)}
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </button>
+                                  {openReviewMenuKey === `reply-${r.respuestas[0].id}` && (
+                                    <div className="absolute right-0 top-7 z-10 w-40 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl p-1">
+                                      <button
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                                        onClick={() => startEditingReview(r.respuestas![0], true)}
+                                      >
+                                        Editar respuesta
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        onClick={() => handleDeleteReview(r.respuestas![0].id)}
+                                      >
+                                        Eliminar respuesta
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
                               <div className="mt-2 text-gray-700 dark:text-gray-300">
-                                <p className="text-base leading-relaxed">{r.respuestas[0].comentario}</p>
+                                {editingReviewId === r.respuestas[0].id && editingIsReply ? (
+                                  <div className="space-y-3 rounded-2xl border border-purple-200 dark:border-purple-800 bg-purple-50/60 dark:bg-purple-900/20 p-4">
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Respuesta</label>
+                                      <textarea
+                                        value={editingComentario}
+                                        onChange={(e) => setEditingComentario(e.target.value)}
+                                        rows={3}
+                                        className="w-full resize-y rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-gray-900 dark:text-slate-100"
+                                      />
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600"
+                                        onClick={cancelEditingReview}
+                                        disabled={reviewActionLoading}
+                                      >
+                                        Cancelar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                                        onClick={() => handleSaveReviewEdit(r.respuestas![0].id, true)}
+                                        disabled={reviewActionLoading}
+                                      >
+                                        {reviewActionLoading ? 'Guardando...' : 'Guardar cambios'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-base leading-relaxed">{r.respuestas[0].comentario}</p>
+                                )}
                               </div>
 
                               <div className="flex gap-3 mt-4 text-sm items-center">
@@ -2062,13 +2293,70 @@ const DetalleLibro: React.FC = () => {
 
                                   </div>
 
-                                  <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-2 relative" ref={openReviewMenuKey === `reply-${reply.id}` ? reviewMenuRef : undefined}>
                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(reply.fechaResena)}</span>
+                                    <button
+                                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                                      title="Más opciones"
+                                      onClick={() => setOpenReviewMenuKey(prev => prev === `reply-${reply.id}` ? null : `reply-${reply.id}`)}
+                                    >
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </button>
+                                    {openReviewMenuKey === `reply-${reply.id}` && (
+                                      <div className="absolute right-0 top-7 z-10 w-40 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl p-1">
+                                        <button
+                                          type="button"
+                                          className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700"
+                                          onClick={() => startEditingReview(reply, true)}
+                                        >
+                                          Editar respuesta
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                          onClick={() => handleDeleteReview(reply.id)}
+                                        >
+                                          Eliminar respuesta
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
                                 <div className="mt-2 text-gray-700 dark:text-gray-300">
-                                  <p className="text-base leading-relaxed">{reply.comentario}</p>
+                                  {editingReviewId === reply.id && editingIsReply ? (
+                                    <div className="space-y-3 rounded-2xl border border-purple-200 dark:border-purple-800 bg-purple-50/60 dark:bg-purple-900/20 p-4">
+                                      <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Respuesta</label>
+                                        <textarea
+                                          value={editingComentario}
+                                          onChange={(e) => setEditingComentario(e.target.value)}
+                                          rows={3}
+                                          className="w-full resize-y rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-gray-900 dark:text-slate-100"
+                                        />
+                                      </div>
+                                      <div className="flex justify-end gap-2">
+                                        <button
+                                          type="button"
+                                          className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600"
+                                          onClick={cancelEditingReview}
+                                          disabled={reviewActionLoading}
+                                        >
+                                          Cancelar
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                                          onClick={() => handleSaveReviewEdit(reply.id, true)}
+                                          disabled={reviewActionLoading}
+                                        >
+                                          {reviewActionLoading ? 'Guardando...' : 'Guardar cambios'}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-base leading-relaxed">{reply.comentario}</p>
+                                  )}
                                 </div>
 
                                 <div className="flex gap-3 mt-4 text-sm items-center">

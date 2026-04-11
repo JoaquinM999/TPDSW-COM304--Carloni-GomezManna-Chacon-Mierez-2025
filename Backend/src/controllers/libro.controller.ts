@@ -111,13 +111,15 @@ export const getLibroBySlug = async (req: Request, res: Response) => {
   
   try {
     const { slug } = req.params;
+    const numericId = Number(slug);
+    const hasNumericId = !Number.isNaN(numericId);
     
     // Buscar por slug o por externalId (para libros de Google Books)
     const libro = await em.findOne(
       Libro, 
       {
         activo: true,
-        $or: [{ slug }, { externalId: slug }],
+        $or: hasNumericId ? [{ slug }, { externalId: slug }, { id: numericId }] : [{ slug }, { externalId: slug }],
       },
       { populate: ['autor', 'categoria', 'editorial', 'saga'] }
     );
@@ -283,9 +285,14 @@ export const getLibrosByEstrellasMinimas = async (req: Request, res: Response) =
 
     // Using COALESCE to treat books without reviews as 0 average
     const libros = await em.getConnection().execute(`
-      SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas
+      SELECT l.*, COALESCE(AVG(r.estrellas), 0) AS promedio_estrellas,
+             CASE
+               WHEN a.id IS NOT NULL THEN TRIM(CONCAT(COALESCE(a.nombre, ''), ' ', COALESCE(a.apellido, '')))
+               ELSE NULL
+             END AS autor_nombre
       FROM libro l
       LEFT JOIN resena r ON r.libro_id = l.id
+      LEFT JOIN autor a ON a.id = l.autor_id
       WHERE l.activo = 1
       GROUP BY l.id
       HAVING promedio_estrellas >= ?

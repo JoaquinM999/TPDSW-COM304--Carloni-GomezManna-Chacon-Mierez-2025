@@ -251,4 +251,46 @@ describe('unit - resena.controller moderation flow', () => {
       })
     );
   });
+
+  it('createResena con comentario demasiado corto debe persistir bloqueada y devolver blocked=true', async () => {
+    const emMock = {
+      findOne: vi
+        .fn()
+        .mockResolvedValueOnce({ id: 1, nombre: 'Usuario Demo' })
+        .mockResolvedValueOnce({ id: 6, nombre: 'Libro corto', externalId: 'book-6' }),
+      create: vi.fn().mockImplementation((_entity: any, data: any) => ({ ...data, id: 1001 })),
+      persistAndFlush: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const req = createReqWithOrm(
+      {
+        body: {
+          comentario: 'ab',
+          estrellas: 3,
+          libroId: 'book-6',
+          libro: {
+            id: 'book-6',
+            titulo: 'Libro corto',
+            autores: ['Autor Dos'],
+          },
+        } as any,
+        user: { id: 1 } as any,
+        headers: { authorization: 'Bearer token' } as any,
+      } as any,
+      emMock
+    );
+
+    await createResena(req, res as Response);
+
+    expect(emMock.create).toHaveBeenCalledTimes(1);
+    expect(emMock.persistAndFlush).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        blocked: true,
+        reasons: expect.arrayContaining(['Comentario demasiado corto (posible spam)']),
+        reviewId: 1001,
+      })
+    );
+  });
 });

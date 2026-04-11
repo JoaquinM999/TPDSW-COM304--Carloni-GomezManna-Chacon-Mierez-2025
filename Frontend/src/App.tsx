@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Header } from './componentes/Header';
 import { HeroSection } from './componentes/HeroSection';
 import { FeaturedContent } from './componentes/FeaturedContent';
+import { TeamCommunitySection } from './componentes/TeamCommunitySection';
 import { Footer } from './componentes/Footer';
 import { ScrollToTop } from './componentes/ScrollToTop';
 import LoginModal from './componentes/LoginModal';
@@ -149,6 +150,7 @@ function Layout({ showLoginModal, setShowLoginModal }: LayoutProps) {
                     <>
                       <HeroSection />
                       <FeaturedContent />
+                      <TeamCommunitySection />
                     </>
                   )}
                 </motion.div>

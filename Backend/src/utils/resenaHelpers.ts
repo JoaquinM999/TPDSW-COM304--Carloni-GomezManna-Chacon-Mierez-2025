@@ -8,12 +8,15 @@ import { EntityManager } from '@mikro-orm/core';
  */
 export function buildResenaWhereClause(params: {
   libroId?: string;
+  libroMatch?: string;
+  libroSource?: string;
+  includeFlagged?: string;
   usuarioId?: string;
   estado?: string;
   user?: any;
   em: EntityManager;
 }): any {
-  const { libroId, usuarioId, estado, user } = params;
+  const { libroId, libroMatch, libroSource, includeFlagged, usuarioId, estado, user } = params;
   const where: any = {};
 
   // Excluir reseñas eliminadas (soft delete)
@@ -23,11 +26,19 @@ export function buildResenaWhereClause(params: {
   if (libroId) {
     const libroIdStr = libroId.toString();
     const isNumeric = /^\d+$/.test(libroIdStr);
-    
-    if (isNumeric) {
+
+    if (libroMatch === 'id' && isNumeric) {
+      where.libro = { id: +libroIdStr };
+    } else if (libroMatch === 'externalId') {
+      where.libro = libroSource
+        ? { externalId: libroIdStr, source: libroSource }
+        : { externalId: libroIdStr };
+    } else if (isNumeric) {
       where.libro = { $or: [{ id: +libroIdStr }, { externalId: libroIdStr }] };
     } else {
-      where.libro = { externalId: libroIdStr };
+      where.libro = libroSource
+        ? { externalId: libroIdStr, source: libroSource }
+        : { externalId: libroIdStr };
     }
   }
 
@@ -42,8 +53,11 @@ export function buildResenaWhereClause(params: {
     const estadoNormalizado = estado.toLowerCase();
     
     if (estadoNormalizado === 'pendiente' || estadoNormalizado === 'pending') {
-      // Para moderación: incluir pendientes y flagged
-      where.estado = { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] };
+      // Para moderación se puede incluir flagged; para conteos específicos puede excluirse.
+      const shouldIncludeFlagged = includeFlagged !== 'false';
+      where.estado = shouldIncludeFlagged
+        ? { $in: [EstadoResena.PENDING, EstadoResena.FLAGGED] }
+        : EstadoResena.PENDING;
     } else if (estadoNormalizado === 'aprobada' || estadoNormalizado === 'approved') {
       where.estado = EstadoResena.APPROVED;
     } else if (estadoNormalizado === 'rechazada' || estadoNormalizado === 'rejected') {

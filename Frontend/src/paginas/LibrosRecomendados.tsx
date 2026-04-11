@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, RefreshCw, Award, Info } from 'lucide-react';
 import { obtenerRecomendaciones, invalidarCacheRecomendaciones, RecomendacionResponse } from '../services/recomendacionService';
+import { getResenasByLibro } from '../services/resenaService';
 import LibroCard from '../componentes/LibroCard';
 import RecomendacionesSkeletonLoader from '../componentes/RecomendacionesSkeletonLoader';
 import RecomendacionesFiltros, { FiltrosRecomendaciones } from '../componentes/RecomendacionesFiltros';
@@ -39,7 +40,26 @@ export const LibrosRecomendados: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await obtenerRecomendaciones(15);
-      setData(response);
+      const librosConPromedioReal = await Promise.all(
+        response.libros.map(async (libro) => {
+          try {
+            const reviewsData = await getResenasByLibro(String(libro.id));
+            const reviews = reviewsData?.reviews || [];
+            const avgRating = reviews.length > 0
+              ? reviews.reduce((sum: number, r: any) => sum + r.estrellas, 0) / reviews.length
+              : 0;
+
+            return { ...libro, averageRating: avgRating };
+          } catch {
+            return libro;
+          }
+        })
+      );
+
+      setData({
+        ...response,
+        libros: librosConPromedioReal,
+      });
     } catch (err: any) {
       console.error('Error al cargar recomendaciones:', err);
       setError(err.message || 'Error al cargar recomendaciones');

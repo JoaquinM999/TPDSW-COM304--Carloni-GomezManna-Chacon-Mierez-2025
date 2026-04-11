@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getNuevosLanzamientos } from '../services/libroService';
+import { getResenasByLibro } from '../services/resenaService';
 import { Sparkles, Calendar, Star, BookOpen } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { motion } from 'framer-motion';
@@ -34,7 +35,25 @@ export default function NuevosLanzamientos() {
       setLoading(true);
       setError(null);
       const response = await getNuevosLanzamientos(24);
-      setLibros(response.libros || []);
+
+      const baseLibros: Libro[] = response.libros || [];
+      const librosConPromedioReal = await Promise.all(
+        baseLibros.map(async (libro) => {
+          try {
+            const reviewsData = await getResenasByLibro(String(libro.id));
+            const reviews = reviewsData?.reviews || [];
+            const avgRating = reviews.length > 0
+              ? reviews.reduce((sum: number, r: any) => sum + r.estrellas, 0) / reviews.length
+              : 0;
+
+            return { ...libro, averageRating: avgRating };
+          } catch {
+            return libro;
+          }
+        })
+      );
+
+      setLibros(librosConPromedioReal);
     } catch (err) {
       console.error('Error al obtener nuevos lanzamientos:', err);
       setError('Error al cargar los nuevos lanzamientos');

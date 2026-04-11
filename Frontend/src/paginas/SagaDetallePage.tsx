@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { getSagaById } from '../services/sagaService';
+import { getResenasByLibro } from '../services/resenaService';
 import LibroCard from '../componentes/LibroCard';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
@@ -37,7 +38,27 @@ const SagaDetallePage: React.FC = () => {
 
       try {
         const data = await getSagaById(Number(id));
-        setSaga(data);
+        const librosConPromedioReal = await Promise.all(
+          (data.libros || []).map(async (libro: Libro) => {
+            try {
+              const lookupId = String(libro.externalId || libro.id);
+              const reviewsData = await getResenasByLibro(lookupId);
+              const reviews = reviewsData?.reviews || [];
+              const avgRating = reviews.length > 0
+                ? reviews.reduce((sum: number, r: any) => sum + r.estrellas, 0) / reviews.length
+                : 0;
+
+              return { ...libro, averageRating: avgRating };
+            } catch {
+              return libro;
+            }
+          })
+        );
+
+        setSaga({
+          ...data,
+          libros: librosConPromedioReal,
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {

@@ -8,6 +8,9 @@
     "dev:frontend": "cd Frontend && npm install && npm run dev",
     "dev:setup": "npm run install:all && echo '✅ Todas las dependencias instaladas'",
     "dev": "ts-node-dev --respawn --transpile-only --project Backend/tsconfig.json Backend/src/index.ts",
+    "test:e2e": "npm --prefix Frontend run e2e",
+    "test:e2e:ui": "npm --prefix Frontend run e2e:ui",
+    "test:e2e:install": "npm --prefix Frontend exec playwright install",
     "build": "cd Backend && npm install && npm run build",
     "start": "node Backend/dist/index.js"
   },

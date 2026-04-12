@@ -411,7 +411,7 @@ export const FeaturedContent: React.FC = () => {
       <img
         src="/images/piupiu%20reseña.png"
         alt="Piu Piu con reseña"
-        className="pointer-events-none select-none absolute -bottom-10 md:-bottom-14 right-24 md:right-36 lg:right-44 w-32 md:w-40 lg:w-44 opacity-95 saturate-125"
+        className="hidden sm:block pointer-events-none select-none absolute -bottom-10 md:-bottom-14 right-24 md:right-36 lg:right-44 w-32 md:w-40 lg:w-44 opacity-95 saturate-125"
         loading="lazy"
       />
     </section>

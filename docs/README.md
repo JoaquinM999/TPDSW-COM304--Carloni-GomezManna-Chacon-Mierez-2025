@@ -229,7 +229,14 @@ npx playwright install          # solo la primera vez (descarga navegadores)
 npx playwright test             # ejecuta los tests
 npx playwright test --ui        # modo interactivo con UI
 npx playwright show-report      # ver reporte HTML tras la ejecución
+
+# Alternativa desde la raiz del repo (sin cambiar de carpeta)
+npm run test:e2e:install        # solo la primera vez
+npm run test:e2e                # ejecuta los tests
+npm run test:e2e:ui             # modo interactivo con UI
 ```
+
+> **Importante:** evitar `npx playwright test` en la raiz del repositorio, porque puede instalar/usar otra version de Playwright y mezclar runners.
 
 > **Nota:** Los tests E2E tienen un timeout extendido de **120 segundos** para permitir la ejecución en entornos con carga alta o servidores de desarrollo más lentos.
 

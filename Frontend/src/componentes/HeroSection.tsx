@@ -8,9 +8,7 @@ import { AnimatedCounter } from './AnimatedCounter';
 import { getStatsWithCache, PlatformStats } from '../services/statsService';
 import { isAuthenticated } from '../services/authService';
 
-
 const Spline = lazy(() => import('@splinetool/react-spline'));
-
 
 const SplineSkeleton: React.FC = () => (
   <motion.div
@@ -22,6 +20,18 @@ const SplineSkeleton: React.FC = () => (
   </motion.div>
 );
 
+const PiuPiuHero: React.FC = () => (
+  <motion.img
+    initial={{ opacity: 0, y: 10, scale: 0.96 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: 0.7, ease: 'easeOut' }}
+    src="/images/piupiu%20reseña.png"
+    alt="Piu Piu con reseña"
+    className="w-full h-full object-contain drop-shadow-[0_16px_34px_rgba(0,0,0,0.2)]"
+    loading="eager"
+    decoding="async"
+  />
+);
 
 const PollitoSpline: React.FC = () => {
   const [showSpline, setShowSpline] = useState(
@@ -44,7 +54,6 @@ const PollitoSpline: React.FC = () => {
     const originalWarn = console.warn;
     console.warn = (...args) => {
       const message = args.join(' ');
-      // Filtrar warnings específicos de THREE.js/Spline
       if (message.includes('THREE.WebGLProgram') || message.includes('forcing loop to unroll')) {
         return;
       }
@@ -175,18 +184,24 @@ export const HeroSection: React.FC = () => {
       {/* Contenedor principal */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center lg:justify-center gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 md:mb-20">
         
-        {/* Pollito - solo en desktop y iPad Pro */}
-        <div className="hidden lg:flex relative z-10 justify-center items-center h-full min-h-[300px]">
-          <div className="w-full max-w-6xl h-[440px] sm:h-[500px] lg:h-[560px] overflow-hidden flex items-center justify-center">
-            <div
-              style={{
-                transformOrigin: 'center',
-                width: '100%',
-                height: '100%',
-                transform: 'translateY(80px)',
-              }}
-            >
-              <PollitoSpline />
+        {/* Mobile: PNG | Desktop: pollito 3D Spline */}
+        <div className="relative z-10 flex justify-center items-center w-full lg:w-auto">
+          <div className="lg:hidden w-[170px] h-[170px] sm:w-[230px] sm:h-[230px] md:w-[280px] md:h-[280px] mb-1">
+            <PiuPiuHero />
+          </div>
+
+          <div className="hidden lg:flex justify-center items-center h-full min-h-[300px]">
+            <div className="w-full max-w-6xl h-[440px] xl:h-[500px] 2xl:h-[560px] overflow-hidden flex items-center justify-center">
+              <div
+                style={{
+                  transformOrigin: 'center',
+                  width: '100%',
+                  height: '100%',
+                  transform: 'translateY(80px)',
+                }}
+              >
+                <PollitoSpline />
+              </div>
             </div>
           </div>
         </div>
